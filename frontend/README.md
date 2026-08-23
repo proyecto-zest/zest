@@ -67,10 +67,15 @@ do not exist yet and each lands with its own ticket.
 
 ## Styling
 
-Tailwind defaults for now. The design system tokens (Citrus palette,
-typography, spacing, radii, shadows and breakpoints) are defined in
-**ZEST-20**; from then on utilities resolve to those tokens and arbitrary
-values (`bg-[#hex]`, `text-[13px]`) are not allowed.
+Every color, type size, spacing step, radius and shadow comes from a design
+system token. Tailwind's scales are **replaced**, not extended, so a utility can
+only resolve to a token — `bg-slate-500` does not exist here.
+
+Tokens live in `src/styles/tokens/` and are mapped onto Tailwind in `src/theme/`.
+Arbitrary values (`bg-[#hex]`, `text-[13px]`, `p-[7px]`) are rejected by ESLint.
+When a token is missing, add it rather than working around it.
+
+Full reference: [`docs/design-system.md`](../docs/design-system.md).
 
 ## CI
 

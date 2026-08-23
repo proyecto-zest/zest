@@ -1,0 +1,41 @@
+/**
+ * Typography tokens.
+ *
+ * Families come from the design reference: Playfair Display for headings and
+ * the wordmark, Geist for body copy, Geist Mono for anything numeric.
+ *
+ * The size scale mirrors what the reference actually uses. `2xs` exists because
+ * the design reaches for 11px in badges and meta text, which had no token and
+ * showed up as `text-[11px]`.
+ */
+:root {
+  --font-heading: 'Playfair Display Variable', Georgia, serif;
+  --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs-leading: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs-leading: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm-leading: 1.25rem;
+  --text-base: 1rem;
+  --text-base-leading: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg-leading: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl-leading: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl-leading: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl-leading: 2.25rem;
+  --text-4xl: 2.25rem;
+  --text-4xl-leading: 2.5rem;
+  --text-5xl: 3rem;
+  --text-5xl-leading: 1;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}

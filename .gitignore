@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 # JetBrains IDEs
 .idea/
 *.iml
+
+# PR screenshots — attach them in GitHub, do not version them
+docs/screenshots/
