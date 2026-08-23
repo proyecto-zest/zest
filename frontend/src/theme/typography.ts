@@ -3,6 +3,7 @@ const size = (name: string) => [`var(--text-${name})`, `var(--text-${name}-leadi
 
 export const fontFamily = {
   heading: ['var(--font-heading)'],
+  serif: ['var(--font-serif)'],
   sans: ['var(--font-sans)'],
   mono: ['var(--font-mono)'],
 }

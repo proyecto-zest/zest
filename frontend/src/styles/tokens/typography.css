@@ -10,6 +10,9 @@
  */
 :root {
   --font-heading: 'Playfair Display Variable', Georgia, serif;
+  /* `serif` is an alias of `heading`: the design reference reaches for
+     font-serif, so ported components keep working. */
+  --font-serif: var(--font-heading);
   --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
 

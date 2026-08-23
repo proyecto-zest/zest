@@ -17,6 +17,7 @@
   --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
   --radius-full: 9999px;
 
   --shadow-sm: 0 1px 2px 0 rgb(44 44 44 / 0.05);

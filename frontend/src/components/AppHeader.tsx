@@ -10,7 +10,7 @@ import { Logo } from './Logo'
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 md:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 tablet:px-6">
         <Link to="/" aria-label="Zest home">
           <Logo />
         </Link>

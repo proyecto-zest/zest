@@ -14,7 +14,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AppHeader />
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-4 md:px-6 md:pt-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-4 tablet:px-6 tablet:pt-8">{children}</main>
     </div>
   )
 }
