@@ -39,7 +39,7 @@ frontend.
 ```
 src/
   app/          App.tsx and route definitions
-  components/   shared components (Layout, ...)
+  components/   shared components (AppShell, AppHeader, Card, Logo)
   features/     code grouped by feature (health, ...)
   services/     HTTP clients, one per backend resource
   hooks/        reusable hooks
@@ -55,6 +55,15 @@ base and throws `HttpError` on unsuccessful responses. Do not scatter bare
 `features/health/useHealthCheck.ts` consumes `GET /health` and the home screen
 renders the result, so it is obvious at a glance whether frontend and backend
 are talking.
+
+## Layout
+
+`components/AppShell.tsx` follows the shell in the design reference
+(`support/design/uploads/zest-wireframe-design/components/site-shell.tsx`):
+a sticky header over a centered, capped content column, and no footer.
+
+Navigation, search and the profile menu are deliberately absent — their routes
+do not exist yet and each lands with its own ticket.
 
 ## Styling
 

@@ -1,9 +1,9 @@
 import { useRoutes } from 'react-router-dom'
-import { Layout } from '../components/Layout'
+import { AppShell } from '../components/AppShell'
 import { routes } from './routes'
 
 export function App() {
   const element = useRoutes(routes)
 
-  return <Layout>{element}</Layout>
+  return <AppShell>{element}</AppShell>
 }
