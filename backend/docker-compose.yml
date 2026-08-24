@@ -1,0 +1,52 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: zest
+      POSTGRES_USER: zest
+      POSTGRES_PASSWORD: zest
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U zest -d zest']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: runtime
+    environment:
+      DATABASE_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-your-tenant.us.auth0.com}
+      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-https://api.zest.example}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-zest-images-dev}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-your-access-key-id}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-your-secret-access-key}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      target: build
+    command: npm run prisma:migrate:deploy
+    environment:
+      DATABASE_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+volumes:
+  postgres_data:
