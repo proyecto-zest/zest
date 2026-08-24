@@ -21,7 +21,8 @@ npm run start:dev
 ```
 
 Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
-Auth0 y AWS. Nunca subas el archivo `.env` al repositorio.
+Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
+archivo `.env` al repositorio.
 
 La API queda disponible en `http://localhost:3000`. El health-check se puede
 probar con:
@@ -72,7 +73,7 @@ su servicio PostgreSQL.
 
 ## CI y protección de `main`
 
-`.github/workflows/ci.yml` ejecuta instalación limpia, lint, build y tests con
-cobertura en cada pull request y cada push a `main`. La configuración del repo
-en GitHub debe requerir el check `CI` y una aprobación antes de permitir el
-merge a `main`.
+`.github/workflows/ci.yml` ejecuta instalación limpia, migraciones, lint, build
+y tests con cobertura en cada pull request y cada push a `main`. La
+configuración del repo en GitHub debe requerir el check `CI` y una aprobación
+antes de permitir el merge a `main`.

@@ -21,6 +21,7 @@ services:
       target: runtime
     environment:
       DATABASE_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
       AUTH0_DOMAIN: ${AUTH0_DOMAIN:-your-tenant.us.auth0.com}
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-https://api.zest.example}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-zest-images-dev}

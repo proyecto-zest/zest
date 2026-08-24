@@ -3,6 +3,7 @@ import * as Joi from 'joi';
 export type EnvironmentVariables = {
   NODE_ENV: 'development' | 'test' | 'production';
   PORT: number;
+  CORS_ORIGIN: string;
   DATABASE_URL: string;
   AUTH0_DOMAIN: string;
   AUTH0_AUDIENCE: string;
@@ -16,6 +17,9 @@ export const envValidationSchema = Joi.object<EnvironmentVariables>({
     .valid('development', 'test', 'production')
     .default('development'),
   PORT: Joi.number().port().default(3000),
+  CORS_ORIGIN: Joi.string()
+    .uri({ scheme: ['http', 'https'] })
+    .required(),
   DATABASE_URL: Joi.string()
     .uri({ scheme: ['postgresql', 'postgres'] })
     .required(),
