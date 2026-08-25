@@ -1,0 +1,26 @@
+/**
+ * Spacing, radius and shadow tokens.
+ *
+ * Spacing keeps Tailwind's 4px rhythm so the utilities stay predictable; it is
+ * declared here so the scale has one owner. Radii derive from `--radius`, the
+ * base the design reference uses, so retuning roundness is a one-line change.
+ */
+:root {
+  /* One unit drives the whole spacing rhythm; every step is a multiple of it,
+     so retuning density is a single-value change. */
+  --space-unit: 0.25rem;
+
+  --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgb(44 44 44 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(44 44 44 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(44 44 44 / 0.08);
+}

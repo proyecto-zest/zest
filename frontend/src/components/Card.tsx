@@ -11,9 +11,9 @@ interface CardProps {
  */
 export function Card({ title, children }: CardProps) {
   return (
-    <section className="rounded-2xl border border-neutral-200 p-4 md:p-6">
+    <section className="rounded-2xl border bg-card border-border p-4 tablet:p-6">
       <h2 className="font-serif text-xl font-bold">{title}</h2>
-      <div className="mt-2 text-sm text-neutral-700">{children}</div>
+      <div className="mt-2 text-sm text-muted-foreground">{children}</div>
     </section>
   )
 }

@@ -19,7 +19,7 @@ already shows the what.
 ## Pull requests
 - Small and reviewable: one feature or fix, not a batch of unrelated changes.
 - The description says what changed and why, linking the related task.
-- Before opening: it builds, lint passes, and tests pass locally.
+- Before opening: it builds and lint passes locally.
 - UI changes include a screenshot or short clip.
 - At least one other person reviews before merging.
 

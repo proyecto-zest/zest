@@ -1,0 +1,11 @@
+/**
+ * Design system tokens — single entry point.
+ *
+ * Split by domain so each file stays readable; import this one, never the parts.
+ * Breakpoints are the one exception: CSS variables cannot be used inside media
+ * queries, so they live in `src/theme/breakpoints.ts`. See docs/design-system.md.
+ */
+@import './tokens/colors.css';
+@import './tokens/colors-dark.css';
+@import './tokens/typography.css';
+@import './tokens/layout.css';
