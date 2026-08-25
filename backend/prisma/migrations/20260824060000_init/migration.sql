@@ -1,0 +1,2 @@
+-- Initial backend workspace migration.
+-- Domain tables are intentionally introduced by their respective tickets.
