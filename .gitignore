@@ -141,3 +141,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# PR screenshots — attach them in GitHub, do not version them
+docs/screenshots/
