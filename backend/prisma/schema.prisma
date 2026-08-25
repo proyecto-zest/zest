@@ -30,6 +30,8 @@ model Recipe {
   difficulty  String             @db.VarChar
   servings    Int
   ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  images      RecipeImage[]
 
   @@map("recipes")
 }
@@ -51,4 +53,23 @@ model RecipeIngredient {
 
   @@id([recipeId, ingredientId])
   @@map("recipe_ingredients")
+}
+
+model RecipeStep {
+  id         String @id @default(uuid()) @db.Uuid
+  recipeId   String @map("recipe_id") @db.Uuid
+  stepNumber Int    @map("step_number")
+  text       String @db.Text
+  recipe     Recipe @relation(fields: [recipeId], references: [id])
+
+  @@map("recipe_steps")
+}
+
+model RecipeImage {
+  id       String @id @default(uuid()) @db.Uuid
+  recipeId String @map("recipe_id") @db.Uuid
+  imageUrl String @map("image_url") @db.VarChar
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+
+  @@map("recipe_images")
 }
