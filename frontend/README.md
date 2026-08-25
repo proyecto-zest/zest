@@ -23,16 +23,14 @@ frontend.
 
 ## Daily use
 
-| Command              | What it does                           |
-| -------------------- | -------------------------------------- |
-| `npm run dev`        | Dev server at http://localhost:5173    |
-| `npm run build`      | Production build into `dist/`          |
-| `npm run preview`    | Serves the production build for review |
-| `npm test`           | Runs the tests once                    |
-| `npm run test:watch` | Tests in watch mode                    |
-| `npm run lint`       | ESLint                                 |
-| `npm run typecheck`  | Type check without emitting            |
-| `npm run format`     | Formats with Prettier                  |
+| Command             | What it does                           |
+| ------------------- | -------------------------------------- |
+| `npm run dev`       | Dev server at http://localhost:5173    |
+| `npm run build`     | Production build into `dist/`          |
+| `npm run preview`   | Serves the production build for review |
+| `npm run lint`      | ESLint                                 |
+| `npm run typecheck` | Type check without emitting            |
+| `npm run format`    | Formats with Prettier                  |
 
 ## Structure
 
@@ -80,4 +78,4 @@ Full reference: [`docs/design-system.md`](../docs/design-system.md).
 ## CI
 
 `.github/workflows/ci.yml` runs on every PR and on push to `main`:
-`npm ci` → `lint` → `typecheck` → `build` → `test`.
+`npm ci` → `lint` → `typecheck` → `build`.
