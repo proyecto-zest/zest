@@ -1,3 +1,4 @@
+import { Alert } from '../../components/alert'
 import { Card } from '../../components/Card'
 import { healthMessage } from './healthMessage'
 import { useHealthCheck } from './useHealthCheck'
@@ -6,5 +7,16 @@ import { useHealthCheck } from './useHealthCheck'
 export function HealthStatus() {
   const health = useHealthCheck()
 
-  return <Card title="Backend connection">{healthMessage(health)}</Card>
+  return (
+    <Card title="Backend connection">
+      {health.status === 'loading' ? (
+        <p>{healthMessage(health)}</p>
+      ) : (
+        <Alert
+          variant={health.status === 'ok' ? 'success' : 'error'}
+          message={healthMessage(health)}
+        />
+      )}
+    </Card>
+  )
 }
