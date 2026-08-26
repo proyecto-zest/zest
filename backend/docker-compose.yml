@@ -25,6 +25,7 @@ services:
       AUTH0_DOMAIN: ${AUTH0_DOMAIN:-your-tenant.us.auth0.com}
       AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-https://api.zest.example}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-zest-images-dev}
+      AWS_S3_REGION: ${AWS_S3_REGION:-us-east-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-your-access-key-id}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-your-secret-access-key}
     ports:

@@ -1,5 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { PrismaClient, RecipeCategory } from '@prisma/client';
+import {
+  IngredientUnit,
+  PrismaClient,
+  RecipeCategory,
+  RecipeDifficulty,
+  RecipeTimeUnit,
+} from '@prisma/client';
 import { Test } from '@nestjs/testing';
 import { randomUUID } from 'node:crypto';
 import { Server } from 'node:http';
@@ -8,8 +14,11 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
-  DEFAULT_RECIPE_IMAGE_URL,
+  DEFAULT_RECIPE_IMAGE_KEY,
 } from '../src/recipes/recipes.constants';
+
+const DEFAULT_RECIPE_IMAGE_URL =
+  'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/default.webp';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -32,11 +41,12 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     description: 'Una ensalada simple y fresca.',
     category: RecipeCategory.ENTRADA,
     time: 10,
-    difficulty: 'FACIL',
+    timeUnit: RecipeTimeUnit.MINUTOS,
+    difficulty: RecipeDifficulty.FACIL,
     servings: 2,
     ingredients: [
-      { ingredientId: tomatoId, amount: '2 unidades' },
-      { ingredientId: oilId, amount: '1 cucharada' },
+      { ingredientId: tomatoId, amount: '2', unit: IngredientUnit.UNIDAD },
+      { ingredientId: oilId, amount: '1', unit: IngredientUnit.CUCHARADA },
     ],
     steps: ['Cortar el tomate.', 'Mezclar todos los ingredientes.'],
   });
@@ -95,12 +105,14 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       ingredients: [
         {
           ingredientId: tomatoId,
-          amount: '2 unidades',
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
           ingredient: { id: tomatoId, name: 'Tomate' },
         },
         {
           ingredientId: oilId,
-          amount: '1 cucharada',
+          amount: '1',
+          unit: IngredientUnit.CUCHARADA,
           ingredient: { id: oilId, name: 'Aceite de oliva' },
         },
       ],
@@ -109,6 +121,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
         { stepNumber: 2, text: 'Mezclar todos los ingredientes.' },
       ],
     });
+    expect(response.body).not.toHaveProperty('s3Key');
 
     const persistedRecipe = await prisma.recipe.findUnique({
       where: { id: responseBody.id },
@@ -117,9 +130,10 @@ describeWithDatabase('POST /recipes (e2e)', () => {
 
     expect(persistedRecipe).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      timeUnit: RecipeTimeUnit.MINUTOS,
       ingredients: [{ ingredientId: tomatoId }, { ingredientId: oilId }],
       steps: [{ stepNumber: 1 }, { stepNumber: 2 }],
-      images: [{ imageUrl: DEFAULT_RECIPE_IMAGE_URL }],
+      images: [{ s3Key: DEFAULT_RECIPE_IMAGE_KEY }],
     });
   });
 
@@ -158,6 +172,26 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       .post('/recipes')
       .send({ ...validRecipe(), ingredients: [] })
       .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('returns 400 for invalid difficulty, time or ingredient units', async () => {
+    const invalidRecipes = [
+      { ...validRecipe(), difficulty: 'MUY_FACIL' },
+      { ...validRecipe(), timeUnit: 'DIAS' },
+      {
+        ...validRecipe(),
+        ingredients: [{ ingredientId: tomatoId, amount: '2', unit: 'PUÑADO' }],
+      },
+    ];
+
+    for (const recipe of invalidRecipes) {
+      await request(app.getHttpServer() as Server)
+        .post('/recipes')
+        .send(recipe)
+        .expect(400);
+    }
 
     await expect(prisma.recipe.count()).resolves.toBe(0);
   });

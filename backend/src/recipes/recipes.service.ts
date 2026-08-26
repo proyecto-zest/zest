@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
-  DEFAULT_RECIPE_IMAGE_URL,
+  DEFAULT_RECIPE_IMAGE_KEY,
 } from './recipes.constants';
 
 const createdRecipeInclude = {
@@ -16,7 +17,7 @@ const createdRecipeInclude = {
     orderBy: { stepNumber: 'asc' },
   },
   images: {
-    select: { imageUrl: true },
+    select: { s3Key: true },
   },
 } satisfies Prisma.RecipeInclude;
 
@@ -30,7 +31,10 @@ export type CreatedRecipe = Omit<CreatedRecipeRecord, 'images'> & {
 
 @Injectable()
 export class RecipesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async create(createRecipeDto: CreateRecipeDto): Promise<CreatedRecipe> {
     return this.prisma.$transaction(async (transaction) => {
@@ -60,11 +64,16 @@ export class RecipesService {
           description: createRecipeDto.description,
           category: createRecipeDto.category,
           time: createRecipeDto.time,
+          timeUnit: createRecipeDto.timeUnit,
           difficulty: createRecipeDto.difficulty,
           servings: createRecipeDto.servings,
           ingredients: {
             create: createRecipeDto.ingredients.map(
-              ({ ingredientId, amount }) => ({ ingredientId, amount }),
+              ({ ingredientId, amount, unit }) => ({
+                ingredientId,
+                amount,
+                unit,
+              }),
             ),
           },
           steps: {
@@ -74,7 +83,7 @@ export class RecipesService {
             })),
           },
           images: {
-            create: { imageUrl: DEFAULT_RECIPE_IMAGE_URL },
+            create: { s3Key: DEFAULT_RECIPE_IMAGE_KEY },
           },
         },
         include: createdRecipeInclude,
@@ -83,8 +92,15 @@ export class RecipesService {
 
       return {
         ...createdRecipe,
-        imageUrl: images[0].imageUrl,
+        imageUrl: this.buildS3Url(images[0].s3Key),
       };
     });
+  }
+
+  private buildS3Url(s3Key: string): string {
+    const bucket = this.configService.getOrThrow<string>('AWS_S3_BUCKET');
+    const region = this.configService.getOrThrow<string>('AWS_S3_REGION');
+
+    return `https://${bucket}.s3.${region}.amazonaws.com/${s3Key}`;
   }
 }

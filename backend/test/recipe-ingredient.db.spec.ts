@@ -1,4 +1,10 @@
-import { PrismaClient, RecipeCategory } from '@prisma/client';
+import {
+  IngredientUnit,
+  PrismaClient,
+  RecipeCategory,
+  RecipeDifficulty,
+  RecipeTimeUnit,
+} from '@prisma/client';
 
 import { loadIngredientNames, seedIngredients } from '../prisma/seed';
 
@@ -32,16 +38,19 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
         description: 'Una ensalada simple y fresca.',
         category: RecipeCategory.ENTRADA,
         time: 10,
-        difficulty: 'FACIL',
+        timeUnit: RecipeTimeUnit.MINUTOS,
+        difficulty: RecipeDifficulty.FACIL,
         servings: 2,
         ingredients: {
           create: [
             {
-              amount: '2 unidades',
+              amount: '2',
+              unit: IngredientUnit.UNIDAD,
               ingredient: { create: { name: 'Tomate' } },
             },
             {
-              amount: '1 cucharada',
+              amount: '1',
+              unit: IngredientUnit.CUCHARADA,
               ingredient: { create: { name: 'Aceite de oliva' } },
             },
           ],
@@ -63,8 +72,16 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
       authorId: null,
       title: 'Ensalada de tomate',
       ingredients: [
-        { amount: '1 cucharada', ingredient: { name: 'Aceite de oliva' } },
-        { amount: '2 unidades', ingredient: { name: 'Tomate' } },
+        {
+          amount: '1',
+          unit: IngredientUnit.CUCHARADA,
+          ingredient: { name: 'Aceite de oliva' },
+        },
+        {
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
+          ingredient: { name: 'Tomate' },
+        },
       ],
     });
   });
@@ -79,14 +96,16 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
         description: 'Papas doradas al horno.',
         category: RecipeCategory.ALMUERZO,
         time: 45,
-        difficulty: 'FACIL',
+        timeUnit: RecipeTimeUnit.MINUTOS,
+        difficulty: RecipeDifficulty.FACIL,
         servings: 4,
       },
     });
     const relation = {
       recipeId: recipe.id,
       ingredientId: ingredient.id,
-      amount: '1 kg',
+      amount: '1',
+      unit: IngredientUnit.KILOGRAMO,
     };
 
     await prisma.recipeIngredient.create({ data: relation });

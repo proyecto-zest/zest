@@ -39,6 +39,7 @@ jobs:
       AUTH0_DOMAIN: test.us.auth0.com
       AUTH0_AUDIENCE: https://api.zest.test
       AWS_S3_BUCKET: zest-images-test
+      AWS_S3_REGION: us-east-1
       AWS_ACCESS_KEY_ID: test-access-key-id
       AWS_SECRET_ACCESS_KEY: test-secret-access-key
       RUN_DATABASE_TESTS: "true"

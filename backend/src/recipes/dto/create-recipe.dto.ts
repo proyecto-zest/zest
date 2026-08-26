@@ -11,7 +11,12 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { RecipeCategory } from '@prisma/client';
+import {
+  IngredientUnit,
+  RecipeCategory,
+  RecipeDifficulty,
+  RecipeTimeUnit,
+} from '@prisma/client';
 
 export class CreateRecipeIngredientDto {
   @IsUUID()
@@ -20,6 +25,9 @@ export class CreateRecipeIngredientDto {
   @IsString()
   @IsNotEmpty()
   amount!: string;
+
+  @IsEnum(IngredientUnit)
+  unit!: IngredientUnit;
 }
 
 export class CreateRecipeDto {
@@ -38,9 +46,11 @@ export class CreateRecipeDto {
   @Min(1)
   time!: number;
 
-  @IsString()
-  @IsNotEmpty()
-  difficulty!: string;
+  @IsEnum(RecipeTimeUnit)
+  timeUnit!: RecipeTimeUnit;
+
+  @IsEnum(RecipeDifficulty)
+  difficulty!: RecipeDifficulty;
 
   @IsInt()
   @Min(1)

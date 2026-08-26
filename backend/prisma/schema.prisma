@@ -18,6 +18,36 @@ enum RecipeCategory {
   BEBIDA
 }
 
+enum RecipeTimeUnit {
+  MINUTOS
+  HORAS
+}
+
+enum RecipeDifficulty {
+  FACIL
+  MEDIA
+  DIFICIL
+}
+
+enum IngredientUnit {
+  SIN_UNIDAD
+  UNIDAD
+  GRAMO
+  KILOGRAMO
+  MILILITRO
+  LITRO
+  CUCHARADITA
+  CUCHARADA
+  TAZA
+  ONZA
+  LIBRA
+  PIZCA
+  DIENTE
+  LATA
+  PAQUETE
+  A_GUSTO
+}
+
 model Recipe {
   id String @id @default(uuid()) @db.Uuid
 
@@ -27,7 +57,8 @@ model Recipe {
   description String             @db.Text
   category    RecipeCategory
   time        Int
-  difficulty  String             @db.VarChar
+  timeUnit    RecipeTimeUnit     @map("time_unit")
+  difficulty  RecipeDifficulty
   servings    Int
   ingredients RecipeIngredient[]
   steps       RecipeStep[]
@@ -45,11 +76,12 @@ model Ingredient {
 }
 
 model RecipeIngredient {
-  recipeId     String     @map("recipe_id") @db.Uuid
-  ingredientId String     @map("ingredient_id") @db.Uuid
-  amount       String     @db.VarChar
-  recipe       Recipe     @relation(fields: [recipeId], references: [id])
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  recipeId     String         @map("recipe_id") @db.Uuid
+  ingredientId String         @map("ingredient_id") @db.Uuid
+  amount       String         @db.VarChar
+  unit         IngredientUnit
+  recipe       Recipe         @relation(fields: [recipeId], references: [id])
+  ingredient   Ingredient     @relation(fields: [ingredientId], references: [id])
 
   @@id([recipeId, ingredientId])
   @@map("recipe_ingredients")
@@ -68,8 +100,9 @@ model RecipeStep {
 model RecipeImage {
   id       String @id @default(uuid()) @db.Uuid
   recipeId String @map("recipe_id") @db.Uuid
-  imageUrl String @map("image_url") @db.VarChar
+  s3Key    String @map("s3_key") @db.VarChar
   recipe   Recipe @relation(fields: [recipeId], references: [id])
 
+  @@index([recipeId])
   @@map("recipe_images")
 }

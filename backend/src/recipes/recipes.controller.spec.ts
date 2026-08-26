@@ -1,4 +1,9 @@
-import { RecipeCategory } from '@prisma/client';
+import {
+  IngredientUnit,
+  RecipeCategory,
+  RecipeDifficulty,
+  RecipeTimeUnit,
+} from '@prisma/client';
 
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { RecipesController } from './recipes.controller';
@@ -11,12 +16,14 @@ describe('RecipesController', () => {
       description: 'Una ensalada fresca.',
       category: RecipeCategory.ENTRADA,
       time: 10,
-      difficulty: 'FACIL',
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      difficulty: RecipeDifficulty.FACIL,
       servings: 2,
       ingredients: [
         {
           ingredientId: '11111111-1111-4111-8111-111111111111',
-          amount: '2 unidades',
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
         },
       ],
       steps: ['Cortar el tomate.'],
