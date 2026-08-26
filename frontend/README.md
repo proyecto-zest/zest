@@ -63,6 +63,48 @@ a sticky header over a centered, capped content column, and no footer.
 Navigation, search and the profile menu are deliberately absent — their routes
 do not exist yet and each lands with its own ticket.
 
+## Alerts
+
+`components/alert` is the single component for every error and success message.
+Do not hand-roll a coloured `<div>` for feedback.
+
+| Prop        | Type                   | Notes                                                                       |
+| ----------- | ---------------------- | --------------------------------------------------------------------------- |
+| `variant`   | `'error' \| 'success'` | Required. Drives colors, icon and how screen readers announce it            |
+| `message`   | `string \| string[]`   | Required. A list renders as bullets — the shape validation errors arrive in |
+| `title`     | `string`               | Optional bold line above the message                                        |
+| `onDismiss` | `() => void`           | Optional. Passing it is what makes the close button appear                  |
+
+```tsx
+<Alert variant="error" message="Could not connect: 503 Service Unavailable" />
+
+<Alert variant="success" message="Recipe saved to your collection." />
+
+<Alert
+  variant="error"
+  title="Please fix the following"
+  message={['Title is required.', 'Add at least one ingredient.']}
+/>
+```
+
+Dismissal is controlled by the caller: `Alert` calls `onDismiss`, and the parent
+decides to stop rendering it.
+
+```tsx
+const [visible, setVisible] = useState(true)
+
+{
+  visible && (
+    <Alert variant="success" message="Changes published." onDismiss={() => setVisible(false)} />
+  )
+}
+```
+
+Accessibility is handled inside the component. `error` renders `role="alert"`
+with `aria-live="assertive"`, so a failure interrupts and gets announced right
+away. `success` renders `role="status"` with `aria-live="polite"`, so a
+confirmation waits its turn instead of cutting off whatever the user is hearing.
+
 ## Styling
 
 Every color, type size, spacing step, radius and shadow comes from a design
