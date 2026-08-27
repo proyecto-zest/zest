@@ -1,6 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
+import {
+  IngredientUnit,
+  Prisma,
+  RecipeCategory,
+  RecipeDifficulty,
+} from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
@@ -29,12 +34,26 @@ export type CreatedRecipe = Omit<CreatedRecipeRecord, 'images'> & {
   imageUrl: string;
 };
 
+export type RecipeMetadata = {
+  categories: string[];
+  difficulties: string[];
+  units: string[];
+};
+
 @Injectable()
 export class RecipesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {}
+
+  getMetadata(): RecipeMetadata {
+    return {
+      categories: Object.values(RecipeCategory),
+      difficulties: Object.values(RecipeDifficulty),
+      units: Object.values(IngredientUnit),
+    };
+  }
 
   async create(createRecipeDto: CreateRecipeDto): Promise<CreatedRecipe> {
     return this.prisma.$transaction(async (transaction) => {

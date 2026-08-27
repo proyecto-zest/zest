@@ -93,6 +93,14 @@ describe('RecipesService', () => {
     );
   });
 
+  it('returns the exact recipe selector enum values', () => {
+    expect(service.getMetadata()).toEqual({
+      categories: Object.values(RecipeCategory),
+      difficulties: Object.values(RecipeDifficulty),
+      units: Object.values(IngredientUnit),
+    });
+  });
+
   it('creates the recipe and all nested records atomically', async () => {
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
     recipeCreate.mockResolvedValue({

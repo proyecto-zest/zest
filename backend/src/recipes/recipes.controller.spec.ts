@@ -7,9 +7,28 @@ import {
 
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { RecipesController } from './recipes.controller';
-import { CreatedRecipe, RecipesService } from './recipes.service';
+import {
+  CreatedRecipe,
+  RecipeMetadata,
+  RecipesService,
+} from './recipes.service';
 
 describe('RecipesController', () => {
+  it('returns recipe metadata from the service', () => {
+    const metadata: RecipeMetadata = {
+      categories: Object.values(RecipeCategory),
+      difficulties: Object.values(RecipeDifficulty),
+      units: Object.values(IngredientUnit),
+    };
+    const getMetadata = jest.fn().mockReturnValue(metadata);
+    const controller = new RecipesController({
+      getMetadata,
+    } as unknown as RecipesService);
+
+    expect(controller.getMetadata()).toBe(metadata);
+    expect(getMetadata).toHaveBeenCalledTimes(1);
+  });
+
   it('delegates recipe creation to the service', async () => {
     const createRecipeDto: CreateRecipeDto = {
       title: 'Ensalada de tomate',
