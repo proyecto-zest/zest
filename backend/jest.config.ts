@@ -10,6 +10,7 @@ const config: Config = {
   collectCoverageFrom: ['src/**/*.ts', '!src/main.ts', '!src/**/*.module.ts'],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
+  maxWorkers: 1,
   coverageThreshold: {
     global: {
       branches: 75,
