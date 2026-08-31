@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import {
   PrismaClient,
   RecipeCategory,
@@ -10,6 +10,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 import {
   DEFAULT_RECIPES_LIMIT,
   DEFAULT_RECIPES_PAGE,
@@ -26,18 +27,22 @@ describeWithDatabase('GET /recipes (e2e)', () => {
 
   const recipeId = (position: number): string =>
     `00000000-0000-4000-8000-${position.toString().padStart(12, '0')}`;
+  const testRecipeIds = Array.from(
+    { length: MAX_RECIPES_LIMIT + 5 },
+    (_, index) => recipeId(index + 1),
+  );
 
   const cleanRecipes = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany();
-    await prisma.recipeStep.deleteMany();
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipe.deleteMany();
+    await prisma.recipeImage.deleteMany({
+      where: { recipeId: { in: testRecipeIds } },
+    });
+    await prisma.recipe.deleteMany({
+      where: { id: { in: testRecipeIds } },
+    });
   };
 
   const createRecipes = async (count: number): Promise<string[]> => {
-    const ids = Array.from({ length: count }, (_, index) =>
-      recipeId(index + 1),
-    );
+    const ids = testRecipeIds.slice(0, count);
 
     await prisma.recipe.createMany({
       data: ids.map((id, index) => ({
@@ -49,6 +54,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
         timeUnit: RecipeTimeUnit.MINUTOS,
         difficulty: RecipeDifficulty.FACIL,
         servings: 2,
+        createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)),
       })),
     });
     await prisma.recipeImage.createMany({
@@ -69,13 +75,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    configureApp(app);
     await app.init();
   });
 
@@ -193,14 +193,18 @@ describeWithDatabase('GET /recipes (e2e)', () => {
       .expect(400);
   });
 
-  it('orders recipes by id descending', async () => {
+  it('orders recipes by creation date descending', async () => {
     const ids = await createRecipes(3);
+    await prisma.recipe.update({
+      where: { id: ids[0] },
+      data: { createdAt: new Date(Date.UTC(2026, 0, 2)) },
+    });
 
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes?limit=3')
       .expect(200);
     const body = response.body as PaginatedRecipes;
 
-    expect(body.recipes.map(({ id }) => id)).toEqual(ids.reverse());
+    expect(body.recipes.map(({ id }) => id)).toEqual([ids[0], ids[2], ids[1]]);
   });
 });

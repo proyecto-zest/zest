@@ -1,4 +1,4 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import {
   IngredientUnit,
   PrismaClient,
@@ -12,6 +12,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPE_IMAGE_KEY,
@@ -73,13 +74,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    configureApp(app);
     await app.init();
   });
 

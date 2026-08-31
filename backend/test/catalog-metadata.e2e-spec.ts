@@ -12,6 +12,7 @@ import request from 'supertest';
 
 import { loadIngredientNames, seedIngredients } from '../prisma/seed';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 import { RecipeMetadata } from '../src/recipes/recipes.service';
 
 const describeWithDatabase =
@@ -35,6 +36,7 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    configureApp(app);
     await app.init();
   });
 

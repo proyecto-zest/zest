@@ -153,7 +153,7 @@ describe('RecipesService', () => {
         servings: true,
         images: { select: { s3Key: true }, take: 1 },
       },
-      orderBy: { id: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       skip: 0,
       take: 20,
     });

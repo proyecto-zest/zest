@@ -100,7 +100,7 @@ export class RecipesService {
       this.prisma.recipe.findMany({
         where,
         select: recipeCardSelect,
-        orderBy: { id: 'desc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
       }),

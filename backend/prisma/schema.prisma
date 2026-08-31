@@ -60,6 +60,7 @@ model Recipe {
   timeUnit    RecipeTimeUnit     @map("time_unit")
   difficulty  RecipeDifficulty
   servings    Int
+  createdAt   DateTime           @default(now()) @map("created_at")
   ingredients RecipeIngredient[]
   steps       RecipeStep[]
   images      RecipeImage[]
