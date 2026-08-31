@@ -92,7 +92,30 @@ export class RecipesService {
   ): Promise<PaginatedRecipesResponseDto> {
     const page = query.page;
     const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
-    const where: Prisma.RecipeWhereInput = {};
+    const filters: Prisma.RecipeWhereInput[] = [];
+
+    if (query.name !== undefined) {
+      filters.push({
+        title: { contains: query.name, mode: 'insensitive' },
+      });
+    }
+
+    for (const ingredientId of query.ingredient ?? []) {
+      filters.push({
+        ingredients: { some: { ingredientId } },
+      });
+    }
+
+    if (query.category !== undefined) {
+      filters.push({ category: query.category });
+    }
+
+    if (query.difficulty !== undefined) {
+      filters.push({ difficulty: query.difficulty });
+    }
+
+    const where: Prisma.RecipeWhereInput =
+      filters.length > 0 ? { AND: filters } : {};
     const [total, recipes] = await Promise.all([
       this.prisma.recipe.count({ where }),
       this.prisma.recipe.findMany({

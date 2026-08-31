@@ -306,6 +306,34 @@ describe('RecipesService', () => {
     );
   });
 
+  it('combines all recipe filters with AND', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({
+      page: 1,
+      limit: 20,
+      name: 'pasta',
+      ingredient: [tomatoId, oilId],
+      category: RecipeCategory.ALMUERZO,
+      difficulty: RecipeDifficulty.FACIL,
+    });
+
+    const expectedWhere = {
+      AND: [
+        { title: { contains: 'pasta', mode: 'insensitive' } },
+        { ingredients: { some: { ingredientId: tomatoId } } },
+        { ingredients: { some: { ingredientId: oilId } } },
+        { category: RecipeCategory.ALMUERZO },
+        { difficulty: RecipeDifficulty.FACIL },
+      ],
+    };
+    expect(recipeCount).toHaveBeenCalledWith({ where: expectedWhere });
+    expect(recipeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expectedWhere }),
+    );
+  });
+
   it('returns an empty first page when there are no recipes', async () => {
     recipeCount.mockResolvedValue(0);
     recipeFindMany.mockResolvedValue([]);
