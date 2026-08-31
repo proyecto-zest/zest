@@ -7,18 +7,31 @@ import {
 
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
-import { RecipesController } from './recipes.controller';
 import {
-  CreatedRecipe,
-  PaginatedRecipes,
-  RecipeMetadata,
-  RecipesService,
-} from './recipes.service';
+  CreatedRecipeResponseDto,
+  PaginatedRecipesResponseDto,
+  RecipeDetailResponseDto,
+  RecipeMetadataResponseDto,
+} from './dto/recipe-response.dto';
+import { RecipesController } from './recipes.controller';
+import { RecipesService } from './recipes.service';
 
 describe('RecipesController', () => {
+  it('delegates recipe detail retrieval to the service', async () => {
+    const recipeId = '33333333-3333-4333-8333-333333333333';
+    const recipe = { id: recipeId } as RecipeDetailResponseDto;
+    const findOne = jest.fn().mockResolvedValue(recipe);
+    const controller = new RecipesController({
+      findOne,
+    } as unknown as RecipesService);
+
+    await expect(controller.findOne(recipeId)).resolves.toBe(recipe);
+    expect(findOne).toHaveBeenCalledWith(recipeId);
+  });
+
   it('delegates the paginated recipe listing to the service', async () => {
     const query: ListRecipesQueryDto = { page: 1, limit: 20 };
-    const result: PaginatedRecipes = {
+    const result: PaginatedRecipesResponseDto = {
       recipes: [],
       pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
     };
@@ -32,7 +45,7 @@ describe('RecipesController', () => {
   });
 
   it('returns recipe metadata from the service', () => {
-    const metadata: RecipeMetadata = {
+    const metadata: RecipeMetadataResponseDto = {
       categories: Object.values(RecipeCategory),
       difficulties: Object.values(RecipeDifficulty),
       units: Object.values(IngredientUnit),
@@ -65,7 +78,7 @@ describe('RecipesController', () => {
       ],
       steps: ['Cortar el tomate.'],
     };
-    const createdRecipe = { id: 'recipe-id' } as CreatedRecipe;
+    const createdRecipe = { id: 'recipe-id' } as CreatedRecipeResponseDto;
     const create = jest.fn().mockResolvedValue(createdRecipe);
     const recipesService = {
       create,

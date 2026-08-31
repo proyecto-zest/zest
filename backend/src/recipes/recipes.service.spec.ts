@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   IngredientUnit,
@@ -40,6 +40,11 @@ type RecipeFindManyMock = jest.Mock<
   [unknown]
 >;
 
+type RecipeFindUniqueMock = jest.Mock<
+  Promise<Record<string, unknown> | null>,
+  [unknown]
+>;
+
 type TransactionClientMock = {
   ingredient: { findMany: IngredientFindManyMock };
   recipe: { create: RecipeCreateMock };
@@ -73,6 +78,7 @@ describe('RecipesService', () => {
   let recipeCreate: RecipeCreateMock;
   let recipeCount: RecipeCountMock;
   let recipeFindMany: RecipeFindManyMock;
+  let recipeFindUnique: RecipeFindUniqueMock;
   let runTransaction: jest.Mock<Promise<unknown>, [TransactionOperation]>;
   let configGetOrThrow: jest.Mock<string, [string]>;
   let service: RecipesService;
@@ -83,6 +89,10 @@ describe('RecipesService', () => {
     recipeCount = jest.fn<Promise<number>, [unknown]>();
     recipeFindMany = jest.fn<
       Promise<Array<Record<string, unknown>>>,
+      [unknown]
+    >();
+    recipeFindUnique = jest.fn<
+      Promise<Record<string, unknown> | null>,
       [unknown]
     >();
     runTransaction = jest.fn<Promise<unknown>, [TransactionOperation]>(
@@ -104,11 +114,98 @@ describe('RecipesService', () => {
         recipe: {
           count: recipeCount,
           findMany: recipeFindMany,
+          findUnique: recipeFindUnique,
         },
       } as unknown as PrismaService,
       {
         getOrThrow: configGetOrThrow,
       } as unknown as ConfigService,
+    );
+  });
+
+  it('returns a recipe with ingredients, steps and images', async () => {
+    const recipeId = '33333333-3333-4333-8333-333333333333';
+    recipeFindUnique.mockResolvedValue({
+      id: recipeId,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      title: 'Ensalada de tomate',
+      description: 'Una ensalada fresca.',
+      category: RecipeCategory.ENTRADA,
+      time: 10,
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      difficulty: RecipeDifficulty.FACIL,
+      servings: 2,
+      ingredients: [
+        {
+          recipeId,
+          ingredientId: tomatoId,
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
+          ingredient: { id: tomatoId, name: 'Tomate' },
+        },
+      ],
+      steps: [
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          recipeId,
+          stepNumber: 1,
+          text: 'Cortar el tomate.',
+        },
+      ],
+      images: [
+        {
+          s3Key: DEFAULT_RECIPE_IMAGE_KEY,
+        },
+      ],
+    });
+
+    await expect(service.findOne(recipeId)).resolves.toMatchObject({
+      id: recipeId,
+      ingredients: [
+        {
+          amount: '2',
+          ingredient: { id: tomatoId, name: 'Tomate' },
+        },
+      ],
+      steps: [{ stepNumber: 1, text: 'Cortar el tomate.' }],
+      imageUrl: defaultImageUrl,
+    });
+    expect(recipeFindUnique).toHaveBeenCalledWith({
+      where: { id: recipeId },
+      include: {
+        ingredients: { include: { ingredient: true } },
+        steps: { orderBy: { stepNumber: 'asc' } },
+        images: { select: { s3Key: true }, take: 1 },
+      },
+    });
+  });
+
+  it('uses the default image when the recipe detail has no images', async () => {
+    recipeFindUnique.mockResolvedValue({
+      id: tomatoId,
+      authorId: null,
+      title: 'Receta sin imagen',
+      description: 'Descripción.',
+      category: RecipeCategory.ALMUERZO,
+      time: 10,
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      difficulty: RecipeDifficulty.FACIL,
+      servings: 2,
+      ingredients: [],
+      steps: [],
+      images: [],
+    });
+
+    const recipe = await service.findOne(tomatoId);
+
+    expect(recipe.imageUrl).toBe(defaultImageUrl);
+  });
+
+  it('throws not found when the recipe does not exist', async () => {
+    recipeFindUnique.mockResolvedValue(null);
+
+    await expect(service.findOne(tomatoId)).rejects.toThrow(
+      new NotFoundException('Recipe not found'),
     );
   });
 

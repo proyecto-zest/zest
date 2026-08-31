@@ -13,7 +13,7 @@ import request from 'supertest';
 import { loadIngredientNames, seedIngredients } from '../prisma/seed';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
-import { RecipeMetadata } from '../src/recipes/recipes.service';
+import { RecipeMetadataResponseDto } from '../src/recipes/dto/recipe-response.dto';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -66,7 +66,7 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes/metadata')
       .expect(200);
-    const metadata = response.body as RecipeMetadata;
+    const metadata = response.body as RecipeMetadataResponseDto;
 
     expect(metadata).toEqual({
       categories: Object.values(RecipeCategory),

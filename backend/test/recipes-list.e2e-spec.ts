@@ -16,7 +16,7 @@ import {
   DEFAULT_RECIPES_PAGE,
   MAX_RECIPES_LIMIT,
 } from '../src/recipes/recipes.constants';
-import { PaginatedRecipes } from '../src/recipes/recipes.service';
+import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -93,7 +93,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes')
       .expect(200);
-    const body = response.body as PaginatedRecipes;
+    const body = response.body as PaginatedRecipesResponseDto;
 
     expect(body.recipes).toHaveLength(DEFAULT_RECIPES_LIMIT);
     expect(body.pagination).toEqual({
@@ -110,7 +110,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes')
       .expect(200);
-    const body = response.body as PaginatedRecipes;
+    const body = response.body as PaginatedRecipesResponseDto;
 
     expect(Object.keys(body.recipes[0]).sort()).toEqual(
       [
@@ -135,8 +135,8 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const secondResponse = await request(app.getHttpServer() as Server)
       .get('/recipes?page=2&limit=10')
       .expect(200);
-    const firstPage = firstResponse.body as PaginatedRecipes;
-    const secondPage = secondResponse.body as PaginatedRecipes;
+    const firstPage = firstResponse.body as PaginatedRecipesResponseDto;
+    const secondPage = secondResponse.body as PaginatedRecipesResponseDto;
     const receivedIds = [...firstPage.recipes, ...secondPage.recipes].map(
       ({ id }) => id,
     );
@@ -149,7 +149,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes')
       .expect(200);
-    const body = response.body as PaginatedRecipes;
+    const body = response.body as PaginatedRecipesResponseDto;
 
     expect(body).toEqual({
       recipes: [],
@@ -168,7 +168,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get(`/recipes?limit=${MAX_RECIPES_LIMIT + 50}`)
       .expect(200);
-    const body = response.body as PaginatedRecipes;
+    const body = response.body as PaginatedRecipesResponseDto;
 
     expect(body.recipes).toHaveLength(MAX_RECIPES_LIMIT);
     expect(body.pagination).toMatchObject({
@@ -203,7 +203,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes?limit=3')
       .expect(200);
-    const body = response.body as PaginatedRecipes;
+    const body = response.body as PaginatedRecipesResponseDto;
 
     expect(body.recipes.map(({ id }) => id)).toEqual([ids[0], ids[2], ids[1]]);
   });

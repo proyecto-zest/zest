@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   IngredientUnit,
@@ -11,6 +15,12 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
+import {
+  CreatedRecipeResponseDto,
+  PaginatedRecipesResponseDto,
+  RecipeDetailResponseDto,
+  RecipeMetadataResponseDto,
+} from './dto/recipe-response.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPE_IMAGE_KEY,
@@ -29,10 +39,6 @@ const createdRecipeInclude = {
   },
 } satisfies Prisma.RecipeInclude;
 
-type CreatedRecipeRecord = Prisma.RecipeGetPayload<{
-  include: typeof createdRecipeInclude;
-}>;
-
 const recipeCardSelect = {
   id: true,
   title: true,
@@ -46,34 +52,18 @@ const recipeCardSelect = {
   },
 } satisfies Prisma.RecipeSelect;
 
-type RecipeCardRecord = Prisma.RecipeGetPayload<{
-  select: typeof recipeCardSelect;
-}>;
-
-export type CreatedRecipe = Omit<CreatedRecipeRecord, 'images'> & {
-  imageUrl: string;
-};
-
-export type RecipeMetadata = {
-  categories: string[];
-  difficulties: string[];
-  units: string[];
-  timeUnits: string[];
-};
-
-export type RecipeCard = Omit<RecipeCardRecord, 'images'> & {
-  imageUrl: string;
-};
-
-export type PaginatedRecipes = {
-  recipes: RecipeCard[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-};
+const recipeDetailInclude = {
+  ingredients: {
+    include: { ingredient: true },
+  },
+  steps: {
+    orderBy: { stepNumber: 'asc' },
+  },
+  images: {
+    select: { s3Key: true },
+    take: 1,
+  },
+} satisfies Prisma.RecipeInclude;
 
 @Injectable()
 export class RecipesService {
@@ -82,7 +72,7 @@ export class RecipesService {
     private readonly configService: ConfigService,
   ) {}
 
-  getMetadata(): RecipeMetadata {
+  getMetadata(): RecipeMetadataResponseDto {
     return {
       categories: Object.values(RecipeCategory),
       difficulties: Object.values(RecipeDifficulty),
@@ -91,7 +81,9 @@ export class RecipesService {
     };
   }
 
-  async findAll(query: ListRecipesQueryDto): Promise<PaginatedRecipes> {
+  async findAll(
+    query: ListRecipesQueryDto,
+  ): Promise<PaginatedRecipesResponseDto> {
     const page = query.page;
     const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
     const where: Prisma.RecipeWhereInput = {};
@@ -120,7 +112,27 @@ export class RecipesService {
     };
   }
 
-  async create(createRecipeDto: CreateRecipeDto): Promise<CreatedRecipe> {
+  async findOne(id: string): Promise<RecipeDetailResponseDto> {
+    const recipe = await this.prisma.recipe.findUnique({
+      where: { id },
+      include: recipeDetailInclude,
+    });
+
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
+    const { images, ...recipeDetail } = recipe;
+
+    return {
+      ...recipeDetail,
+      imageUrl: this.buildS3Url(images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY),
+    };
+  }
+
+  async create(
+    createRecipeDto: CreateRecipeDto,
+  ): Promise<CreatedRecipeResponseDto> {
     return this.prisma.$transaction(async (transaction) => {
       const ingredientIds = createRecipeDto.ingredients.map(
         ({ ingredientId }) => ingredientId,
