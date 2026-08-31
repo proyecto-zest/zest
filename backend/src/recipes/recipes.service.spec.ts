@@ -98,6 +98,7 @@ describe('RecipesService', () => {
       categories: Object.values(RecipeCategory),
       difficulties: Object.values(RecipeDifficulty),
       units: Object.values(IngredientUnit),
+      timeUnits: Object.values(RecipeTimeUnit),
     });
   });
 

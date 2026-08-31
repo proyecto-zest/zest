@@ -4,6 +4,7 @@ import {
   PrismaClient,
   RecipeCategory,
   RecipeDifficulty,
+  RecipeTimeUnit,
 } from '@prisma/client';
 import { Test } from '@nestjs/testing';
 import { Server } from 'node:http';
@@ -69,9 +70,11 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
       categories: Object.values(RecipeCategory),
       difficulties: Object.values(RecipeDifficulty),
       units: Object.values(IngredientUnit),
+      timeUnits: Object.values(RecipeTimeUnit),
     });
     expect(metadata.categories).not.toHaveLength(0);
     expect(metadata.difficulties).not.toHaveLength(0);
     expect(metadata.units).not.toHaveLength(0);
+    expect(metadata.timeUnits).not.toHaveLength(0);
   });
 });

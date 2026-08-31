@@ -5,6 +5,7 @@ import {
   Prisma,
   RecipeCategory,
   RecipeDifficulty,
+  RecipeTimeUnit,
 } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -38,6 +39,7 @@ export type RecipeMetadata = {
   categories: string[];
   difficulties: string[];
   units: string[];
+  timeUnits: string[];
 };
 
 @Injectable()
@@ -52,6 +54,7 @@ export class RecipesService {
       categories: Object.values(RecipeCategory),
       difficulties: Object.values(RecipeDifficulty),
       units: Object.values(IngredientUnit),
+      timeUnits: Object.values(RecipeTimeUnit),
     };
   }
 
