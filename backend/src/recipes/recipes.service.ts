@@ -10,9 +10,11 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
+import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPE_IMAGE_KEY,
+  MAX_RECIPES_LIMIT,
 } from './recipes.constants';
 
 const createdRecipeInclude = {
@@ -31,6 +33,23 @@ type CreatedRecipeRecord = Prisma.RecipeGetPayload<{
   include: typeof createdRecipeInclude;
 }>;
 
+const recipeCardSelect = {
+  id: true,
+  title: true,
+  category: true,
+  difficulty: true,
+  time: true,
+  servings: true,
+  images: {
+    select: { s3Key: true },
+    take: 1,
+  },
+} satisfies Prisma.RecipeSelect;
+
+type RecipeCardRecord = Prisma.RecipeGetPayload<{
+  select: typeof recipeCardSelect;
+}>;
+
 export type CreatedRecipe = Omit<CreatedRecipeRecord, 'images'> & {
   imageUrl: string;
 };
@@ -40,6 +59,20 @@ export type RecipeMetadata = {
   difficulties: string[];
   units: string[];
   timeUnits: string[];
+};
+
+export type RecipeCard = Omit<RecipeCardRecord, 'images'> & {
+  imageUrl: string;
+};
+
+export type PaginatedRecipes = {
+  recipes: RecipeCard[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 };
 
 @Injectable()
@@ -55,6 +88,35 @@ export class RecipesService {
       difficulties: Object.values(RecipeDifficulty),
       units: Object.values(IngredientUnit),
       timeUnits: Object.values(RecipeTimeUnit),
+    };
+  }
+
+  async findAll(query: ListRecipesQueryDto): Promise<PaginatedRecipes> {
+    const page = query.page;
+    const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
+    const where: Prisma.RecipeWhereInput = {};
+    const [total, recipes] = await Promise.all([
+      this.prisma.recipe.count({ where }),
+      this.prisma.recipe.findMany({
+        where,
+        select: recipeCardSelect,
+        orderBy: { id: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      recipes: recipes.map(({ images, ...recipe }) => ({
+        ...recipe,
+        imageUrl: this.buildS3Url(images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY),
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

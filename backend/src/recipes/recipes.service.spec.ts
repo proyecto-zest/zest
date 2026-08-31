@@ -12,6 +12,7 @@ import { CreateRecipeDto } from './dto/create-recipe.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPE_IMAGE_KEY,
+  MAX_RECIPES_LIMIT,
 } from './recipes.constants';
 import { RecipesService } from './recipes.service';
 
@@ -31,6 +32,13 @@ type IngredientFindManyMock = jest.Mock<
 >;
 
 type RecipeCreateMock = jest.Mock<Promise<Record<string, unknown>>, [unknown]>;
+
+type RecipeCountMock = jest.Mock<Promise<number>, [unknown]>;
+
+type RecipeFindManyMock = jest.Mock<
+  Promise<Array<Record<string, unknown>>>,
+  [unknown]
+>;
 
 type TransactionClientMock = {
   ingredient: { findMany: IngredientFindManyMock };
@@ -63,6 +71,8 @@ describe('RecipesService', () => {
 
   let ingredientFindMany: IngredientFindManyMock;
   let recipeCreate: RecipeCreateMock;
+  let recipeCount: RecipeCountMock;
+  let recipeFindMany: RecipeFindManyMock;
   let runTransaction: jest.Mock<Promise<unknown>, [TransactionOperation]>;
   let configGetOrThrow: jest.Mock<string, [string]>;
   let service: RecipesService;
@@ -70,6 +80,11 @@ describe('RecipesService', () => {
   beforeEach(() => {
     ingredientFindMany = jest.fn<Promise<Array<{ id: string }>>, [unknown]>();
     recipeCreate = jest.fn<Promise<Record<string, unknown>>, [unknown]>();
+    recipeCount = jest.fn<Promise<number>, [unknown]>();
+    recipeFindMany = jest.fn<
+      Promise<Array<Record<string, unknown>>>,
+      [unknown]
+    >();
     runTransaction = jest.fn<Promise<unknown>, [TransactionOperation]>(
       async (operation) =>
         operation({
@@ -86,11 +101,112 @@ describe('RecipesService', () => {
     service = new RecipesService(
       {
         $transaction: runTransaction,
+        recipe: {
+          count: recipeCount,
+          findMany: recipeFindMany,
+        },
       } as unknown as PrismaService,
       {
         getOrThrow: configGetOrThrow,
       } as unknown as ConfigService,
     );
+  });
+
+  it('returns paginated recipe cards without nested records', async () => {
+    recipeCount.mockResolvedValue(1);
+    recipeFindMany.mockResolvedValue([
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        title: 'Ensalada de tomate',
+        category: RecipeCategory.ENTRADA,
+        difficulty: RecipeDifficulty.FACIL,
+        time: 10,
+        servings: 2,
+        images: [{ s3Key: 'recipes/recipe.webp' }],
+      },
+    ]);
+
+    await expect(service.findAll({ page: 1, limit: 20 })).resolves.toEqual({
+      recipes: [
+        {
+          id: '33333333-3333-4333-8333-333333333333',
+          title: 'Ensalada de tomate',
+          category: RecipeCategory.ENTRADA,
+          difficulty: RecipeDifficulty.FACIL,
+          time: 10,
+          servings: 2,
+          imageUrl:
+            'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/recipe.webp',
+        },
+      ],
+      pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
+    });
+    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
+    expect(recipeFindMany).toHaveBeenCalledWith({
+      where: {},
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        difficulty: true,
+        time: true,
+        servings: true,
+        images: { select: { s3Key: true }, take: 1 },
+      },
+      orderBy: { id: 'desc' },
+      skip: 0,
+      take: 20,
+    });
+  });
+
+  it('caps the requested limit and calculates its pagination', async () => {
+    recipeCount.mockResolvedValue(250);
+    recipeFindMany.mockResolvedValue([]);
+
+    await expect(service.findAll({ page: 2, limit: 500 })).resolves.toEqual({
+      recipes: [],
+      pagination: {
+        total: 250,
+        page: 2,
+        limit: MAX_RECIPES_LIMIT,
+        totalPages: 3,
+      },
+    });
+    expect(recipeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: MAX_RECIPES_LIMIT,
+        take: MAX_RECIPES_LIMIT,
+      }),
+    );
+  });
+
+  it('returns an empty first page when there are no recipes', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await expect(service.findAll({ page: 1, limit: 20 })).resolves.toEqual({
+      recipes: [],
+      pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+    });
+  });
+
+  it('uses the default image when a recipe has no images', async () => {
+    recipeCount.mockResolvedValue(1);
+    recipeFindMany.mockResolvedValue([
+      {
+        id: '33333333-3333-4333-8333-333333333333',
+        title: 'Ensalada de tomate',
+        category: RecipeCategory.ENTRADA,
+        difficulty: RecipeDifficulty.FACIL,
+        time: 10,
+        servings: 2,
+        images: [],
+      },
+    ]);
+
+    const result = await service.findAll({ page: 1, limit: 20 });
+
+    expect(result.recipes[0].imageUrl).toBe(defaultImageUrl);
   });
 
   it('returns the exact recipe selector enum values', () => {

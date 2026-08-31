@@ -6,14 +6,31 @@ import {
 } from '@prisma/client';
 
 import { CreateRecipeDto } from './dto/create-recipe.dto';
+import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import { RecipesController } from './recipes.controller';
 import {
   CreatedRecipe,
+  PaginatedRecipes,
   RecipeMetadata,
   RecipesService,
 } from './recipes.service';
 
 describe('RecipesController', () => {
+  it('delegates the paginated recipe listing to the service', async () => {
+    const query: ListRecipesQueryDto = { page: 1, limit: 20 };
+    const result: PaginatedRecipes = {
+      recipes: [],
+      pagination: { total: 0, page: 1, limit: 20, totalPages: 0 },
+    };
+    const findAll = jest.fn().mockResolvedValue(result);
+    const controller = new RecipesController({
+      findAll,
+    } as unknown as RecipesService);
+
+    await expect(controller.findAll(query)).resolves.toBe(result);
+    expect(findAll).toHaveBeenCalledWith(query);
+  });
+
   it('returns recipe metadata from the service', () => {
     const metadata: RecipeMetadata = {
       categories: Object.values(RecipeCategory),

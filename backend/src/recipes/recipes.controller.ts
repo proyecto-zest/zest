@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 
 import { CreateRecipeDto } from './dto/create-recipe.dto';
+import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import {
   CreatedRecipe,
+  PaginatedRecipes,
   RecipeMetadata,
   RecipesService,
 } from './recipes.service';
@@ -14,6 +16,11 @@ export class RecipesController {
   @Get('metadata')
   getMetadata(): RecipeMetadata {
     return this.recipesService.getMetadata();
+  }
+
+  @Get()
+  findAll(@Query() query: ListRecipesQueryDto): Promise<PaginatedRecipes> {
+    return this.recipesService.findAll(query);
   }
 
   @Post()
