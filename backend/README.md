@@ -67,9 +67,11 @@ npm run prisma:generate       # regenera Prisma Client
 npm run prisma:migrate:dev    # crea/aplica migraciones locales
 ```
 
-El test end-to-end que verifica PostgreSQL real se habilita con
-`RUN_DATABASE_TESTS=true`; el workflow de CI lo ejecuta automáticamente contra
-su servicio PostgreSQL.
+Los tests end-to-end que verifican PostgreSQL real se habilitan con
+`RUN_DATABASE_TESTS=true npm test`. Jest usa automáticamente `.env.test`, aplica
+las migraciones sobre la base aislada `zest_test` y rechaza cualquier operación
+de limpieza si `DATABASE_URL` no termina en `_test`. El workflow de CI los
+ejecuta automáticamente contra su servicio PostgreSQL.
 
 ## CI y protección de `main`
 

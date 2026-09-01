@@ -10,6 +10,8 @@ const config: Config = {
   collectCoverageFrom: ['src/**/*.ts', '!src/main.ts', '!src/**/*.module.ts'],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/test/load-test-env.ts'],
+  globalSetup: '<rootDir>/test/jest-global-setup.ts',
   maxWorkers: 1,
   coverageThreshold: {
     global: {
