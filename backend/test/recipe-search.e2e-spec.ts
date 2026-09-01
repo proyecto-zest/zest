@@ -13,6 +13,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -26,50 +27,24 @@ type SearchRecipes = {
 
 describeWithDatabase('GET /recipes search (e2e)', () => {
   const prisma = new PrismaClient();
-  const recipes: SearchRecipes = {
-    pastaTomato: '14141414-1414-4414-8414-141414141401',
-    tomatoSoup: '14141414-1414-4414-8414-141414141402',
-    greenPasta: '14141414-1414-4414-8414-141414141403',
-    salad: '14141414-1414-4414-8414-141414141404',
-  };
-  const testRecipeIds = Object.values(recipes);
   const ingredientNames = {
     tomato: 'Tomate búsqueda ZEST-14',
     cheese: 'Queso búsqueda ZEST-14',
     basil: 'Albahaca búsqueda ZEST-14',
   };
   let app: INestApplication;
+  let recipes: SearchRecipes;
   let tomatoId: string;
   let cheeseId: string;
 
-  const cleanSearchData = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipeStep.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipeIngredient.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipe.deleteMany({
-      where: { id: { in: testRecipeIds } },
-    });
-    await prisma.ingredient.deleteMany({
-      where: { name: { in: Object.values(ingredientNames) } },
-    });
-  };
-
   const createRecipe = async (
-    id: string,
     title: string,
     category: RecipeCategory,
     difficulty: RecipeDifficulty,
     ingredientIds: string[],
-  ): Promise<void> => {
-    await prisma.recipe.create({
+  ): Promise<string> => {
+    const recipe = await prisma.recipe.create({
       data: {
-        id,
         title,
         description: `Descripción de ${title}`,
         category,
@@ -86,6 +61,8 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
         },
       },
     });
+
+    return recipe.id;
   };
 
   const createSearchData = async (): Promise<void> => {
@@ -97,36 +74,33 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
     tomatoId = tomato.id;
     cheeseId = cheese.id;
 
-    await Promise.all([
+    const [pastaTomato, tomatoSoup, greenPasta, salad] = await Promise.all([
       createRecipe(
-        recipes.pastaTomato,
         'Pasta de tomate',
         RecipeCategory.ALMUERZO,
         RecipeDifficulty.FACIL,
         [tomato.id, cheese.id],
       ),
       createRecipe(
-        recipes.tomatoSoup,
         'Sopa de tomate',
         RecipeCategory.CENA,
         RecipeDifficulty.FACIL,
         [tomato.id],
       ),
       createRecipe(
-        recipes.greenPasta,
         'Pasta verde',
         RecipeCategory.ALMUERZO,
         RecipeDifficulty.MEDIA,
         [basil.id, cheese.id],
       ),
       createRecipe(
-        recipes.salad,
         'Ensalada fresca',
         RecipeCategory.ENTRADA,
         RecipeDifficulty.FACIL,
         [basil.id],
       ),
     ]);
+    recipes = { pastaTomato, tomatoSoup, greenPasta, salad };
   };
 
   const responseIds = (body: PaginatedRecipesResponseDto): Set<string> =>
@@ -134,6 +108,7 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    await resetTestDatabase(prisma);
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
@@ -145,12 +120,11 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
   });
 
   beforeEach(async () => {
-    await cleanSearchData();
+    await resetTestDatabase(prisma);
     await createSearchData();
   });
 
   afterAll(async () => {
-    await cleanSearchData();
     await app.close();
     await prisma.$disconnect();
   });

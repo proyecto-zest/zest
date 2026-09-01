@@ -7,6 +7,7 @@ import {
 } from '@prisma/client';
 
 import { loadIngredientNames, seedIngredients } from '../prisma/seed';
+import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -16,18 +17,12 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    await resetTestDatabase(prisma);
   });
 
-  beforeEach(async () => {
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipe.deleteMany();
-    await prisma.ingredient.deleteMany();
-  });
+  beforeEach(() => resetTestDatabase(prisma));
 
   afterAll(async () => {
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipe.deleteMany();
-    await prisma.ingredient.deleteMany();
     await prisma.$disconnect();
   });
 

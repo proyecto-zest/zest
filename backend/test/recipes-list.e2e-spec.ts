@@ -6,6 +6,7 @@ import {
   RecipeTimeUnit,
 } from '@prisma/client';
 import { Test } from '@nestjs/testing';
+import { randomUUID } from 'node:crypto';
 import { Server } from 'node:http';
 import request from 'supertest';
 
@@ -17,6 +18,7 @@ import {
   MAX_RECIPES_LIMIT,
 } from '../src/recipes/recipes.constants';
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -25,24 +27,8 @@ describeWithDatabase('GET /recipes (e2e)', () => {
   const prisma = new PrismaClient();
   let app: INestApplication;
 
-  const recipeId = (position: number): string =>
-    `00000000-0000-4000-8000-${position.toString().padStart(12, '0')}`;
-  const testRecipeIds = Array.from(
-    { length: MAX_RECIPES_LIMIT + 5 },
-    (_, index) => recipeId(index + 1),
-  );
-
-  const cleanRecipes = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipe.deleteMany({
-      where: { id: { in: testRecipeIds } },
-    });
-  };
-
   const createRecipes = async (count: number): Promise<string[]> => {
-    const ids = testRecipeIds.slice(0, count);
+    const ids = Array.from({ length: count }, () => randomUUID());
 
     await prisma.recipe.createMany({
       data: ids.map((id, index) => ({
@@ -69,6 +55,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    await resetTestDatabase(prisma);
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
@@ -79,10 +66,9 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     await app.init();
   });
 
-  beforeEach(cleanRecipes);
+  beforeEach(() => resetTestDatabase(prisma));
 
   afterAll(async () => {
-    await cleanRecipes();
     await app.close();
     await prisma.$disconnect();
   });
@@ -105,10 +91,10 @@ describeWithDatabase('GET /recipes (e2e)', () => {
   });
 
   it('returns only the expected recipe card fields', async () => {
-    await createRecipes(1);
+    const [recipeId] = await createRecipes(1);
     await prisma.recipeImage.create({
       data: {
-        recipeId: testRecipeIds[0],
+        recipeId,
         s3Key: 'recipes/secondary.webp',
       },
     });

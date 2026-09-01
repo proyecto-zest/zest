@@ -14,6 +14,7 @@ import { loadIngredientNames, seedIngredients } from '../prisma/seed';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
 import { RecipeMetadataResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -29,6 +30,7 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    await resetTestDatabase(prisma);
     await seedIngredients(prisma);
 
     const moduleFixture = await Test.createTestingModule({

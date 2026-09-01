@@ -12,7 +12,9 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 import { RecipeDetailResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -20,42 +22,24 @@ const describeWithDatabase =
 describeWithDatabase('GET /recipes/:id (e2e)', () => {
   const prisma = new PrismaClient();
   const ingredientName = 'Ingrediente detalle ZEST-15';
-  const recipeWithImagesId = '15151515-1515-4515-8515-151515151501';
-  const recipeWithoutImagesId = '15151515-1515-4515-8515-151515151502';
-  const testRecipeIds = [recipeWithImagesId, recipeWithoutImagesId];
   let app: INestApplication;
-
-  const cleanTestData = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipeStep.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipeIngredient.deleteMany({
-      where: { recipeId: { in: testRecipeIds } },
-    });
-    await prisma.recipe.deleteMany({
-      where: { id: { in: testRecipeIds } },
-    });
-    await prisma.ingredient.deleteMany({ where: { name: ingredientName } });
-  };
 
   beforeAll(async () => {
     await prisma.$connect();
+    await resetTestDatabase(prisma);
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    configureApp(app);
     await app.init();
   });
 
-  beforeEach(cleanTestData);
+  beforeEach(() => resetTestDatabase(prisma));
 
   afterAll(async () => {
-    await cleanTestData();
     await app.close();
     await prisma.$disconnect();
   });
@@ -63,7 +47,6 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('returns the complete data for an existing recipe', async () => {
     const recipe = await prisma.recipe.create({
       data: {
-        id: recipeWithImagesId,
         title: 'Receta de detalle',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,
@@ -144,7 +127,6 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('uses the default image when the recipe has no images', async () => {
     const recipe = await prisma.recipe.create({
       data: {
-        id: recipeWithoutImagesId,
         title: 'Receta sin imagen',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,

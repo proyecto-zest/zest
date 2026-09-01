@@ -17,6 +17,7 @@ import {
   DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPE_IMAGE_KEY,
 } from '../src/recipes/recipes.constants';
+import { resetTestDatabase } from './test-database';
 
 const DEFAULT_RECIPE_IMAGE_URL =
   'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/default.webp';
@@ -30,11 +31,13 @@ describeWithDatabase('POST /recipes (e2e)', () => {
   let tomatoId: string;
   let oilId: string;
 
-  const cleanRecipes = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany();
-    await prisma.recipeStep.deleteMany();
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipe.deleteMany();
+  const createCatalog = async (): Promise<void> => {
+    const [tomato, oil] = await Promise.all([
+      prisma.ingredient.create({ data: { name: 'Tomate' } }),
+      prisma.ingredient.create({ data: { name: 'Aceite de oliva' } }),
+    ]);
+    tomatoId = tomato.id;
+    oilId = oil.id;
   };
 
   const validRecipe = () => ({
@@ -54,20 +57,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
-    const [tomato, oil] = await Promise.all([
-      prisma.ingredient.upsert({
-        where: { name: 'Tomate' },
-        update: {},
-        create: { name: 'Tomate' },
-      }),
-      prisma.ingredient.upsert({
-        where: { name: 'Aceite de oliva' },
-        update: {},
-        create: { name: 'Aceite de oliva' },
-      }),
-    ]);
-    tomatoId = tomato.id;
-    oilId = oil.id;
+    await resetTestDatabase(prisma);
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
@@ -78,10 +68,12 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     await app.init();
   });
 
-  beforeEach(cleanRecipes);
+  beforeEach(async () => {
+    await resetTestDatabase(prisma);
+    await createCatalog();
+  });
 
   afterAll(async () => {
-    await cleanRecipes();
     await app.close();
     await prisma.$disconnect();
   });
