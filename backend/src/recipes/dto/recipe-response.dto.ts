@@ -75,5 +75,5 @@ export class PaginatedRecipesResponseDto {
 export class RecipeDetailResponseDto extends RecipeBaseResponseDto {
   ingredients!: RecipeIngredientResponseDto[];
   steps!: RecipeStepResponseDto[];
-  imageUrl!: string;
+  imageUrls!: string[];
 }

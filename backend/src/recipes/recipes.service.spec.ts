@@ -59,6 +59,8 @@ describe('RecipesService', () => {
   const oilId = '22222222-2222-4222-8222-222222222222';
   const defaultImageUrl =
     'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/default.webp';
+  const secondaryImageUrl =
+    'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/secondary.webp';
   const createRecipeDto: CreateRecipeDto = {
     title: 'Ensalada de tomate',
     description: 'Una ensalada fresca.',
@@ -156,26 +158,48 @@ describe('RecipesService', () => {
         {
           s3Key: DEFAULT_RECIPE_IMAGE_KEY,
         },
+        {
+          s3Key: 'recipes/secondary.webp',
+        },
       ],
+      internalField: 'must not be exposed',
     });
 
-    await expect(service.findOne(recipeId)).resolves.toMatchObject({
+    await expect(service.findOne(recipeId)).resolves.toEqual({
       id: recipeId,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      title: 'Ensalada de tomate',
+      description: 'Una ensalada fresca.',
+      category: RecipeCategory.ENTRADA,
+      time: 10,
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      difficulty: RecipeDifficulty.FACIL,
+      servings: 2,
       ingredients: [
         {
+          recipeId,
+          ingredientId: tomatoId,
           amount: '2',
+          unit: IngredientUnit.UNIDAD,
           ingredient: { id: tomatoId, name: 'Tomate' },
         },
       ],
-      steps: [{ stepNumber: 1, text: 'Cortar el tomate.' }],
-      imageUrl: defaultImageUrl,
+      steps: [
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          recipeId,
+          stepNumber: 1,
+          text: 'Cortar el tomate.',
+        },
+      ],
+      imageUrls: [defaultImageUrl, secondaryImageUrl],
     });
     expect(recipeFindUnique).toHaveBeenCalledWith({
       where: { id: recipeId },
       include: {
         ingredients: { include: { ingredient: true } },
         steps: { orderBy: { stepNumber: 'asc' } },
-        images: { select: { s3Key: true }, take: 1 },
+        images: { select: { s3Key: true } },
       },
     });
   });
@@ -198,7 +222,7 @@ describe('RecipesService', () => {
 
     const recipe = await service.findOne(tomatoId);
 
-    expect(recipe.imageUrl).toBe(defaultImageUrl);
+    expect(recipe.imageUrls).toEqual([defaultImageUrl]);
   });
 
   it('throws not found when the recipe does not exist', async () => {
@@ -330,12 +354,16 @@ describe('RecipesService', () => {
       ingredients: [],
       steps: [],
       images: [{ s3Key: DEFAULT_RECIPE_IMAGE_KEY }],
+      internalField: 'must not be exposed',
     });
 
-    await expect(service.create(createRecipeDto)).resolves.toMatchObject({
+    const createdRecipe = await service.create(createRecipeDto);
+
+    expect(createdRecipe).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
       imageUrl: defaultImageUrl,
     });
+    expect(createdRecipe).not.toHaveProperty('internalField');
     expect(runTransaction).toHaveBeenCalledTimes(1);
     const [createArguments] = recipeCreate.mock.calls[0] as [
       RecipeCreateArguments,

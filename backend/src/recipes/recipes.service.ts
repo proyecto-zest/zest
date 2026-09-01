@@ -61,9 +61,16 @@ const recipeDetailInclude = {
   },
   images: {
     select: { s3Key: true },
-    take: 1,
   },
 } satisfies Prisma.RecipeInclude;
+
+type CreatedRecipeRecord = Prisma.RecipeGetPayload<{
+  include: typeof createdRecipeInclude;
+}>;
+
+type RecipeDetailRecord = Prisma.RecipeGetPayload<{
+  include: typeof recipeDetailInclude;
+}>;
 
 @Injectable()
 export class RecipesService {
@@ -122,12 +129,7 @@ export class RecipesService {
       throw new NotFoundException('Recipe not found');
     }
 
-    const { images, ...recipeDetail } = recipe;
-
-    return {
-      ...recipeDetail,
-      imageUrl: this.buildS3Url(images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY),
-    };
+    return this.toRecipeDetailResponse(recipe);
   }
 
   async create(
@@ -184,13 +186,80 @@ export class RecipesService {
         },
         include: createdRecipeInclude,
       });
-      const { images, ...createdRecipe } = recipe;
-
-      return {
-        ...createdRecipe,
-        imageUrl: this.buildS3Url(images[0].s3Key),
-      };
+      return this.toCreatedRecipeResponse(recipe);
     });
+  }
+
+  private toCreatedRecipeResponse(
+    recipe: CreatedRecipeRecord,
+  ): CreatedRecipeResponseDto {
+    return {
+      id: recipe.id,
+      authorId: recipe.authorId,
+      title: recipe.title,
+      description: recipe.description,
+      category: recipe.category,
+      time: recipe.time,
+      timeUnit: recipe.timeUnit,
+      difficulty: recipe.difficulty,
+      servings: recipe.servings,
+      ingredients: recipe.ingredients.map((recipeIngredient) => ({
+        recipeId: recipeIngredient.recipeId,
+        ingredientId: recipeIngredient.ingredientId,
+        amount: recipeIngredient.amount,
+        unit: recipeIngredient.unit,
+        ingredient: {
+          id: recipeIngredient.ingredient.id,
+          name: recipeIngredient.ingredient.name,
+        },
+      })),
+      steps: recipe.steps.map((step) => ({
+        id: step.id,
+        recipeId: step.recipeId,
+        stepNumber: step.stepNumber,
+        text: step.text,
+      })),
+      imageUrl: this.buildS3Url(
+        recipe.images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY,
+      ),
+    };
+  }
+
+  private toRecipeDetailResponse(
+    recipe: RecipeDetailRecord,
+  ): RecipeDetailResponseDto {
+    const imageKeys = recipe.images.length
+      ? recipe.images.map(({ s3Key }) => s3Key)
+      : [DEFAULT_RECIPE_IMAGE_KEY];
+
+    return {
+      id: recipe.id,
+      authorId: recipe.authorId,
+      title: recipe.title,
+      description: recipe.description,
+      category: recipe.category,
+      time: recipe.time,
+      timeUnit: recipe.timeUnit,
+      difficulty: recipe.difficulty,
+      servings: recipe.servings,
+      ingredients: recipe.ingredients.map((recipeIngredient) => ({
+        recipeId: recipeIngredient.recipeId,
+        ingredientId: recipeIngredient.ingredientId,
+        amount: recipeIngredient.amount,
+        unit: recipeIngredient.unit,
+        ingredient: {
+          id: recipeIngredient.ingredient.id,
+          name: recipeIngredient.ingredient.name,
+        },
+      })),
+      steps: recipe.steps.map((step) => ({
+        id: step.id,
+        recipeId: step.recipeId,
+        stepNumber: step.stepNumber,
+        text: step.text,
+      })),
+      imageUrls: imageKeys.map((imageKey) => this.buildS3Url(imageKey)),
+    };
   }
 
   private buildS3Url(s3Key: string): string {

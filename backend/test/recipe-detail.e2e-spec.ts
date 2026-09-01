@@ -12,6 +12,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { RecipeDetailResponseDto } from '../src/recipes/dto/recipe-response.dto';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -19,13 +20,24 @@ const describeWithDatabase =
 describeWithDatabase('GET /recipes/:id (e2e)', () => {
   const prisma = new PrismaClient();
   const ingredientName = 'Ingrediente detalle ZEST-15';
+  const recipeWithImagesId = '15151515-1515-4515-8515-151515151501';
+  const recipeWithoutImagesId = '15151515-1515-4515-8515-151515151502';
+  const testRecipeIds = [recipeWithImagesId, recipeWithoutImagesId];
   let app: INestApplication;
 
   const cleanTestData = async (): Promise<void> => {
-    await prisma.recipeImage.deleteMany();
-    await prisma.recipeStep.deleteMany();
-    await prisma.recipeIngredient.deleteMany();
-    await prisma.recipe.deleteMany();
+    await prisma.recipeImage.deleteMany({
+      where: { recipeId: { in: testRecipeIds } },
+    });
+    await prisma.recipeStep.deleteMany({
+      where: { recipeId: { in: testRecipeIds } },
+    });
+    await prisma.recipeIngredient.deleteMany({
+      where: { recipeId: { in: testRecipeIds } },
+    });
+    await prisma.recipe.deleteMany({
+      where: { id: { in: testRecipeIds } },
+    });
     await prisma.ingredient.deleteMany({ where: { name: ingredientName } });
   };
 
@@ -51,6 +63,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('returns the complete data for an existing recipe', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        id: recipeWithImagesId,
         title: 'Receta de detalle',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,
@@ -72,7 +85,10 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
           ],
         },
         images: {
-          create: { s3Key: 'recipes/detail.webp' },
+          create: [
+            { s3Key: 'recipes/detail.webp' },
+            { s3Key: 'recipes/detail-secondary.webp' },
+          ],
         },
       },
     });
@@ -80,8 +96,9 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get(`/recipes/${recipe.id}`)
       .expect(200);
+    const body = response.body as RecipeDetailResponseDto;
 
-    expect(response.body).toMatchObject({
+    expect(body).toMatchObject({
       id: recipe.id,
       authorId: null,
       title: 'Receta de detalle',
@@ -102,10 +119,14 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
         { stepNumber: 1, text: 'Preparar los ingredientes.' },
         { stepNumber: 2, text: 'Cocinar la receta.' },
       ],
-      imageUrl:
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/detail.webp',
     });
-    expect(response.body).not.toHaveProperty('images');
+    expect([...body.imageUrls].sort()).toEqual(
+      [
+        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/detail.webp',
+        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/detail-secondary.webp',
+      ].sort(),
+    );
+    expect(body).not.toHaveProperty('images');
   });
 
   it('returns 404 when the recipe does not exist', async () => {
@@ -123,6 +144,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('uses the default image when the recipe has no images', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        id: recipeWithoutImagesId,
         title: 'Receta sin imagen',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,
@@ -136,10 +158,12 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     const response = await request(app.getHttpServer() as Server)
       .get(`/recipes/${recipe.id}`)
       .expect(200);
+    const body = response.body as RecipeDetailResponseDto;
 
-    expect(response.body).toMatchObject({
-      imageUrl:
+    expect(body).toMatchObject({
+      imageUrls: [
         'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/default.webp',
+      ],
     });
   });
 });
