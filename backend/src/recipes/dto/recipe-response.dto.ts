@@ -53,7 +53,7 @@ export class RecipeMetadataResponseDto {
 export class RecipeCardResponseDto {
   id!: string;
   title!: string;
-  imageUrl!: string;
+  imageUrls!: string[];
   category!: RecipeCategory;
   difficulty!: RecipeDifficulty;
   time!: number;

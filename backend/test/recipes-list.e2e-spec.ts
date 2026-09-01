@@ -106,6 +106,12 @@ describeWithDatabase('GET /recipes (e2e)', () => {
 
   it('returns only the expected recipe card fields', async () => {
     await createRecipes(1);
+    await prisma.recipeImage.create({
+      data: {
+        recipeId: testRecipeIds[0],
+        s3Key: 'recipes/secondary.webp',
+      },
+    });
 
     const response = await request(app.getHttpServer() as Server)
       .get('/recipes')
@@ -116,11 +122,17 @@ describeWithDatabase('GET /recipes (e2e)', () => {
       [
         'id',
         'title',
-        'imageUrl',
+        'imageUrls',
         'category',
         'difficulty',
         'time',
         'servings',
+      ].sort(),
+    );
+    expect([...body.recipes[0].imageUrls].sort()).toEqual(
+      [
+        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/1.webp',
+        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/secondary.webp',
       ].sort(),
     );
   });

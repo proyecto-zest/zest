@@ -48,7 +48,6 @@ const recipeCardSelect = {
   servings: true,
   images: {
     select: { s3Key: true },
-    take: 1,
   },
 } satisfies Prisma.RecipeSelect;
 
@@ -106,10 +105,16 @@ export class RecipesService {
     ]);
 
     return {
-      recipes: recipes.map(({ images, ...recipe }) => ({
-        ...recipe,
-        imageUrl: this.buildS3Url(images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY),
-      })),
+      recipes: recipes.map(({ images, ...recipe }) => {
+        const imageKeys = images.length
+          ? images.map(({ s3Key }) => s3Key)
+          : [DEFAULT_RECIPE_IMAGE_KEY];
+
+        return {
+          ...recipe,
+          imageUrls: imageKeys.map((imageKey) => this.buildS3Url(imageKey)),
+        };
+      }),
       pagination: {
         total,
         page,

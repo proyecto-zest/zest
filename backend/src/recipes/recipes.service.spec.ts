@@ -243,7 +243,10 @@ describe('RecipesService', () => {
         difficulty: RecipeDifficulty.FACIL,
         time: 10,
         servings: 2,
-        images: [{ s3Key: 'recipes/recipe.webp' }],
+        images: [
+          { s3Key: 'recipes/recipe.webp' },
+          { s3Key: 'recipes/secondary.webp' },
+        ],
       },
     ]);
 
@@ -256,8 +259,10 @@ describe('RecipesService', () => {
           difficulty: RecipeDifficulty.FACIL,
           time: 10,
           servings: 2,
-          imageUrl:
+          imageUrls: [
             'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/recipe.webp',
+            secondaryImageUrl,
+          ],
         },
       ],
       pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
@@ -272,7 +277,7 @@ describe('RecipesService', () => {
         difficulty: true,
         time: true,
         servings: true,
-        images: { select: { s3Key: true }, take: 1 },
+        images: { select: { s3Key: true } },
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       skip: 0,
@@ -327,7 +332,7 @@ describe('RecipesService', () => {
 
     const result = await service.findAll({ page: 1, limit: 20 });
 
-    expect(result.recipes[0].imageUrl).toBe(defaultImageUrl);
+    expect(result.recipes[0].imageUrls).toEqual([defaultImageUrl]);
   });
 
   it('returns the exact recipe selector enum values', () => {
