@@ -21,6 +21,7 @@ export function IngredientsSection({ form, catalog, units }: IngredientsSectionP
             row={row}
             catalog={catalog}
             units={units}
+            canRemove={form.ingredients.rows.length > 1}
             onChange={(patch) => form.ingredients.update(row.id, patch)}
             onRemove={() => form.ingredients.remove(row.id)}
           />

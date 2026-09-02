@@ -20,6 +20,7 @@ export function StepsSection({ form }: StepsSectionProps) {
             key={row.id}
             stepNumber={index + 1}
             text={row.text}
+            canRemove={form.steps.rows.length > 1}
             onChange={(text) => form.steps.update(row.id, { text })}
             onRemove={() => form.steps.remove(row.id)}
             isDragging={draggedId === row.id}

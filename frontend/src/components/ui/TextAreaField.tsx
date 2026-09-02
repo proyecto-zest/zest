@@ -36,7 +36,7 @@ export function TextAreaField({
       error={error}
       errorId={errorId}
       htmlFor={label ? id : undefined}
-      className="flex-1"
+      className="min-w-0 flex-1"
     >
       <textarea
         id={label ? id : undefined}
