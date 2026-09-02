@@ -6,7 +6,6 @@ import { RemoveRowButton } from '../../../components/ui/RemoveRowButton'
 interface StepRowProps {
   stepNumber: number
   text: string
-  canRemove: boolean
   isDragging: boolean
   onChange: (text: string) => void
   onRemove: () => void
@@ -19,7 +18,6 @@ interface StepRowProps {
 export function StepRow({
   stepNumber,
   text,
-  canRemove,
   isDragging,
   onChange,
   onRemove,
@@ -54,7 +52,7 @@ export function StepRow({
         rows={2}
         aria-label={`Step ${stepNumber}`}
       />
-      <RemoveRowButton onClick={onRemove} visible={canRemove} />
+      <RemoveRowButton onClick={onRemove} />
     </div>
   )
 }

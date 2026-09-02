@@ -13,7 +13,7 @@ export function CoverImageAddTile({ compact, onClick }: CoverImageAddTileProps) 
       type="button"
       onClick={onClick}
       className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-secondary text-muted-foreground ${
-        compact ? 'aspect-square rounded-xl' : 'aspect-[21/9] rounded-2xl'
+        compact ? 'aspect-square rounded-xl' : 'aspect-[21/9] w-full rounded-2xl'
       }`}
     >
       <ImagePlus aria-hidden="true" className={compact ? 'h-6 w-6' : 'h-8 w-8'} />

@@ -1,6 +1,7 @@
 import { useId } from 'react'
 import { FieldWrap } from './FieldWrap'
 import { fieldInputClasses } from './fieldInputClasses'
+import { SelectChevron } from './SelectChevron'
 
 interface SelectFieldProps {
   label?: string
@@ -14,7 +15,7 @@ interface SelectFieldProps {
   'aria-label'?: string
 }
 
-/** Labeled select. Label is optional for use inside repeated rows. */
+/** Labeled select with a fixed-position chevron instead of the browser's own. */
 export function SelectField({
   label,
   value,
@@ -31,26 +32,29 @@ export function SelectField({
 
   return (
     <FieldWrap label={label} required={required} error={error} errorId={errorId} htmlFor={label ? id : undefined}>
-      <select
-        id={label ? id : undefined}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        disabled={disabled}
-        aria-label={label ? undefined : ariaLabel}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        className={fieldInputClasses(error)}
-      >
-        <option value="" disabled>
-          {placeholder ?? 'Select…'}
-        </option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
+      <div className="relative">
+        <select
+          id={label ? id : undefined}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          disabled={disabled}
+          aria-label={label ? undefined : ariaLabel}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
+          className={fieldInputClasses(error, 'w-full appearance-none pr-10')}
+        >
+          <option value="" disabled>
+            {placeholder ?? 'Select…'}
           </option>
-        ))}
-      </select>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <SelectChevron />
+      </div>
     </FieldWrap>
   )
 }

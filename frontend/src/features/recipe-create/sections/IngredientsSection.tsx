@@ -12,8 +12,6 @@ interface IngredientsSectionProps {
 
 /** The dynamic ingredients list: add and remove rows before submitting. */
 export function IngredientsSection({ form, catalog, units }: IngredientsSectionProps) {
-  const canRemove = form.ingredients.rows.length > 1
-
   return (
     <Card title="Ingredients">
       <div className="flex flex-col gap-2.5">
@@ -23,7 +21,6 @@ export function IngredientsSection({ form, catalog, units }: IngredientsSectionP
             row={row}
             catalog={catalog}
             units={units}
-            canRemove={canRemove}
             onChange={(patch) => form.ingredients.update(row.id, patch)}
             onRemove={() => form.ingredients.remove(row.id)}
           />

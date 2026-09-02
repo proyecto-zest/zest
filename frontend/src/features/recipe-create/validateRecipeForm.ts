@@ -14,12 +14,14 @@ export function validateRecipeForm(values: RecipeFormValues): string[] {
     errors.push('Servings must be at least 1.')
   }
 
+  if (values.ingredients.length === 0) errors.push('Add at least one ingredient.')
   values.ingredients.forEach((row, index) => {
     if (!row.ingredientId) errors.push(`Ingredient #${index + 1}: pick an ingredient.`)
     if (!row.amount.trim()) errors.push(`Ingredient #${index + 1}: amount is required.`)
     if (!row.unit) errors.push(`Ingredient #${index + 1}: pick a unit.`)
   })
 
+  if (values.steps.length === 0) errors.push('Add at least one step.')
   values.steps.forEach((row, index) => {
     if (!row.text.trim()) errors.push(`Step #${index + 1} is empty.`)
   })

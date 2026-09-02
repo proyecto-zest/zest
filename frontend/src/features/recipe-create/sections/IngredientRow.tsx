@@ -8,12 +8,11 @@ interface IngredientRowProps {
   row: IngredientRowValue
   catalog: Ingredient[]
   units: string[]
-  canRemove: boolean
   onChange: (patch: Partial<IngredientRowValue>) => void
   onRemove: () => void
 }
 
-export function IngredientRow({ row, catalog, units, canRemove, onChange, onRemove }: IngredientRowProps) {
+export function IngredientRow({ row, catalog, units, onChange, onRemove }: IngredientRowProps) {
   const catalogOptions = catalog.map((i) => ({ value: i.id, label: i.name }))
 
   return (
@@ -45,7 +44,7 @@ export function IngredientRow({ row, catalog, units, canRemove, onChange, onRemo
           aria-label="Unit"
         />
       </div>
-      <RemoveRowButton onClick={onRemove} visible={canRemove} />
+      <RemoveRowButton onClick={onRemove} />
     </div>
   )
 }

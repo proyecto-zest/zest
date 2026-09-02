@@ -11,7 +11,6 @@ interface StepsSectionProps {
 /** The dynamic steps list: add, remove and drag-reorder rows before submitting. */
 export function StepsSection({ form }: StepsSectionProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
-  const canRemove = form.steps.rows.length > 1
 
   return (
     <Card title="Instructions">
@@ -21,7 +20,6 @@ export function StepsSection({ form }: StepsSectionProps) {
             key={row.id}
             stepNumber={index + 1}
             text={row.text}
-            canRemove={canRemove}
             onChange={(text) => form.steps.update(row.id, { text })}
             onRemove={() => form.steps.remove(row.id)}
             isDragging={draggedId === row.id}
