@@ -1,0 +1,42 @@
+import { SelectField } from '../../../components/ui/SelectField'
+import { TextField } from '../../../components/ui/TextField'
+import { RemoveRowButton } from '../../../components/ui/RemoveRowButton'
+import { toOptions } from '../enumLabels'
+import type { Ingredient, IngredientRowValue } from '../types'
+
+interface IngredientRowProps {
+  row: IngredientRowValue
+  catalog: Ingredient[]
+  units: string[]
+  onChange: (patch: Partial<IngredientRowValue>) => void
+  onRemove: () => void
+}
+
+export function IngredientRow({ row, catalog, units, onChange, onRemove }: IngredientRowProps) {
+  const catalogOptions = catalog.map((i) => ({ value: i.id, label: i.name }))
+
+  return (
+    <div className="flex items-end gap-2.5">
+      <div className="min-w-0 flex-[2_1_0%]">
+        <SelectField
+          value={row.ingredientId}
+          onChange={(v) => onChange({ ingredientId: v })}
+          options={catalogOptions}
+          placeholder="Ingredient"
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <TextField value={row.amount} onChange={(v) => onChange({ amount: v })} placeholder="Amount" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <SelectField
+          value={row.unit}
+          onChange={(v) => onChange({ unit: v })}
+          options={toOptions(units)}
+          placeholder="Unit"
+        />
+      </div>
+      <RemoveRowButton onClick={onRemove} />
+    </div>
+  )
+}
