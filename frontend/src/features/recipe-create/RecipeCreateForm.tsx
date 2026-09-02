@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { buildCreateRecipePayload } from './buildCreateRecipePayload'
 import { RecipeFormActions } from './RecipeFormActions'
 import { RecipeFormAlerts } from './RecipeFormAlerts'
@@ -20,6 +21,7 @@ interface RecipeCreateFormProps {
 export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   const form = useRecipeForm()
   const creation = useCreateRecipe()
+  const navigate = useNavigate()
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const handleSubmit = async (event: FormEvent) => {
@@ -29,7 +31,7 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
     if (errors.length > 0) return
 
     const created = await creation.submit(buildCreateRecipePayload(form.values))
-    if (created) form.reset()
+    if (created) navigate('/')
   }
 
   return (
