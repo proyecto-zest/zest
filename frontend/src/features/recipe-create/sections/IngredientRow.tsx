@@ -17,7 +17,7 @@ export function IngredientRow({ row, catalog, units, canRemove, onChange, onRemo
   const catalogOptions = catalog.map((i) => ({ value: i.id, label: i.name }))
 
   return (
-    <div className="flex items-end gap-2.5">
+    <div className="flex items-stretch gap-2.5">
       <div className="min-w-0 flex-[2_1_0%]">
         <SelectField
           value={row.ingredientId}
@@ -45,7 +45,7 @@ export function IngredientRow({ row, catalog, units, canRemove, onChange, onRemo
           aria-label="Unit"
         />
       </div>
-      {canRemove && <RemoveRowButton onClick={onRemove} />}
+      <RemoveRowButton onClick={onRemove} visible={canRemove} />
     </div>
   )
 }

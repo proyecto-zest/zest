@@ -10,12 +10,10 @@ interface CoverImagePreviewProps {
   onRemove: (id: string) => void
 }
 
-/** Thumbnail grid for the images picked in `CoverImageDropzone`, each removable. */
+/** Thumbnails for the images picked in `CoverImageDropzone`. Bare tiles — the parent owns the grid. */
 export function CoverImagePreview({ images, onRemove }: CoverImagePreviewProps) {
-  if (images.length === 0) return null
-
   return (
-    <div className="grid grid-cols-3 gap-3 tablet:grid-cols-4">
+    <>
       {images.map((image) => (
         <div key={image.id} className="relative aspect-square overflow-hidden rounded-xl border border-border">
           <img src={image.url} alt="" className="h-full w-full object-cover" />
@@ -29,6 +27,6 @@ export function CoverImagePreview({ images, onRemove }: CoverImagePreviewProps) 
           </button>
         </div>
       ))}
-    </div>
+    </>
   )
 }

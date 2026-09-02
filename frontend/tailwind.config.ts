@@ -23,7 +23,15 @@ export default {
     fontFamily,
     fontSize,
     fontWeight,
-    extend: {},
+    extend: {
+      keyframes: {
+        'toast-in': {
+          from: { opacity: '0', transform: 'translateY(0.5rem)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+      },
+      animation: { 'toast-in': 'toast-in 150ms ease-out' },
+    },
   },
   plugins: [],
 } satisfies Config

@@ -30,17 +30,21 @@ export function StepRow({
 }: StepRowProps) {
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      className={`flex items-start gap-2 ${isDragging ? 'opacity-40' : ''}`}
+      className={`flex items-stretch gap-2 ${isDragging ? 'opacity-40' : ''}`}
     >
-      <span className="flex h-[3.25rem] w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground">
+      {/* Only the handle is draggable: a draggable row loses to the textarea's own text selection. */}
+      <span
+        draggable
+        onDragStart={onDragStart}
+        aria-label={`Reorder step ${stepNumber}`}
+        className="flex w-5 shrink-0 cursor-grab items-center justify-center text-muted-foreground"
+      >
         <GripVertical aria-hidden="true" className="h-4 w-4" />
       </span>
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent font-serif text-base font-bold text-accent-foreground">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full bg-accent font-serif text-base font-bold text-accent-foreground">
         {stepNumber}
       </span>
       <TextAreaField
@@ -50,7 +54,7 @@ export function StepRow({
         rows={2}
         aria-label={`Step ${stepNumber}`}
       />
-      {canRemove && <RemoveRowButton onClick={onRemove} />}
+      <RemoveRowButton onClick={onRemove} visible={canRemove} />
     </div>
   )
 }

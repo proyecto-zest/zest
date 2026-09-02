@@ -1,11 +1,16 @@
-import { ImagePlus } from 'lucide-react'
 import { useRef, useState, type DragEvent } from 'react'
+import { CoverImageAddTile } from './CoverImageAddTile'
 import { CoverImagePreview, type PickedImage } from './CoverImagePreview'
 
-/** Cover image picker: click or drag-and-drop, with previews. Client-side only — no upload endpoint yet. */
+/**
+ * Cover image picker: click or drag-and-drop, with previews. Once there are
+ * images the picker shrinks into one more tile of their grid, so it stops
+ * dwarfing the thumbnails. Client-side only — no upload endpoint yet.
+ */
 export function CoverImageDropzone() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState<PickedImage[]>([])
+  const hasImages = images.length > 0
 
   const addFiles = (files: FileList | null) => {
     const picked = Array.from(files ?? [])
@@ -22,24 +27,16 @@ export function CoverImageDropzone() {
     })
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      onDragOver={(e: DragEvent) => e.preventDefault()}
+      onDrop={(e: DragEvent) => {
+        e.preventDefault()
+        addFiles(e.dataTransfer.files)
+      }}
+      className={hasImages ? 'grid grid-cols-3 gap-3 tablet:grid-cols-4' : undefined}
+    >
       <CoverImagePreview images={images} onRemove={removeImage} />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(e: DragEvent) => e.preventDefault()}
-        onDrop={(e: DragEvent) => {
-          e.preventDefault()
-          addFiles(e.dataTransfer.files)
-        }}
-        className="flex aspect-[21/9] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-secondary text-muted-foreground"
-      >
-        <ImagePlus aria-hidden="true" className="h-8 w-8" />
-        <p className="text-sm font-semibold text-foreground">
-          {images.length > 0 ? 'Add more photos' : 'Add a cover photo'}
-        </p>
-        <p className="font-mono text-xs">Drag & drop or click to browse</p>
-      </button>
+      <CoverImageAddTile compact={hasImages} onClick={() => inputRef.current?.click()} />
       <input
         ref={inputRef}
         type="file"

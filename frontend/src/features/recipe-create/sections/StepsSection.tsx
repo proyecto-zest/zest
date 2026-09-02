@@ -25,10 +25,19 @@ export function StepsSection({ form }: StepsSectionProps) {
             onChange={(text) => form.steps.update(row.id, { text })}
             onRemove={() => form.steps.remove(row.id)}
             isDragging={draggedId === row.id}
-            onDragStart={() => setDraggedId(row.id)}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={() => {
-              if (draggedId) form.steps.reorder(draggedId, row.id)
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = 'move'
+              e.dataTransfer.setData('text/plain', row.id)
+              setDraggedId(row.id)
+            }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              e.dataTransfer.dropEffect = 'move'
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              const source = draggedId ?? e.dataTransfer.getData('text/plain')
+              if (source) form.steps.reorder(source, row.id)
               setDraggedId(null)
             }}
             onDragEnd={() => setDraggedId(null)}

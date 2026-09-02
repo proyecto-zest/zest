@@ -18,7 +18,7 @@ interface RecipeCreateFormProps {
   metadata: RecipeMetadata
 }
 
-/** The recipe form itself: fields, validation, and the POST /recipes submit. */
+/** Fields, validation and the POST /recipes submit. `noValidate`: the browser's own tooltip would preempt our modal. */
 export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   const form = useRecipeForm()
   const creation = useCreateRecipe()
@@ -41,7 +41,7 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
       <RecipeFormAlerts
         validationErrors={validationErrors}
         onDismissValidation={() => setValidationErrors([])}

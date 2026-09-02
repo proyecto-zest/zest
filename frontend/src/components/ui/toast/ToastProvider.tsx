@@ -27,7 +27,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
-        <div className="fixed inset-x-4 bottom-4 z-50 flex justify-center tablet:inset-x-auto tablet:right-6">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-x-4 bottom-4 z-50 flex animate-toast-in justify-center tablet:inset-x-auto tablet:right-6"
+        >
           <div className="w-full max-w-sm">
             <Alert variant={toast.variant} message={toast.message} onDismiss={() => setToast(null)} />
           </div>

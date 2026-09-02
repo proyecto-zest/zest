@@ -14,16 +14,16 @@ export function useRowList<T extends { id: string }>(initial: T[], makeRow: () =
   const update = (id: string, patch: Partial<T>) =>
     setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)))
 
-  /** Moves the row with id `draggedId` to sit just before the row with id `targetId`. */
+  /** Moves the row with id `draggedId` into the slot the row with id `targetId` occupies. */
   const reorder = (draggedId: string, targetId: string) =>
     setRows((prev) => {
-      if (draggedId === targetId) return prev
-      const dragged = prev.find((row) => row.id === draggedId)
-      if (!dragged) return prev
-      const withoutDragged = prev.filter((row) => row.id !== draggedId)
-      const targetIndex = withoutDragged.findIndex((row) => row.id === targetId)
-      if (targetIndex === -1) return prev
-      return [...withoutDragged.slice(0, targetIndex), dragged, ...withoutDragged.slice(targetIndex)]
+      const from = prev.findIndex((row) => row.id === draggedId)
+      const to = prev.findIndex((row) => row.id === targetId)
+      if (from === -1 || to === -1 || from === to) return prev
+      const next = [...prev]
+      const [dragged] = next.splice(from, 1)
+      next.splice(to, 0, dragged)
+      return next
     })
 
   return { rows, add, remove, update, reorder, reset: () => setRows(initial) }
