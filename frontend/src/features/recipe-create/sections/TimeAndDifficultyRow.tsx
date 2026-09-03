@@ -13,18 +13,26 @@ interface TimeAndDifficultyRowProps {
 export function TimeAndDifficultyRow({ values, metadata, setField }: TimeAndDifficultyRowProps) {
   return (
     <div className="grid grid-cols-1 gap-3.5 tablet:grid-cols-3">
-      <NumberField label="Time" value={values.time} onChange={(v) => setField('time', v)} placeholder="25" />
+      <NumberField
+        label="Time"
+        value={values.time}
+        onChange={(v) => setField('time', v)}
+        placeholder="25"
+        required
+      />
       <SelectField
         label="Time unit"
         value={values.timeUnit}
         onChange={(v) => setField('timeUnit', v)}
         options={toOptions(metadata.timeUnits)}
+        required
       />
       <SelectField
         label="Difficulty"
         value={values.difficulty}
         onChange={(v) => setField('difficulty', v)}
         options={toOptions(metadata.difficulties)}
+        required
       />
     </div>
   )

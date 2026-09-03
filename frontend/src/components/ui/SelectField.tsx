@@ -1,20 +1,46 @@
+import { useId } from 'react'
+import { FieldWrap } from './FieldWrap'
+import { fieldInputClasses } from './fieldInputClasses'
+
 interface SelectFieldProps {
   label?: string
   value: string
   onChange: (value: string) => void
   options: { value: string; label: string }[]
   placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  error?: string
+  'aria-label'?: string
 }
 
 /** Labeled select. Label is optional for use inside repeated rows. */
-export function SelectField({ label, value, onChange, options, placeholder }: SelectFieldProps) {
+export function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+  disabled,
+  error,
+  'aria-label': ariaLabel,
+}: SelectFieldProps) {
+  const id = useId()
+  const errorId = `${id}-error`
+
   return (
-    <label className="flex flex-col gap-2">
-      {label && <span className="text-sm font-semibold">{label}</span>}
+    <FieldWrap label={label} required={required} error={error} errorId={errorId} htmlFor={label ? id : undefined}>
       <select
+        id={label ? id : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-input bg-background px-3.5 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        required={required}
+        disabled={disabled}
+        aria-label={label ? undefined : ariaLabel}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        className={fieldInputClasses(error)}
       >
         <option value="" disabled>
           {placeholder ?? 'Select…'}
@@ -25,6 +51,6 @@ export function SelectField({ label, value, onChange, options, placeholder }: Se
           </option>
         ))}
       </select>
-    </label>
+    </FieldWrap>
   )
 }

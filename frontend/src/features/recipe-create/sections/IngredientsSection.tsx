@@ -1,3 +1,4 @@
+import { Card } from '../../../components/Card'
 import { AddRowButton } from '../../../components/ui/AddRowButton'
 import type { useRecipeForm } from '../useRecipeForm'
 import type { Ingredient } from '../types'
@@ -11,9 +12,10 @@ interface IngredientsSectionProps {
 
 /** The dynamic ingredients list: add and remove rows before submitting. */
 export function IngredientsSection({ form, catalog, units }: IngredientsSectionProps) {
+  const canRemove = form.ingredients.rows.length > 1
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
-      <h2 className="mb-4 font-serif text-xl font-bold">Ingredients</h2>
+    <Card title="Ingredients">
       <div className="flex flex-col gap-2.5">
         {form.ingredients.rows.map((row) => (
           <IngredientRow
@@ -21,12 +23,13 @@ export function IngredientsSection({ form, catalog, units }: IngredientsSectionP
             row={row}
             catalog={catalog}
             units={units}
+            canRemove={canRemove}
             onChange={(patch) => form.ingredients.update(row.id, patch)}
             onRemove={() => form.ingredients.remove(row.id)}
           />
         ))}
       </div>
       <AddRowButton label="Add ingredient" onClick={form.ingredients.add} />
-    </div>
+    </Card>
   )
 }

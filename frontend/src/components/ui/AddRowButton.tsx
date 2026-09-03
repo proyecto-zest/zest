@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { Button } from './Button'
 
 interface AddRowButtonProps {
   label: string
@@ -8,13 +9,14 @@ interface AddRowButtonProps {
 /** Dashed "add another row" button, used by both the ingredients and steps lists. */
 export function AddRowButton({ label, onClick }: AddRowButtonProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={onClick}
-      className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-4 py-2.5 text-sm font-semibold text-primary"
+      className="mt-3.5 border border-dashed border-border"
     >
       <Plus aria-hidden="true" className="h-4 w-4" />
       {label}
-    </button>
+    </Button>
   )
 }

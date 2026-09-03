@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { Button } from '../../components/ui/Button'
 
 interface RecipeFormActionsProps {
   submitting: boolean
@@ -10,20 +11,12 @@ export function RecipeFormActions({ submitting }: RecipeFormActionsProps) {
 
   return (
     <div className="flex justify-end gap-3">
-      <button
-        type="button"
-        onClick={() => navigate('/')}
-        className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold"
-      >
+      <Button variant="secondary" onClick={() => navigate('/')}>
         Cancel
-      </button>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="rounded-full bg-primary px-7 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-      >
+      </Button>
+      <Button variant="primary" type="submit" disabled={submitting}>
         {submitting ? 'Publishing…' : 'Publish'}
-      </button>
+      </Button>
     </div>
   )
 }

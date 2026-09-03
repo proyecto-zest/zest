@@ -1,22 +1,47 @@
+import { useId } from 'react'
+import { FieldWrap } from './FieldWrap'
+import { fieldInputClasses } from './fieldInputClasses'
+
 interface TextFieldProps {
   label?: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  error?: string
+  'aria-label'?: string
 }
 
 /** Labeled single-line text input. Label is optional for use inside repeated rows. */
-export function TextField({ label, value, onChange, placeholder }: TextFieldProps) {
+export function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  disabled,
+  error,
+  'aria-label': ariaLabel,
+}: TextFieldProps) {
+  const id = useId()
+  const errorId = `${id}-error`
+
   return (
-    <label className="flex flex-col gap-2">
-      {label && <span className="text-sm font-semibold">{label}</span>}
+    <FieldWrap label={label} required={required} error={error} errorId={errorId} htmlFor={label ? id : undefined}>
       <input
+        id={label ? id : undefined}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-lg border border-input bg-background px-3.5 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        required={required}
+        disabled={disabled}
+        aria-label={label ? undefined : ariaLabel}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        className={fieldInputClasses(error)}
       />
-    </label>
+    </FieldWrap>
   )
 }

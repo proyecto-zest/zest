@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useToast } from '../../components/ui/toast'
 import { buildCreateRecipePayload } from './buildCreateRecipePayload'
 import { RecipeFormActions } from './RecipeFormActions'
 import { RecipeFormAlerts } from './RecipeFormAlerts'
@@ -22,6 +23,7 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   const form = useRecipeForm()
   const creation = useCreateRecipe()
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const handleSubmit = async (event: FormEvent) => {
@@ -30,8 +32,12 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
     setValidationErrors(errors)
     if (errors.length > 0) return
 
-    const created = await creation.submit(buildCreateRecipePayload(form.values))
-    if (created) navigate('/')
+    const payload = buildCreateRecipePayload(form.values)
+    const created = await creation.submit(payload)
+    if (created) {
+      showToast(`"${payload.title}" was published.`)
+      navigate('/')
+    }
   }
 
   return (
