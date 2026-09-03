@@ -1,11 +1,11 @@
 import type { RouteObject } from 'react-router-dom'
-import { HealthStatus } from '../features/health/HealthStatus'
+import { FeedPage } from '../features/feed/FeedPage'
 import { RecipeCreatePage } from '../features/recipe-create/RecipeCreatePage'
 
 export const routes: RouteObject[] = [
   {
     path: '/',
-    element: <HealthStatus />,
+    element: <FeedPage />,
   },
   {
     path: '/recipes/new',

@@ -3,7 +3,7 @@ import { NumberField } from '../../../components/ui/NumberField'
 import { SelectField } from '../../../components/ui/SelectField'
 import { TextAreaField } from '../../../components/ui/TextAreaField'
 import { TextField } from '../../../components/ui/TextField'
-import { toOptions } from '../enumLabels'
+import { toOptions } from '../../../lib/enumLabels'
 import type { RecipeFormValues, RecipeMetadata } from '../types'
 import { TimeAndDifficultyRow } from './TimeAndDifficultyRow'
 
