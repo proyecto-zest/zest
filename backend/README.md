@@ -24,6 +24,17 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+Las imágenes de recetas del entorno de desarrollo se almacenan en el bucket
+S3 `zest-recipes`, ubicado en la región `us-east-1`. El backend obtiene el
+bucket, la región y las credenciales exclusivamente desde las variables
+`AWS_S3_BUCKET`, `AWS_S3_REGION`, `AWS_ACCESS_KEY_ID` y
+`AWS_SECRET_ACCESS_KEY`.
+
+El bucket es privado. La base de datos guarda únicamente la key de cada objeto
+y la API genera URLs firmadas de lectura con una duración de 15 minutos. El
+frontend subirá el binario directamente mediante la URL firmada de subida que
+proveerá ZEST-70; el archivo nunca pasa por este backend.
+
 La API queda disponible en `http://localhost:3000`. El health-check se puede
 probar con:
 
