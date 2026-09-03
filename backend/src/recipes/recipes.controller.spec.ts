@@ -69,6 +69,7 @@ describe('RecipesController', () => {
       timeUnit: RecipeTimeUnit.MINUTOS,
       difficulty: RecipeDifficulty.FACIL,
       servings: 2,
+      imageKey: 'recipes/image.webp',
       ingredients: [
         {
           ingredientId: '11111111-1111-4111-8111-111111111111',
@@ -89,5 +90,29 @@ describe('RecipesController', () => {
       createdRecipe,
     );
     expect(create).toHaveBeenCalledWith(createRecipeDto);
+  });
+
+  it('delegates an image update to the service', async () => {
+    const recipeId = '33333333-3333-4333-8333-333333333333';
+    const dto = { imageKey: 'recipes/new.webp' };
+    const recipe = { id: recipeId } as RecipeDetailResponseDto;
+    const updateImage = jest.fn().mockResolvedValue(recipe);
+    const controller = new RecipesController({
+      updateImage,
+    } as unknown as RecipesService);
+
+    await expect(controller.updateImage(recipeId, dto)).resolves.toBe(recipe);
+    expect(updateImage).toHaveBeenCalledWith(recipeId, dto);
+  });
+
+  it('delegates recipe deletion to the service', async () => {
+    const recipeId = '33333333-3333-4333-8333-333333333333';
+    const remove = jest.fn().mockResolvedValue(undefined);
+    const controller = new RecipesController({
+      remove,
+    } as unknown as RecipesService);
+
+    await expect(controller.remove(recipeId)).resolves.toBeUndefined();
+    expect(remove).toHaveBeenCalledWith(recipeId);
   });
 });
