@@ -1,9 +1,9 @@
 import { useRoutes } from 'react-router-dom'
-import { AppShell } from '../components/AppShell'
+import { SiteShell } from '../components/nav/SiteShell'
 import { routes } from './routes'
 
 export function App() {
   const element = useRoutes(routes)
 
-  return <AppShell>{element}</AppShell>
+  return <SiteShell>{element}</SiteShell>
 }

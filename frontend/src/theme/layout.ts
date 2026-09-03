@@ -9,7 +9,21 @@ const steps = [
 export const spacing = Object.fromEntries([
   ['px', '1px'],
   ...steps.map((step) => [String(step), `calc(var(--space-unit) * ${step})`]),
+  ['nav-mobile', 'var(--nav-height-mobile)'],
+  ['nav-desktop', 'var(--nav-height-desktop)'],
+  ['safe-bottom', 'var(--safe-area-bottom)'],
+  ['nav-clearance-mobile', 'var(--nav-clearance-mobile)'],
 ])
+
+/**
+ * Named additions layered on top of Tailwind's default `maxWidth`/`zIndex`
+ * scales (see `extend` in `tailwind.config.ts`) rather than replacing them —
+ * several existing screens still rely on the stock scale (`max-w-3xl`,
+ * `max-w-md`, `z-50`), so replacing it outright would silently drop their
+ * styles instead of failing the build.
+ */
+export const maxWidth = { content: '77.5rem' }
+export const zIndex = { nav: '40' }
 
 export const borderRadius = {
   none: '0px',
