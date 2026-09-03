@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 import { breakpoints } from './src/theme/breakpoints'
 import { colors } from './src/theme/colors'
-import { borderRadius, boxShadow, spacing } from './src/theme/layout'
+import { borderRadius, boxShadow, maxWidth, spacing, zIndex } from './src/theme/layout'
 import { fontFamily, fontSize, fontWeight } from './src/theme/typography'
 
 /**
@@ -23,7 +23,17 @@ export default {
     fontFamily,
     fontSize,
     fontWeight,
-    extend: {},
+    extend: {
+      keyframes: {
+        'toast-in': {
+          from: { opacity: '0', transform: 'translateY(0.5rem)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+      },
+      animation: { 'toast-in': 'toast-in 150ms ease-out' },
+      maxWidth,
+      zIndex,
+    },
   },
   plugins: [],
 } satisfies Config
