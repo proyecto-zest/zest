@@ -7,6 +7,7 @@ describe('environment validation', () => {
     AUTH0_DOMAIN: 'example.us.auth0.com',
     AUTH0_AUDIENCE: 'https://api.zest.example',
     AWS_S3_BUCKET: 'zest-images-dev',
+    AWS_S3_REGION: 'us-east-1',
     AWS_ACCESS_KEY_ID: 'placeholder',
     AWS_SECRET_ACCESS_KEY: 'placeholder',
   };
