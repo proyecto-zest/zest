@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
 
-interface RecipeCardImageProps {
+interface RecipeImageProps {
   src: string
   alt: string
 }
 
 /**
- * Cover image with a graceful fallback. The API always sends a URL (it falls
- * back to a default asset server-side), but that asset may not exist in every
- * environment — a broken URL must not break the card's layout.
+ * Recipe cover image with a graceful fallback, used by both `RecipeCard` and
+ * the recipe detail header. The API always sends a URL (it falls back to a
+ * default asset server-side), but that asset may not exist in every
+ * environment — a broken URL must not break the layout around it.
  */
-export function RecipeCardImage({ src, alt }: RecipeCardImageProps) {
+export function RecipeImage({ src, alt }: RecipeImageProps) {
   const [failed, setFailed] = useState(false)
 
   if (failed) {
