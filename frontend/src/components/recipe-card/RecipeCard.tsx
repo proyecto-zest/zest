@@ -21,7 +21,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
       to={`/recipes/${recipe.id}`}
       className={`group ${recipeCardShellClasses} hover:shadow-lg hover:shadow-foreground/5`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <RecipeCardImage src={recipe.imageUrls[0]} alt={recipe.title} />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
           <Clock aria-hidden="true" className="h-3 w-3 text-primary" />
