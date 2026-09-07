@@ -23,4 +23,10 @@
   --shadow-sm: 0 1px 2px 0 rgb(44 44 44 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(44 44 44 / 0.08);
   --shadow-lg: 0 10px 15px -3px rgb(44 44 44 / 0.08);
+
+  /* Sticky header heights: MobileHeader and TopNav. No bottom bar — mobile
+     nav is the drawer in MobileNavDrawer, so there's no fixed element at the
+     bottom of the screen for <main> to clear. */
+  --nav-height-mobile: calc(var(--space-unit) * 16);
+  --nav-height-desktop: calc(var(--space-unit) * 16);
 }
