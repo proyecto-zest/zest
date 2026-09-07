@@ -24,10 +24,9 @@
   --shadow-md: 0 4px 6px -1px rgb(44 44 44 / 0.08);
   --shadow-lg: 0 10px 15px -3px rgb(44 44 44 / 0.08);
 
-  /* Nav bar heights — content clearance (`SiteShell`'s <main>) derives from the
-     same values, so a taller bar can never end up hidden behind its own content. */
+  /* Sticky header heights: MobileHeader and TopNav. No bottom bar — mobile
+     nav is the drawer in MobileNavDrawer, so there's no fixed element at the
+     bottom of the screen for <main> to clear. */
   --nav-height-mobile: calc(var(--space-unit) * 16);
   --nav-height-desktop: calc(var(--space-unit) * 16);
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --nav-clearance-mobile: calc(var(--nav-height-mobile) + var(--safe-area-bottom));
 }
