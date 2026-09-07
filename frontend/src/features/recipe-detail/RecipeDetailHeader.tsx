@@ -23,6 +23,7 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
           category={recipe.category}
           difficulty={recipe.difficulty}
           time={recipe.time}
+          timeUnit={recipe.timeUnit}
           servings={recipe.servings}
           size="lg"
         />

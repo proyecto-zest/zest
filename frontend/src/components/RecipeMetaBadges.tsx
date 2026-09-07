@@ -6,6 +6,8 @@ interface RecipeMetaBadgesProps {
   category: string
   difficulty: string
   time: number
+  /** Omitted where the backend doesn't send it (e.g. `RecipeCard`'s list projection) — the badge then shows the number alone. */
+  timeUnit?: string
   servings: number
   /** `sm` for `RecipeCard`, `lg` for the recipe detail header. Defaults to `sm`. */
   size?: RecipeMetaBadgesSize
@@ -17,7 +19,7 @@ interface RecipeMetaBadgesProps {
  * `category`/`difficulty` arrive as raw backend enum values (e.g. `POSTRE`);
  * `enumLabel` maps them to what the user sees.
  */
-export function RecipeMetaBadges({ category, difficulty, time, servings, size = 'sm' }: RecipeMetaBadgesProps) {
+export function RecipeMetaBadges({ category, difficulty, time, timeUnit, servings, size = 'sm' }: RecipeMetaBadgesProps) {
   const classes = recipeMetaBadgeClasses[size]
 
   return (
@@ -27,6 +29,7 @@ export function RecipeMetaBadges({ category, difficulty, time, servings, size = 
       <span className={classes.chip}>
         <Clock aria-hidden="true" className={classes.icon} />
         {time}
+        {timeUnit ? ` ${enumLabel(timeUnit)}` : null}
       </span>
       <span className={classes.chip}>
         <Users aria-hidden="true" className={classes.icon} />
