@@ -3,6 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/zest-logo.png" />
+    <!--
+      Preloads the serif font (headings, card titles) as static HTML so the
+      browser's preload scanner starts fetching it before any JS runs —
+      injecting this from main.tsx instead would only start the fetch once
+      the whole JS bundle has downloaded and executed, by which point the
+      font-face's own `font-display: swap` fallback has likely already
+      painted, defeating the point. Vite resolves and fingerprints this href
+      in the production build same as any other asset reference.
+    -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zest</title>
   </head>

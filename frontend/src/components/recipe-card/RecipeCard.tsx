@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { Clock } from 'lucide-react'
+import { Clock, Gauge } from 'lucide-react'
 import { enumLabel } from '../../lib/enumLabels'
 import type { RecipeCardData } from '../../types/recipe'
+import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
 import { RecipeCardImage } from './RecipeCardImage'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
 
@@ -11,9 +12,9 @@ interface RecipeCardProps {
 
 /**
  * The single reusable recipe card — the feed, search, collections and the
- * planner all render this. Chips show `category`/`difficulty`: the wireframe's
- * author row and tag chips have no backing data yet (no `User` model, no
- * `labels` table) so they're left out rather than faked.
+ * planner all render this. `category` stays a neutral chip in the body;
+ * `difficulty` is a colored badge over the image (green/yellow/red for
+ * easy/medium/hard) so the two aren't visually interchangeable at a glance.
  */
 export function RecipeCard({ recipe }: RecipeCardProps) {
   return (
@@ -27,13 +28,18 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           <Clock aria-hidden="true" className="h-3 w-3 text-primary" />
           {recipe.time}
         </span>
+        <span
+          className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+            difficultyBadgeClasses[recipe.difficulty] ?? difficultyBadgeFallback
+          }`}
+        >
+          <Gauge aria-hidden="true" className="h-3 w-3" />
+          {enumLabel(recipe.difficulty)}
+        </span>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex flex-wrap gap-1.5">
-          <span className={recipeCardChipClasses}>{enumLabel(recipe.category)}</span>
-          <span className={recipeCardChipClasses}>{enumLabel(recipe.difficulty)}</span>
-        </div>
+        <span className={`self-start ${recipeCardChipClasses}`}>{enumLabel(recipe.category)}</span>
 
         <h3 className="line-clamp-2 font-serif text-lg font-bold leading-snug text-foreground">{recipe.title}</h3>
       </div>
