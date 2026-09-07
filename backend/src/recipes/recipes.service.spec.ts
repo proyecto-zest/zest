@@ -18,7 +18,7 @@ import { RecipesService } from './recipes.service';
 type RecipeCreateArguments = {
   data: {
     authorId: string;
-    images: { create: { s3Key: string } };
+    images: { create: Array<{ s3Key: string }> };
     ingredients: { create: CreateRecipeDto['ingredients'] };
     steps: { create: Array<{ stepNumber: number; text: string }> };
   };
@@ -29,6 +29,7 @@ describe('RecipesService', () => {
   const oilId = '22222222-2222-4222-8222-222222222222';
   const recipeId = '33333333-3333-4333-8333-333333333333';
   const imageKey = 'recipes/image.webp';
+  const secondaryImageKey = 'recipes/secondary.webp';
   const signedUrl = (key: string): string => `https://signed.test/${key}`;
   const createRecipeDto: CreateRecipeDto = {
     title: 'Ensalada de tomate',
@@ -38,7 +39,7 @@ describe('RecipesService', () => {
     timeUnit: RecipeTimeUnit.MINUTOS,
     difficulty: RecipeDifficulty.FACIL,
     servings: 2,
-    imageKey,
+    imageKeys: [imageKey, secondaryImageKey],
     ingredients: [
       { ingredientId: tomatoId, amount: '2', unit: IngredientUnit.UNIDAD },
       { ingredientId: oilId, amount: '1', unit: IngredientUnit.CUCHARADA },
@@ -102,6 +103,7 @@ describe('RecipesService', () => {
   const objectExists = jest.fn<Promise<boolean>, [string]>();
   const deleteObject = jest.fn<Promise<void>, [string]>();
   const getSignedReadUrl = jest.fn<Promise<string>, [string]>();
+  const getSignedUploadUrl = jest.fn<Promise<string>, [string, string]>();
   let service: RecipesService;
 
   beforeEach(() => {
@@ -121,6 +123,7 @@ describe('RecipesService', () => {
     getSignedReadUrl.mockImplementation((key: string) =>
       Promise.resolve(signedUrl(key)),
     );
+    getSignedUploadUrl.mockResolvedValue('https://upload.test');
 
     service = new RecipesService(
       {
@@ -136,6 +139,7 @@ describe('RecipesService', () => {
         objectExists,
         deleteObject,
         getSignedReadUrl,
+        getSignedUploadUrl,
       } as unknown as StorageService,
     );
   });
@@ -277,19 +281,38 @@ describe('RecipesService', () => {
     });
   });
 
-  it('creates a recipe only after validating the uploaded image', async () => {
+  it('generates a safe image key and signed upload URL', async () => {
+    const result = await service.createImageUploadUrl({
+      contentType: 'image/png',
+    });
+
+    expect(result.uploadUrl).toBe('https://upload.test');
+    expect(result.imageKey).toMatch(/^recipes\/[0-9a-f-]{36}\.png$/);
+    expect(getSignedUploadUrl).toHaveBeenCalledWith(
+      result.imageKey,
+      'image/png',
+    );
+  });
+
+  it('creates a recipe after validating every uploaded image', async () => {
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
-    recipeCreate.mockResolvedValue(recipeRecord());
+    recipeCreate.mockResolvedValue(recipeRecord([imageKey, secondaryImageKey]));
 
     const createdRecipe = await service.create(createRecipeDto);
 
     expect(objectExists).toHaveBeenCalledWith(imageKey);
-    expect(createdRecipe.imageUrl).toBe(signedUrl(imageKey));
+    expect(objectExists).toHaveBeenCalledWith(secondaryImageKey);
+    expect(createdRecipe.imageUrls).toEqual([
+      signedUrl(imageKey),
+      signedUrl(secondaryImageKey),
+    ]);
     const createArguments = recipeCreate.mock
       .calls[0][0] as RecipeCreateArguments;
     expect(createArguments.data).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
-      images: { create: { s3Key: imageKey } },
+      images: {
+        create: [{ s3Key: imageKey }, { s3Key: secondaryImageKey }],
+      },
       ingredients: { create: createRecipeDto.ingredients },
       steps: {
         create: [
@@ -300,11 +323,27 @@ describe('RecipesService', () => {
     });
   });
 
+  it('creates a recipe without images when imageKeys is omitted', async () => {
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
+    recipeCreate.mockResolvedValue(recipeRecord([]));
+    const recipeWithoutImages = { ...createRecipeDto, imageKeys: undefined };
+
+    const createdRecipe = await service.create(recipeWithoutImages);
+
+    expect(objectExists).not.toHaveBeenCalled();
+    expect(createdRecipe.imageUrls).toEqual([]);
+    const createArguments = recipeCreate.mock
+      .calls[0][0] as RecipeCreateArguments;
+    expect(createArguments.data.images).toEqual({ create: [] });
+  });
+
   it('rejects a key that does not correspond to an uploaded object', async () => {
-    objectExists.mockResolvedValue(false);
+    objectExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
     await expect(service.create(createRecipeDto)).rejects.toThrow(
-      new BadRequestException('La imagen indicada no existe en S3'),
+      new BadRequestException(
+        `Las siguientes imágenes no existen en S3: ${secondaryImageKey}`,
+      ),
     );
     expect(runTransaction).not.toHaveBeenCalled();
   });
@@ -320,35 +359,36 @@ describe('RecipesService', () => {
     expect(recipeCreate).not.toHaveBeenCalled();
   });
 
-  it('replaces the image reference and deletes the previous object', async () => {
-    const newImageKey = 'recipes/new.webp';
+  it('replaces image references and deletes previous objects', async () => {
+    const newImageKeys = ['recipes/new.webp', 'recipes/new-secondary.webp'];
     recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
-    recipeUpdate.mockResolvedValue(recipeRecord([newImageKey]));
+    recipeUpdate.mockResolvedValue(recipeRecord(newImageKeys));
 
-    const recipe = await service.updateImage(recipeId, {
-      imageKey: newImageKey,
+    const recipe = await service.updateImages(recipeId, {
+      imageKeys: newImageKeys,
     });
 
-    expect(objectExists).toHaveBeenCalledWith(newImageKey);
+    expect(objectExists).toHaveBeenCalledWith(newImageKeys[0]);
+    expect(objectExists).toHaveBeenCalledWith(newImageKeys[1]);
     expect(recipeUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: recipeId },
         data: {
           images: {
             deleteMany: {},
-            create: { s3Key: newImageKey },
+            create: newImageKeys.map((s3Key) => ({ s3Key })),
           },
         },
       }),
     );
     expect(deleteObject).toHaveBeenCalledWith(imageKey);
-    expect(recipe.imageUrls).toEqual([signedUrl(newImageKey)]);
+    expect(recipe.imageUrls).toEqual(newImageKeys.map(signedUrl));
   });
 
-  it('keeps the current image when an update has no new key', async () => {
+  it('keeps current images when an update omits imageKeys', async () => {
     recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
 
-    const recipe = await service.updateImage(recipeId, {});
+    const recipe = await service.updateImages(recipeId, {});
 
     expect(recipe.imageUrls).toEqual([signedUrl(imageKey)]);
     expect(objectExists).not.toHaveBeenCalled();
@@ -356,14 +396,36 @@ describe('RecipesService', () => {
     expect(deleteObject).not.toHaveBeenCalled();
   });
 
-  it('does not update a recipe when its new image does not exist', async () => {
+  it('removes every image when an update sends an empty list', async () => {
+    recipeFindUnique.mockResolvedValue(
+      recipeRecord([imageKey, secondaryImageKey]),
+    );
+    recipeUpdate.mockResolvedValue(recipeRecord([]));
+
+    const recipe = await service.updateImages(recipeId, { imageKeys: [] });
+
+    expect(recipeUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { images: { deleteMany: {}, create: [] } },
+      }),
+    );
+    expect(deleteObject).toHaveBeenCalledWith(imageKey);
+    expect(deleteObject).toHaveBeenCalledWith(secondaryImageKey);
+    expect(recipe.imageUrls).toEqual([]);
+  });
+
+  it('does not update a recipe when a new image does not exist', async () => {
     recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
     objectExists.mockResolvedValue(false);
 
     await expect(
-      service.updateImage(recipeId, { imageKey: 'recipes/missing.webp' }),
+      service.updateImages(recipeId, {
+        imageKeys: ['recipes/missing.webp'],
+      }),
     ).rejects.toThrow(
-      new BadRequestException('La imagen indicada no existe en S3'),
+      new BadRequestException(
+        'Las siguientes imágenes no existen en S3: recipes/missing.webp',
+      ),
     );
     expect(recipeUpdate).not.toHaveBeenCalled();
   });
@@ -371,9 +433,9 @@ describe('RecipesService', () => {
   it('returns 404 when updating a recipe that does not exist', async () => {
     recipeFindUnique.mockResolvedValue(null);
 
-    await expect(service.updateImage(recipeId, { imageKey })).rejects.toThrow(
-      new NotFoundException('Recipe not found'),
-    );
+    await expect(
+      service.updateImages(recipeId, { imageKeys: [imageKey] }),
+    ).rejects.toThrow(new NotFoundException('Recipe not found'));
   });
 
   it('deletes a recipe, its database relations and its S3 objects', async () => {

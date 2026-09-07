@@ -30,6 +30,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
   const getSignedReadUrl = jest.fn((key: string) =>
     Promise.resolve(`https://signed.test/${key}`),
   );
+  const getSignedUploadUrl = jest.fn().mockResolvedValue('https://upload.test');
 
   const createCatalog = async (): Promise<void> => {
     const [tomato, oil] = await Promise.all([
@@ -48,7 +49,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     timeUnit: RecipeTimeUnit.MINUTOS,
     difficulty: RecipeDifficulty.FACIL,
     servings: 2,
-    imageKey: 'recipes/uploaded.webp',
+    imageKeys: ['recipes/uploaded.webp', 'recipes/uploaded-secondary.webp'],
     ingredients: [
       { ingredientId: tomatoId, amount: '2', unit: IngredientUnit.UNIDAD },
       { ingredientId: oilId, amount: '1', unit: IngredientUnit.CUCHARADA },
@@ -64,7 +65,12 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       imports: [AppModule],
     })
       .overrideProvider(StorageService)
-      .useValue({ objectExists, deleteObject, getSignedReadUrl })
+      .useValue({
+        objectExists,
+        deleteObject,
+        getSignedReadUrl,
+        getSignedUploadUrl,
+      })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -85,7 +91,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     await prisma.$disconnect();
   });
 
-  it('creates a recipe with ingredients, steps and an uploaded image key', async () => {
+  it('creates a recipe with ingredients, steps and uploaded image keys', async () => {
     const response = await request(app.getHttpServer() as Server)
       .post('/recipes')
       .send(validRecipe())
@@ -94,7 +100,10 @@ describeWithDatabase('POST /recipes (e2e)', () => {
 
     expect(response.body).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
-      imageUrl: 'https://signed.test/recipes/uploaded.webp',
+      imageUrls: [
+        'https://signed.test/recipes/uploaded.webp',
+        'https://signed.test/recipes/uploaded-secondary.webp',
+      ],
       title: 'Ensalada de tomate',
       ingredients: [
         {
@@ -127,9 +136,15 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       timeUnit: RecipeTimeUnit.MINUTOS,
       ingredients: [{ ingredientId: tomatoId }, { ingredientId: oilId }],
       steps: [{ stepNumber: 1 }, { stepNumber: 2 }],
-      images: [{ s3Key: 'recipes/uploaded.webp' }],
+      images: [
+        { s3Key: 'recipes/uploaded.webp' },
+        { s3Key: 'recipes/uploaded-secondary.webp' },
+      ],
     });
     expect(objectExists).toHaveBeenCalledWith('recipes/uploaded.webp');
+    expect(objectExists).toHaveBeenCalledWith(
+      'recipes/uploaded-secondary.webp',
+    );
   });
 
   it('returns 400 and creates nothing when an ingredient does not exist', async () => {
@@ -153,17 +168,20 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     await expect(prisma.recipe.count()).resolves.toBe(0);
   });
 
-  it('returns 400 and creates nothing when the image key is missing', async () => {
-    await request(app.getHttpServer() as Server)
+  it('creates a recipe without images when imageKeys is omitted', async () => {
+    const response = await request(app.getHttpServer() as Server)
       .post('/recipes')
-      .send({ ...validRecipe(), imageKey: undefined })
-      .expect(400);
+      .send({ ...validRecipe(), imageKeys: undefined })
+      .expect(201);
 
-    await expect(prisma.recipe.count()).resolves.toBe(0);
+    expect(response.body).toMatchObject({ imageUrls: [] });
+    await expect(prisma.recipe.count()).resolves.toBe(1);
+    await expect(prisma.recipeImage.count()).resolves.toBe(0);
+    expect(objectExists).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when the image key does not exist in S3', async () => {
-    objectExists.mockResolvedValue(false);
+  it('returns 400 when one image key does not exist in S3', async () => {
+    objectExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
     await request(app.getHttpServer() as Server)
       .post('/recipes')
@@ -171,6 +189,27 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       .expect(400);
 
     await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('generates an upload URL and a backend-controlled image key', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes/image-upload-url')
+      .send({ contentType: 'image/png' })
+      .expect(201);
+    const body = response.body as { uploadUrl: string; imageKey: string };
+
+    expect(body).toMatchObject({ uploadUrl: 'https://upload.test' });
+    expect(body.imageKey).toMatch(/^recipes\/[0-9a-f-]{36}\.png$/);
+    expect(getSignedUploadUrl).toHaveBeenCalledWith(body.imageKey, 'image/png');
+  });
+
+  it('rejects unsupported upload content types', async () => {
+    await request(app.getHttpServer() as Server)
+      .post('/recipes/image-upload-url')
+      .send({ contentType: 'application/pdf' })
+      .expect(400);
+
+    expect(getSignedUploadUrl).not.toHaveBeenCalled();
   });
 
   it('returns 400 when the recipe has no steps', async () => {
@@ -211,7 +250,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     await expect(prisma.recipe.count()).resolves.toBe(0);
   });
 
-  it('replaces an image reference and deletes the previous S3 object', async () => {
+  it('replaces image references and deletes previous S3 objects', async () => {
     const recipe = await prisma.recipe.create({
       data: {
         title: 'Receta existente',
@@ -227,16 +266,24 @@ describeWithDatabase('POST /recipes (e2e)', () => {
 
     const response = await request(app.getHttpServer() as Server)
       .put(`/recipes/${recipe.id}`)
-      .send({ imageKey: 'recipes/new.webp' })
+      .send({
+        imageKeys: ['recipes/new.webp', 'recipes/new-secondary.webp'],
+      })
       .expect(200);
 
     expect(response.body).toMatchObject({
       id: recipe.id,
-      imageUrls: ['https://signed.test/recipes/new.webp'],
+      imageUrls: [
+        'https://signed.test/recipes/new.webp',
+        'https://signed.test/recipes/new-secondary.webp',
+      ],
     });
     await expect(
       prisma.recipeImage.findMany({ where: { recipeId: recipe.id } }),
-    ).resolves.toMatchObject([{ s3Key: 'recipes/new.webp' }]);
+    ).resolves.toMatchObject([
+      { s3Key: 'recipes/new.webp' },
+      { s3Key: 'recipes/new-secondary.webp' },
+    ]);
     expect(deleteObject).toHaveBeenCalledWith('recipes/old.webp');
   });
 

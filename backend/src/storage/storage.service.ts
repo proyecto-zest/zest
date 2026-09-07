@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -45,6 +46,18 @@ export class StorageService {
     return getSignedUrl(
       this.s3Client,
       new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      { expiresIn: SIGNED_URL_EXPIRATION_SECONDS },
+    );
+  }
+
+  getSignedUploadUrl(key: string, contentType: string): Promise<string> {
+    return getSignedUrl(
+      this.s3Client,
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: contentType,
+      }),
       { expiresIn: SIGNED_URL_EXPIRATION_SECONDS },
     );
   }

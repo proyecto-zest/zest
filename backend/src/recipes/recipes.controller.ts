@@ -15,12 +15,16 @@ import {
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import {
+  RecipeImageUploadRequestDto,
+  RecipeImageUploadResponseDto,
+} from './dto/recipe-image-upload.dto';
+import {
   CreatedRecipeResponseDto,
   PaginatedRecipesResponseDto,
   RecipeDetailResponseDto,
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
-import { UpdateRecipeImageDto } from './dto/update-recipe-image.dto';
+import { UpdateRecipeImagesDto } from './dto/update-recipe-images.dto';
 import { RecipesService } from './recipes.service';
 
 @Controller('recipes')
@@ -46,6 +50,13 @@ export class RecipesController {
     return this.recipesService.findOne(id);
   }
 
+  @Post('image-upload-url')
+  createImageUploadUrl(
+    @Body() requestDto: RecipeImageUploadRequestDto,
+  ): Promise<RecipeImageUploadResponseDto> {
+    return this.recipesService.createImageUploadUrl(requestDto);
+  }
+
   @Post()
   create(
     @Body() createRecipeDto: CreateRecipeDto,
@@ -54,11 +65,11 @@ export class RecipesController {
   }
 
   @Put(':id')
-  updateImage(
+  updateImages(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateRecipeImageDto: UpdateRecipeImageDto,
+    @Body() updateRecipeImagesDto: UpdateRecipeImagesDto,
   ): Promise<RecipeDetailResponseDto> {
-    return this.recipesService.updateImage(id, updateRecipeImageDto);
+    return this.recipesService.updateImages(id, updateRecipeImagesDto);
   }
 
   @Delete(':id')

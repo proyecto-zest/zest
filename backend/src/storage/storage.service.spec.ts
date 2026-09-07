@@ -3,6 +3,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -85,6 +86,19 @@ describe('StorageService', () => {
     expect(getSignedUrl).toHaveBeenCalledWith(
       s3Client,
       expect.any(GetObjectCommand),
+      { expiresIn: SIGNED_URL_EXPIRATION_SECONDS },
+    );
+  });
+
+  it('generates a temporary signed URL for uploading an object', async () => {
+    jest.mocked(getSignedUrl).mockResolvedValueOnce('https://upload.test');
+
+    await expect(
+      service.getSignedUploadUrl('recipes/image.webp', 'image/webp'),
+    ).resolves.toBe('https://upload.test');
+    expect(getSignedUrl).toHaveBeenCalledWith(
+      s3Client,
+      expect.any(PutObjectCommand),
       { expiresIn: SIGNED_URL_EXPIRATION_SECONDS },
     );
   });

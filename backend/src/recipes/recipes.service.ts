@@ -11,18 +11,24 @@ import {
   RecipeDifficulty,
   RecipeTimeUnit,
 } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import {
+  RecipeImageContentType,
+  RecipeImageUploadRequestDto,
+  RecipeImageUploadResponseDto,
+} from './dto/recipe-image-upload.dto';
+import {
   CreatedRecipeResponseDto,
   PaginatedRecipesResponseDto,
   RecipeDetailResponseDto,
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
-import { UpdateRecipeImageDto } from './dto/update-recipe-image.dto';
+import { UpdateRecipeImagesDto } from './dto/update-recipe-images.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
   MAX_RECIPES_LIMIT,
@@ -71,6 +77,12 @@ type CreatedRecipeRecord = Prisma.RecipeGetPayload<{
 type RecipeDetailRecord = Prisma.RecipeGetPayload<{
   include: typeof recipeDetailInclude;
 }>;
+
+const imageExtensionByContentType: Record<RecipeImageContentType, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 
 @Injectable()
 export class RecipesService {
@@ -163,12 +175,26 @@ export class RecipesService {
     return this.toRecipeDetailResponse(recipe);
   }
 
+  async createImageUploadUrl(
+    requestDto: RecipeImageUploadRequestDto,
+  ): Promise<RecipeImageUploadResponseDto> {
+    const extension = imageExtensionByContentType[requestDto.contentType];
+    const imageKey = `recipes/${randomUUID()}.${extension}`;
+
+    return {
+      uploadUrl: await this.storageService.getSignedUploadUrl(
+        imageKey,
+        requestDto.contentType,
+      ),
+      imageKey,
+    };
+  }
+
   async create(
     createRecipeDto: CreateRecipeDto,
   ): Promise<CreatedRecipeResponseDto> {
-    if (!(await this.storageService.objectExists(createRecipeDto.imageKey))) {
-      throw new BadRequestException('La imagen indicada no existe en S3');
-    }
+    const imageKeys = createRecipeDto.imageKeys ?? [];
+    await this.assertImagesExist(imageKeys);
 
     return this.prisma.$transaction(async (transaction) => {
       const ingredientIds = createRecipeDto.ingredients.map(
@@ -216,7 +242,7 @@ export class RecipesService {
             })),
           },
           images: {
-            create: { s3Key: createRecipeDto.imageKey },
+            create: imageKeys.map((s3Key) => ({ s3Key })),
           },
         },
         include: createdRecipeInclude,
@@ -225,9 +251,9 @@ export class RecipesService {
     });
   }
 
-  async updateImage(
+  async updateImages(
     id: string,
-    updateRecipeImageDto: UpdateRecipeImageDto,
+    updateRecipeImagesDto: UpdateRecipeImagesDto,
   ): Promise<RecipeDetailResponseDto> {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
@@ -238,24 +264,22 @@ export class RecipesService {
       throw new NotFoundException('Recipe not found');
     }
 
-    if (updateRecipeImageDto.imageKey === undefined) {
+    if (updateRecipeImagesDto.imageKeys === undefined) {
       return this.toRecipeDetailResponse(recipe);
     }
 
-    const newImageKey = updateRecipeImageDto.imageKey;
-    if (!(await this.storageService.objectExists(newImageKey))) {
-      throw new BadRequestException('La imagen indicada no existe en S3');
-    }
+    const newImageKeys = updateRecipeImagesDto.imageKeys;
+    await this.assertImagesExist(newImageKeys);
 
     const previousImageKeys = recipe.images
       .map(({ s3Key }) => s3Key)
-      .filter((s3Key) => s3Key !== newImageKey);
+      .filter((s3Key) => !newImageKeys.includes(s3Key));
     const updatedRecipe = await this.prisma.recipe.update({
       where: { id },
       data: {
         images: {
           deleteMany: {},
-          create: { s3Key: newImageKey },
+          create: newImageKeys.map((s3Key) => ({ s3Key })),
         },
       },
       include: recipeDetailInclude,
@@ -330,8 +354,10 @@ export class RecipesService {
         stepNumber: step.stepNumber,
         text: step.text,
       })),
-      imageUrl: await this.storageService.getSignedReadUrl(
-        recipe.images[0].s3Key,
+      imageUrls: await Promise.all(
+        recipe.images.map(({ s3Key }) =>
+          this.storageService.getSignedReadUrl(s3Key),
+        ),
       ),
     };
   }
@@ -371,5 +397,18 @@ export class RecipesService {
         ),
       ),
     };
+  }
+
+  private async assertImagesExist(imageKeys: string[]): Promise<void> {
+    const existence = await Promise.all(
+      imageKeys.map((imageKey) => this.storageService.objectExists(imageKey)),
+    );
+    const missingImageKeys = imageKeys.filter((_, index) => !existence[index]);
+
+    if (missingImageKeys.length > 0) {
+      throw new BadRequestException(
+        `Las siguientes imágenes no existen en S3: ${missingImageKeys.join(', ')}`,
+      );
+    }
   }
 }

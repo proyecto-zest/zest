@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   Matches,
@@ -57,10 +58,13 @@ export class CreateRecipeDto {
   @Min(1)
   servings!: number;
 
-  @IsString()
-  @IsNotEmpty()
-  @Matches(/^recipes\/.+/)
-  imageKey!: string;
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @Matches(/^recipes\/.+/, { each: true })
+  imageKeys?: string[];
 
   @IsArray()
   @ArrayMinSize(1)

@@ -69,7 +69,7 @@ describe('RecipesController', () => {
       timeUnit: RecipeTimeUnit.MINUTOS,
       difficulty: RecipeDifficulty.FACIL,
       servings: 2,
-      imageKey: 'recipes/image.webp',
+      imageKeys: ['recipes/image.webp'],
       ingredients: [
         {
           ingredientId: '11111111-1111-4111-8111-111111111111',
@@ -92,17 +92,34 @@ describe('RecipesController', () => {
     expect(create).toHaveBeenCalledWith(createRecipeDto);
   });
 
-  it('delegates an image update to the service', async () => {
-    const recipeId = '33333333-3333-4333-8333-333333333333';
-    const dto = { imageKey: 'recipes/new.webp' };
-    const recipe = { id: recipeId } as RecipeDetailResponseDto;
-    const updateImage = jest.fn().mockResolvedValue(recipe);
+  it('delegates upload URL generation to the service', async () => {
+    const requestDto = { contentType: 'image/webp' as const };
+    const result = {
+      uploadUrl: 'https://upload.test',
+      imageKey: 'recipes/generated.webp',
+    };
+    const createImageUploadUrl = jest.fn().mockResolvedValue(result);
     const controller = new RecipesController({
-      updateImage,
+      createImageUploadUrl,
     } as unknown as RecipesService);
 
-    await expect(controller.updateImage(recipeId, dto)).resolves.toBe(recipe);
-    expect(updateImage).toHaveBeenCalledWith(recipeId, dto);
+    await expect(controller.createImageUploadUrl(requestDto)).resolves.toBe(
+      result,
+    );
+    expect(createImageUploadUrl).toHaveBeenCalledWith(requestDto);
+  });
+
+  it('delegates an images update to the service', async () => {
+    const recipeId = '33333333-3333-4333-8333-333333333333';
+    const dto = { imageKeys: ['recipes/new.webp'] };
+    const recipe = { id: recipeId } as RecipeDetailResponseDto;
+    const updateImages = jest.fn().mockResolvedValue(recipe);
+    const controller = new RecipesController({
+      updateImages,
+    } as unknown as RecipesService);
+
+    await expect(controller.updateImages(recipeId, dto)).resolves.toBe(recipe);
+    expect(updateImages).toHaveBeenCalledWith(recipeId, dto);
   });
 
   it('delegates recipe deletion to the service', async () => {
