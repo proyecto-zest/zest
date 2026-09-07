@@ -11,8 +11,6 @@ export const spacing = Object.fromEntries([
   ...steps.map((step) => [String(step), `calc(var(--space-unit) * ${step})`]),
   ['nav-mobile', 'var(--nav-height-mobile)'],
   ['nav-desktop', 'var(--nav-height-desktop)'],
-  ['safe-bottom', 'var(--safe-area-bottom)'],
-  ['nav-clearance-mobile', 'var(--nav-clearance-mobile)'],
 ])
 
 /**

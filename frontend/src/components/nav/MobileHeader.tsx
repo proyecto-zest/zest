@@ -1,19 +1,28 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { Menu } from 'lucide-react'
 import { Logo } from '../Logo'
-import { NavAvatar } from './NavAvatar'
+import { MobileNavDrawer } from './MobileNavDrawer'
 import { NewRecipeButton } from './NewRecipeButton'
 
-/** Mobile top bar: logo, New recipe and the avatar placeholder. Tabs live in BottomNav. */
+/** Mobile top bar: logo, New recipe and a hamburger that opens the nav drawer. */
 export function MobileHeader() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
   return (
-    <header className="sticky top-0 z-nav flex h-nav-mobile items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur tablet:hidden">
-      <NavLink to="/" aria-label="Zest home">
-        <Logo />
-      </NavLink>
-      <div className="ml-auto flex items-center gap-3">
-        <NewRecipeButton />
-        <NavAvatar />
-      </div>
-    </header>
+    <>
+      <header className="sticky top-0 z-nav flex h-nav-mobile items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur tablet:hidden">
+        <NavLink to="/" aria-label="Zest home">
+          <Logo />
+        </NavLink>
+        <div className="ml-auto flex items-center gap-3">
+          <NewRecipeButton />
+          <button type="button" aria-label="Open menu" onClick={() => setDrawerOpen(true)} className="text-foreground">
+            <Menu aria-hidden="true" className="h-6 w-6" />
+          </button>
+        </div>
+      </header>
+      <MobileNavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </>
   )
 }
