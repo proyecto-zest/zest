@@ -35,10 +35,10 @@ export function FeedPage() {
       )}
 
       {state.status === 'ok' && state.data.recipes.length > 0 && (
-        <>
+        <div className={`flex flex-col gap-6 transition-opacity ${state.stale ? 'opacity-60' : ''}`}>
           <RecipeGrid recipes={state.data.recipes} />
           <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={setPage} />
-        </>
+        </div>
       )}
     </div>
   )
