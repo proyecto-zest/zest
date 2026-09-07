@@ -91,11 +91,22 @@ describe('RecipesService', () => {
     Promise<Record<string, unknown> | null>,
     [unknown]
   >();
-  const recipeUpdate = jest.fn<Promise<Record<string, unknown>>, [unknown]>();
+  const transactionRecipeFindUnique = jest.fn<
+    Promise<Record<string, unknown> | null>,
+    [unknown]
+  >();
+  const transactionRecipeFindUniqueOrThrow = jest.fn<
+    Promise<Record<string, unknown>>,
+    [unknown]
+  >();
+  const transactionRecipeUpdate = jest.fn<Promise<unknown>, [unknown]>();
   const recipeDelete = jest.fn<Promise<unknown>, [unknown]>();
   const recipeIngredientDeleteMany = jest.fn<Promise<unknown>, [unknown]>();
+  const recipeIngredientUpsert = jest.fn<Promise<unknown>, [unknown]>();
   const recipeStepDeleteMany = jest.fn<Promise<unknown>, [unknown]>();
+  const recipeStepCreateMany = jest.fn<Promise<unknown>, [unknown]>();
   const recipeImageDeleteMany = jest.fn<Promise<unknown>, [unknown]>();
+  const recipeImageCreateMany = jest.fn<Promise<unknown>, [unknown]>();
   const runTransaction = jest.fn<
     Promise<unknown>,
     [(transaction: unknown) => Promise<unknown>]
@@ -112,10 +123,25 @@ describe('RecipesService', () => {
       async (operation: (transaction: unknown) => Promise<unknown>) =>
         operation({
           ingredient: { findMany: ingredientFindMany },
-          recipe: { create: recipeCreate, delete: recipeDelete },
-          recipeIngredient: { deleteMany: recipeIngredientDeleteMany },
-          recipeStep: { deleteMany: recipeStepDeleteMany },
-          recipeImage: { deleteMany: recipeImageDeleteMany },
+          recipe: {
+            create: recipeCreate,
+            delete: recipeDelete,
+            findUnique: transactionRecipeFindUnique,
+            findUniqueOrThrow: transactionRecipeFindUniqueOrThrow,
+            update: transactionRecipeUpdate,
+          },
+          recipeIngredient: {
+            deleteMany: recipeIngredientDeleteMany,
+            upsert: recipeIngredientUpsert,
+          },
+          recipeStep: {
+            deleteMany: recipeStepDeleteMany,
+            createMany: recipeStepCreateMany,
+          },
+          recipeImage: {
+            deleteMany: recipeImageDeleteMany,
+            createMany: recipeImageCreateMany,
+          },
         }),
     );
     objectExists.mockResolvedValue(true);
@@ -132,7 +158,6 @@ describe('RecipesService', () => {
           count: recipeCount,
           findMany: recipeFindMany,
           findUnique: recipeFindUnique,
-          update: recipeUpdate,
         },
       } as unknown as PrismaService,
       {
@@ -359,67 +384,120 @@ describe('RecipesService', () => {
     expect(recipeCreate).not.toHaveBeenCalled();
   });
 
-  it('replaces image references and deletes previous objects', async () => {
+  it('replaces recipe fields, ingredients, steps and images atomically', async () => {
     const newImageKeys = ['recipes/new.webp', 'recipes/new-secondary.webp'];
-    recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
-    recipeUpdate.mockResolvedValue(recipeRecord(newImageKeys));
-
-    const recipe = await service.updateImages(recipeId, {
+    const updateRecipeDto = {
+      ...createRecipeDto,
+      title: 'Ensalada actualizada',
+      ingredients: [
+        { ingredientId: tomatoId, amount: '3', unit: IngredientUnit.UNIDAD },
+        { ingredientId: oilId, amount: '2', unit: IngredientUnit.CUCHARADA },
+      ],
+      steps: ['Paso nuevo 1.', 'Paso nuevo 2.'],
       imageKeys: newImageKeys,
+    };
+    transactionRecipeFindUnique.mockResolvedValue({
+      images: [{ s3Key: imageKey }],
+    });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
+    transactionRecipeFindUniqueOrThrow.mockResolvedValue({
+      ...recipeRecord(newImageKeys),
+      title: updateRecipeDto.title,
     });
 
+    const recipe = await service.update(recipeId, updateRecipeDto);
+
+    expect(transactionRecipeUpdate).toHaveBeenCalledWith({
+      where: { id: recipeId },
+      data: {
+        title: 'Ensalada actualizada',
+        description: createRecipeDto.description,
+        category: createRecipeDto.category,
+        time: createRecipeDto.time,
+        timeUnit: createRecipeDto.timeUnit,
+        difficulty: createRecipeDto.difficulty,
+        servings: createRecipeDto.servings,
+      },
+    });
+    expect(recipeIngredientDeleteMany).toHaveBeenCalledWith({
+      where: {
+        recipeId,
+        ingredientId: { notIn: [tomatoId, oilId] },
+      },
+    });
+    expect(recipeIngredientUpsert).toHaveBeenCalledTimes(2);
+    expect(recipeStepDeleteMany).toHaveBeenCalledWith({ where: { recipeId } });
+    expect(recipeStepCreateMany).toHaveBeenCalledWith({
+      data: [
+        { recipeId, stepNumber: 1, text: 'Paso nuevo 1.' },
+        { recipeId, stepNumber: 2, text: 'Paso nuevo 2.' },
+      ],
+    });
     expect(objectExists).toHaveBeenCalledWith(newImageKeys[0]);
     expect(objectExists).toHaveBeenCalledWith(newImageKeys[1]);
-    expect(recipeUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: recipeId },
-        data: {
-          images: {
-            deleteMany: {},
-            create: newImageKeys.map((s3Key) => ({ s3Key })),
-          },
-        },
-      }),
-    );
+    expect(recipeImageDeleteMany).toHaveBeenCalledWith({
+      where: { recipeId },
+    });
+    expect(recipeImageCreateMany).toHaveBeenCalledWith({
+      data: newImageKeys.map((s3Key) => ({ recipeId, s3Key })),
+    });
     expect(deleteObject).toHaveBeenCalledWith(imageKey);
+    expect(recipe.title).toBe('Ensalada actualizada');
     expect(recipe.imageUrls).toEqual(newImageKeys.map(signedUrl));
   });
 
-  it('keeps current images when an update omits imageKeys', async () => {
-    recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
+  it('keeps current images when a complete update omits imageKeys', async () => {
+    transactionRecipeFindUnique.mockResolvedValue({
+      images: [{ s3Key: imageKey }],
+    });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
+    transactionRecipeFindUniqueOrThrow.mockResolvedValue(
+      recipeRecord([imageKey]),
+    );
 
-    const recipe = await service.updateImages(recipeId, {});
+    const recipe = await service.update(recipeId, {
+      ...createRecipeDto,
+      imageKeys: undefined,
+    });
 
     expect(recipe.imageUrls).toEqual([signedUrl(imageKey)]);
     expect(objectExists).not.toHaveBeenCalled();
-    expect(recipeUpdate).not.toHaveBeenCalled();
+    expect(recipeImageDeleteMany).not.toHaveBeenCalled();
+    expect(recipeImageCreateMany).not.toHaveBeenCalled();
     expect(deleteObject).not.toHaveBeenCalled();
   });
 
   it('removes every image when an update sends an empty list', async () => {
-    recipeFindUnique.mockResolvedValue(
-      recipeRecord([imageKey, secondaryImageKey]),
-    );
-    recipeUpdate.mockResolvedValue(recipeRecord([]));
+    transactionRecipeFindUnique.mockResolvedValue({
+      images: [{ s3Key: imageKey }, { s3Key: secondaryImageKey }],
+    });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
+    transactionRecipeFindUniqueOrThrow.mockResolvedValue(recipeRecord([]));
 
-    const recipe = await service.updateImages(recipeId, { imageKeys: [] });
+    const recipe = await service.update(recipeId, {
+      ...createRecipeDto,
+      imageKeys: [],
+    });
 
-    expect(recipeUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { images: { deleteMany: {}, create: [] } },
-      }),
-    );
+    expect(recipeImageDeleteMany).toHaveBeenCalledWith({
+      where: { recipeId },
+    });
+    expect(recipeImageCreateMany).not.toHaveBeenCalled();
     expect(deleteObject).toHaveBeenCalledWith(imageKey);
     expect(deleteObject).toHaveBeenCalledWith(secondaryImageKey);
     expect(recipe.imageUrls).toEqual([]);
   });
 
   it('does not update a recipe when a new image does not exist', async () => {
-    recipeFindUnique.mockResolvedValue(recipeRecord([imageKey]));
+    transactionRecipeFindUnique.mockResolvedValue({
+      images: [{ s3Key: imageKey }],
+    });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
     objectExists.mockResolvedValue(false);
 
     await expect(
-      service.updateImages(recipeId, {
+      service.update(recipeId, {
+        ...createRecipeDto,
         imageKeys: ['recipes/missing.webp'],
       }),
     ).rejects.toThrow(
@@ -427,15 +505,29 @@ describe('RecipesService', () => {
         'Las siguientes imágenes no existen en S3: recipes/missing.webp',
       ),
     );
-    expect(recipeUpdate).not.toHaveBeenCalled();
+    expect(transactionRecipeUpdate).not.toHaveBeenCalled();
+  });
+
+  it('rolls back before changes when an update ingredient is missing', async () => {
+    transactionRecipeFindUnique.mockResolvedValue({ images: [] });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }]);
+
+    await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
+      new BadRequestException(
+        `Los siguientes ingredientes no existen: ${oilId}`,
+      ),
+    );
+    expect(transactionRecipeUpdate).not.toHaveBeenCalled();
+    expect(recipeIngredientDeleteMany).not.toHaveBeenCalled();
+    expect(recipeStepDeleteMany).not.toHaveBeenCalled();
   });
 
   it('returns 404 when updating a recipe that does not exist', async () => {
-    recipeFindUnique.mockResolvedValue(null);
+    transactionRecipeFindUnique.mockResolvedValue(null);
 
-    await expect(
-      service.updateImages(recipeId, { imageKeys: [imageKey] }),
-    ).rejects.toThrow(new NotFoundException('Recipe not found'));
+    await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
+      new NotFoundException('Recipe not found'),
+    );
   });
 
   it('deletes a recipe, its database relations and its S3 objects', async () => {
