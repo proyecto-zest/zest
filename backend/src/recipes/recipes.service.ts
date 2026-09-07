@@ -241,6 +241,11 @@ export class RecipesService {
     id: string,
     updateRecipeDto: UpdateRecipeDto,
   ): Promise<RecipeDetailResponseDto> {
+    // TODO: validar que el usuario autenticado sea el autor de la receta.
+    if (updateRecipeDto.imageKeys !== undefined) {
+      await this.assertImagesExist(updateRecipeDto.imageKeys);
+    }
+
     const { updatedRecipe, deletedImageKeys } = await this.prisma.$transaction(
       async (transaction) => {
         const currentRecipe = await transaction.recipe.findUnique({
@@ -257,9 +262,29 @@ export class RecipesService {
         );
         await this.assertIngredientsExist(transaction, ingredientIds);
 
-        if (updateRecipeDto.imageKeys !== undefined) {
-          await this.assertImagesExist(updateRecipeDto.imageKeys);
-        }
+        const currentIngredients = await transaction.recipeIngredient.findMany({
+          where: { recipeId: id },
+          select: { ingredientId: true, amount: true, unit: true },
+        });
+        const currentIngredientsById = new Map(
+          currentIngredients.map((ingredient) => [
+            ingredient.ingredientId,
+            ingredient,
+          ]),
+        );
+        const newIngredients = updateRecipeDto.ingredients.filter(
+          ({ ingredientId }) => !currentIngredientsById.has(ingredientId),
+        );
+        const changedIngredients = updateRecipeDto.ingredients.filter(
+          ({ ingredientId, amount, unit }) => {
+            const currentIngredient = currentIngredientsById.get(ingredientId);
+            return (
+              currentIngredient !== undefined &&
+              (currentIngredient.amount !== amount ||
+                currentIngredient.unit !== unit)
+            );
+          },
+        );
 
         await transaction.recipe.update({
           where: { id },
@@ -280,21 +305,25 @@ export class RecipesService {
             ingredientId: { notIn: ingredientIds },
           },
         });
-        for (const ingredient of updateRecipeDto.ingredients) {
-          await transaction.recipeIngredient.upsert({
+        if (newIngredients.length > 0) {
+          await transaction.recipeIngredient.createMany({
+            data: newIngredients.map(({ ingredientId, amount, unit }) => ({
+              recipeId: id,
+              ingredientId,
+              amount,
+              unit,
+            })),
+          });
+        }
+        for (const ingredient of changedIngredients) {
+          await transaction.recipeIngredient.update({
             where: {
               recipeId_ingredientId: {
                 recipeId: id,
                 ingredientId: ingredient.ingredientId,
               },
             },
-            update: { amount: ingredient.amount, unit: ingredient.unit },
-            create: {
-              recipeId: id,
-              ingredientId: ingredient.ingredientId,
-              amount: ingredient.amount,
-              unit: ingredient.unit,
-            },
+            data: { amount: ingredient.amount, unit: ingredient.unit },
           });
         }
 
@@ -332,8 +361,12 @@ export class RecipesService {
       },
     );
 
+    const imageKeysToDelete = await this.getUnreferencedImageKeys(
+      id,
+      deletedImageKeys,
+    );
     await Promise.all(
-      deletedImageKeys.map((s3Key) => this.storageService.deleteObject(s3Key)),
+      imageKeysToDelete.map((s3Key) => this.storageService.deleteObject(s3Key)),
     );
 
     return this.toRecipeDetailResponse(updatedRecipe);
@@ -359,13 +392,17 @@ export class RecipesService {
       await transaction.recipe.delete({ where: { id } });
     });
 
+    const imageKeysToDelete = await this.getUnreferencedImageKeys(
+      id,
+      recipe.images.map(({ s3Key }) => s3Key),
+    );
     const deletions = await Promise.allSettled(
-      recipe.images.map(({ s3Key }) => this.storageService.deleteObject(s3Key)),
+      imageKeysToDelete.map((s3Key) => this.storageService.deleteObject(s3Key)),
     );
     deletions.forEach((result, index) => {
       if (result.status === 'rejected') {
         this.logger.error(
-          `No se pudo borrar de S3 la imagen ${recipe.images[index].s3Key}`,
+          `No se pudo borrar de S3 la imagen ${imageKeysToDelete[index]}`,
           result.reason instanceof Error ? result.reason.stack : undefined,
         );
       }
@@ -457,6 +494,27 @@ export class RecipesService {
         `Las siguientes imágenes no existen en S3: ${missingImageKeys.join(', ')}`,
       );
     }
+  }
+
+  private async getUnreferencedImageKeys(
+    recipeId: string,
+    imageKeys: string[],
+  ): Promise<string[]> {
+    const uniqueImageKeys = [...new Set(imageKeys)];
+    if (uniqueImageKeys.length === 0) {
+      return [];
+    }
+
+    const sharedImages = await this.prisma.recipeImage.findMany({
+      where: {
+        s3Key: { in: uniqueImageKeys },
+        recipeId: { not: recipeId },
+      },
+      select: { s3Key: true },
+    });
+    const sharedImageKeys = new Set(sharedImages.map(({ s3Key }) => s3Key));
+
+    return uniqueImageKeys.filter((s3Key) => !sharedImageKeys.has(s3Key));
   }
 
   private async assertIngredientsExist(
