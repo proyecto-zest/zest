@@ -10,6 +10,12 @@ export function FeedPage() {
   const [page, setPage] = useState(1)
   const { state, retry } = useRecipeFeed(page)
 
+  /** Clicking a page number is usually done scrolled down by the pagination control — jump back to the top of the grid so the new page starts from its beginning, not wherever the old one ended. */
+  const goToPage = (next: number) => {
+    setPage(next)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -35,10 +41,10 @@ export function FeedPage() {
       )}
 
       {state.status === 'ok' && state.data.recipes.length > 0 && (
-        <>
+        <div className={`flex flex-col gap-6 transition-opacity ${state.stale ? 'opacity-60' : ''}`}>
           <RecipeGrid recipes={state.data.recipes} />
-          <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={setPage} />
-        </>
+          <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
+        </div>
       )}
     </div>
   )
