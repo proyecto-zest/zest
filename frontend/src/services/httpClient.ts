@@ -1,3 +1,5 @@
+import { buildQuery, type QueryParams } from './buildQuery'
+
 const baseUrl = import.meta.env.VITE_API_URL
 
 if (!baseUrl) {
@@ -21,6 +23,7 @@ interface RequestOptions {
   method?: 'GET' | 'POST'
   body?: unknown
   signal?: AbortSignal
+  query?: QueryParams
 }
 
 /** Nest sends validation errors as { message: string | string[] }. */
@@ -33,7 +36,8 @@ async function readMessages(response: Response): Promise<string[]> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const response = await fetch(`${baseUrl}${path}`, {
+  const query = options.query ? buildQuery(options.query) : ''
+  const response = await fetch(`${baseUrl}${path}${query}`, {
     method: options.method ?? 'GET',
     headers: { 'Content-Type': 'application/json' },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -49,6 +53,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
 export const httpClient = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) => request<T>(path, options),
-  post: <T>(path: string, body: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
+  post: <T>(path: string, body: unknown, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
     request<T>(path, { ...options, method: 'POST', body }),
 }

@@ -1,7 +1,7 @@
 import { NumberField } from '../../../components/ui/NumberField'
 import { SelectField } from '../../../components/ui/SelectField'
 import { RemoveRowButton } from '../../../components/ui/RemoveRowButton'
-import { toOptions } from '../enumLabels'
+import { toOptions } from '../../../lib/enumLabels'
 import type { Ingredient, IngredientRowValue } from '../types'
 
 interface IngredientRowProps {
