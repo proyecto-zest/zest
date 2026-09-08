@@ -28,6 +28,7 @@ export function RecipeImage({ src, alt }: RecipeImageProps) {
       src={src}
       alt={alt}
       onError={() => setFailed(true)}
+      decoding="async"
       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
     />
   )
