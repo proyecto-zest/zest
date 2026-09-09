@@ -46,17 +46,25 @@ export function FeedPage() {
           categories={options.metadata.categories}
           difficulties={options.metadata.difficulties}
           ingredients={options.ingredients}
+          visible={{ name: false }}
         />
       )}
 
       {state.status === 'loading' && <RecipeGridSkeleton />}
 
       {state.status === 'error' && (
-        <div className="flex flex-col items-start gap-3">
-          <Alert variant="error" title="Couldn't load recipes" message={state.message} />
-          <Button variant="secondary" onClick={retry}>
-            Try again
-          </Button>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-start gap-3">
+            <Alert variant="error" title="Couldn't load recipes" message={state.message} />
+            <Button variant="secondary" onClick={retry}>
+              Try again
+            </Button>
+          </div>
+          {state.staleData && state.staleData.recipes.length > 0 && (
+            <div className="opacity-60">
+              <RecipeGrid recipes={state.staleData.recipes} />
+            </div>
+          )}
         </div>
       )}
 
