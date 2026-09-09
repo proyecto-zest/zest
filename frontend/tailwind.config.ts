@@ -29,8 +29,20 @@ export default {
           from: { opacity: '0', transform: 'translateY(0.5rem)' },
           to: { opacity: '1', transform: 'none' },
         },
+        'dropdown-in': {
+          from: { opacity: '0', transform: 'translateY(-0.25rem) scale(0.98)' },
+          to: { opacity: '1', transform: 'none' },
+        },
+        'select-flash': {
+          '0%': { backgroundColor: 'rgb(var(--color-secondary))' },
+          '100%': { backgroundColor: 'transparent' },
+        },
       },
-      animation: { 'toast-in': 'toast-in 150ms ease-out' },
+      animation: {
+        'toast-in': 'toast-in 150ms ease-out',
+        'dropdown-in': 'dropdown-in 120ms ease-out',
+        'select-flash': 'select-flash 400ms ease-out',
+      },
       maxWidth,
       zIndex,
     },

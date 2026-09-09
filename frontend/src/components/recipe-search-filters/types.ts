@@ -1,6 +1,3 @@
-/** Sentinel for the category/difficulty `<select>`'s "no filter" option — never a real backend enum value. */
-export const ANY_OPTION = '__any__'
-
 /** The four filters `RecipeSearchFilters` controls — an empty/undefined field means "no filter". */
 export interface RecipeSearchFiltersValue {
   name: string

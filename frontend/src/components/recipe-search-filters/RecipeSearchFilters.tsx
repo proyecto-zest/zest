@@ -1,10 +1,11 @@
 import { X } from 'lucide-react'
 import type { Ingredient } from '../../features/recipe-create/types'
 import { toOptions } from '../../lib/enumLabels'
-import { SelectField } from '../ui/SelectField'
 import { IngredientFilterField } from './IngredientFilterField'
 import { NameFilterField } from './NameFilterField'
-import { ANY_OPTION, hasActiveFilters, type RecipeSearchFiltersValue } from './types'
+import { SelectedIngredientChips } from './SelectedIngredientChips'
+import { SingleSelectDropdown } from './SingleSelectDropdown'
+import { hasActiveFilters, type RecipeSearchFiltersValue } from './types'
 
 export type { RecipeSearchFiltersValue } from './types'
 export { emptyRecipeSearchFilters, hasActiveFilters } from './types'
@@ -73,20 +74,22 @@ export function RecipeSearchFilters({
         )}
 
         {showCategory && (
-          <SelectField
+          <SingleSelectDropdown
             aria-label="Filter by category"
-            value={value.category || ANY_OPTION}
-            onChange={(category) => onChange({ ...value, category: category === ANY_OPTION ? '' : category })}
-            options={[{ value: ANY_OPTION, label: 'Any category' }, ...toOptions(categories)]}
+            placeholder="Any category"
+            value={value.category}
+            onChange={(category) => onChange({ ...value, category })}
+            options={[{ value: '', label: 'Any category' }, ...toOptions(categories)]}
           />
         )}
 
         {showDifficulty && (
-          <SelectField
+          <SingleSelectDropdown
             aria-label="Filter by difficulty"
-            value={value.difficulty || ANY_OPTION}
-            onChange={(difficulty) => onChange({ ...value, difficulty: difficulty === ANY_OPTION ? '' : difficulty })}
-            options={[{ value: ANY_OPTION, label: 'Any difficulty' }, ...toOptions(difficulties)]}
+            placeholder="Any difficulty"
+            value={value.difficulty}
+            onChange={(difficulty) => onChange({ ...value, difficulty })}
+            options={[{ value: '', label: 'Any difficulty' }, ...toOptions(difficulties)]}
           />
         )}
 
@@ -101,6 +104,14 @@ export function RecipeSearchFilters({
           </button>
         )}
       </div>
+
+      {showIngredient && (
+        <SelectedIngredientChips
+          ingredients={ingredients}
+          value={value.ingredientIds}
+          onChange={(ingredientIds) => onChange({ ...value, ingredientIds })}
+        />
+      )}
     </div>
   )
 }
