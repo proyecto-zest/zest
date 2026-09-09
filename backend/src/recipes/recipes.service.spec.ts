@@ -91,10 +91,6 @@ describe('RecipesService', () => {
     Promise<Record<string, unknown> | null>,
     [unknown]
   >();
-  const transactionRecipeFindUnique = jest.fn<
-    Promise<Record<string, unknown> | null>,
-    [unknown]
-  >();
   const transactionRecipeFindUniqueOrThrow = jest.fn<
     Promise<Record<string, unknown>>,
     [unknown]
@@ -141,7 +137,6 @@ describe('RecipesService', () => {
           recipe: {
             create: recipeCreate,
             delete: recipeDelete,
-            findUnique: transactionRecipeFindUnique,
             findUniqueOrThrow: transactionRecipeFindUniqueOrThrow,
             update: transactionRecipeUpdate,
           },
@@ -422,7 +417,7 @@ describe('RecipesService', () => {
       steps: ['Paso nuevo 1.', 'Paso nuevo 2.'],
       imageKeys: newImageKeys,
     };
-    transactionRecipeFindUnique.mockResolvedValue({
+    recipeFindUnique.mockResolvedValue({
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -474,7 +469,7 @@ describe('RecipesService', () => {
   });
 
   it('keeps current images when a complete update omits imageKeys', async () => {
-    transactionRecipeFindUnique.mockResolvedValue({
+    recipeFindUnique.mockResolvedValue({
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -495,7 +490,7 @@ describe('RecipesService', () => {
   });
 
   it('removes every image when an update sends an empty list', async () => {
-    transactionRecipeFindUnique.mockResolvedValue({
+    recipeFindUnique.mockResolvedValue({
       images: [{ s3Key: imageKey }, { s3Key: secondaryImageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -516,7 +511,7 @@ describe('RecipesService', () => {
   });
 
   it('does not update a recipe when a new image does not exist', async () => {
-    transactionRecipeFindUnique.mockResolvedValue({
+    recipeFindUnique.mockResolvedValue({
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -537,7 +532,7 @@ describe('RecipesService', () => {
   });
 
   it('rolls back before changes when an update ingredient is missing', async () => {
-    transactionRecipeFindUnique.mockResolvedValue({ images: [] });
+    recipeFindUnique.mockResolvedValue({ images: [] });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }]);
 
     await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
@@ -551,11 +546,13 @@ describe('RecipesService', () => {
   });
 
   it('returns 404 when updating a recipe that does not exist', async () => {
-    transactionRecipeFindUnique.mockResolvedValue(null);
+    recipeFindUnique.mockResolvedValue(null);
 
     await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
       new NotFoundException('Recipe not found'),
     );
+    expect(objectExists).not.toHaveBeenCalled();
+    expect(runTransaction).not.toHaveBeenCalled();
   });
 
   it('deletes a recipe, its database relations and its S3 objects', async () => {
@@ -578,7 +575,7 @@ describe('RecipesService', () => {
 
   it('does not delete an updated image that another recipe still uses', async () => {
     const newImageKey = 'recipes/new.webp';
-    transactionRecipeFindUnique.mockResolvedValue({
+    recipeFindUnique.mockResolvedValue({
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -600,6 +597,33 @@ describe('RecipesService', () => {
       select: { s3Key: true },
     });
     expect(deleteObject).not.toHaveBeenCalledWith(imageKey);
+  });
+
+  it('logs an S3 cleanup failure without failing a successful update', async () => {
+    const newImageKey = 'recipes/new.webp';
+    const error = new Error('S3 unavailable');
+    const loggerError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    recipeFindUnique.mockResolvedValue({
+      images: [{ s3Key: imageKey }],
+    });
+    ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
+    transactionRecipeFindUniqueOrThrow.mockResolvedValue(
+      recipeRecord([newImageKey]),
+    );
+    deleteObject.mockRejectedValue(error);
+
+    await expect(
+      service.update(recipeId, {
+        ...createRecipeDto,
+        imageKeys: [newImageKey],
+      }),
+    ).resolves.toMatchObject({ id: recipeId });
+    expect(loggerError).toHaveBeenCalledWith(
+      `No se pudo borrar de S3 la imagen ${imageKey}`,
+      error.stack,
+    );
   });
 
   it('does not delete a removed recipe image that another recipe still uses', async () => {

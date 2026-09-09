@@ -242,21 +242,21 @@ export class RecipesService {
     updateRecipeDto: UpdateRecipeDto,
   ): Promise<RecipeDetailResponseDto> {
     // TODO: validar que el usuario autenticado sea el autor de la receta.
+    const currentRecipe = await this.prisma.recipe.findUnique({
+      where: { id },
+      select: { images: { select: { s3Key: true } } },
+    });
+
+    if (!currentRecipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
     if (updateRecipeDto.imageKeys !== undefined) {
       await this.assertImagesExist(updateRecipeDto.imageKeys);
     }
 
     const { updatedRecipe, deletedImageKeys } = await this.prisma.$transaction(
       async (transaction) => {
-        const currentRecipe = await transaction.recipe.findUnique({
-          where: { id },
-          select: { images: { select: { s3Key: true } } },
-        });
-
-        if (!currentRecipe) {
-          throw new NotFoundException('Recipe not found');
-        }
-
         const ingredientIds = updateRecipeDto.ingredients.map(
           ({ ingredientId }) => ingredientId,
         );
@@ -365,9 +365,7 @@ export class RecipesService {
       id,
       deletedImageKeys,
     );
-    await Promise.all(
-      imageKeysToDelete.map((s3Key) => this.storageService.deleteObject(s3Key)),
-    );
+    await this.deleteImagesSafely(imageKeysToDelete);
 
     return this.toRecipeDetailResponse(updatedRecipe);
   }
@@ -396,13 +394,17 @@ export class RecipesService {
       id,
       recipe.images.map(({ s3Key }) => s3Key),
     );
+    await this.deleteImagesSafely(imageKeysToDelete);
+  }
+
+  private async deleteImagesSafely(imageKeys: string[]): Promise<void> {
     const deletions = await Promise.allSettled(
-      imageKeysToDelete.map((s3Key) => this.storageService.deleteObject(s3Key)),
+      imageKeys.map((s3Key) => this.storageService.deleteObject(s3Key)),
     );
     deletions.forEach((result, index) => {
       if (result.status === 'rejected') {
         this.logger.error(
-          `No se pudo borrar de S3 la imagen ${imageKeysToDelete[index]}`,
+          `No se pudo borrar de S3 la imagen ${imageKeys[index]}`,
           result.reason instanceof Error ? result.reason.stack : undefined,
         );
       }
