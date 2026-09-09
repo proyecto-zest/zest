@@ -22,8 +22,15 @@ function RecipeDetailContent({ id }: { id: string }) {
   const { state, retry } = useRecipeDetail(id)
   const navigate = useNavigate()
 
-  /** The delete toast is already shown by `DeleteRecipeButton` — this just leaves the page for a recipe that no longer exists. */
-  const handleDeleted = () => navigate('/')
+  /**
+   * The delete toast is already shown by `DeleteRecipeButton` — this just leaves
+   * the page for a recipe that no longer exists. Goes back (not to `/`) so the
+   * feed lands on the same page/scroll position it had, same fallback as `BackButton`.
+   */
+  const handleDeleted = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/')
+  }
 
   return (
     <div className="flex flex-col gap-6">
