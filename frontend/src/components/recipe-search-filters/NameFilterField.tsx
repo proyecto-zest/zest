@@ -16,8 +16,13 @@ const DEBOUNCE_MS = 300
  */
 export function NameFilterField({ value, onChange }: NameFilterFieldProps) {
   const [draft, setDraft] = useState(value)
-
-  useEffect(() => setDraft(value), [value])
+  // Tracks the last external `value` seen, so an out-of-band change (e.g. "Clear
+  // filters") can resync `draft` during render instead of via a setState-in-effect.
+  const [prevValue, setPrevValue] = useState(value)
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setDraft(value)
+  }
 
   useEffect(() => {
     if (draft === value) return

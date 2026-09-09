@@ -7,9 +7,6 @@ import { SelectedIngredientChips } from './SelectedIngredientChips'
 import { SingleSelectDropdown } from './SingleSelectDropdown'
 import { hasActiveFilters, type RecipeSearchFiltersValue } from './types'
 
-export type { RecipeSearchFiltersValue } from './types'
-export { emptyRecipeSearchFilters, hasActiveFilters } from './types'
-
 interface VisibleFilters {
   name?: boolean
   ingredient?: boolean

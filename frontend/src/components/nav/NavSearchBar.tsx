@@ -18,12 +18,16 @@ export function NavSearchBar() {
   const navigate = useNavigate()
 
   const onFeed = pathname === '/'
-  const [draft, setDraft] = useState(() => (onFeed ? (searchParams.get('name') ?? '') : ''))
+  const externalValue = onFeed ? (searchParams.get('name') ?? '') : ''
+  const [draft, setDraft] = useState(externalValue)
 
-  useEffect(() => {
-    if (onFeed) setDraft(searchParams.get('name') ?? '')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onFeed, search])
+  // Tracks the last `search` string seen, so navigating (e.g. "Clear filters"
+  // on the feed) resyncs `draft` during render instead of via a setState-in-effect.
+  const [prevSearch, setPrevSearch] = useState(search)
+  if (search !== prevSearch) {
+    setPrevSearch(search)
+    setDraft(externalValue)
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {

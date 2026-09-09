@@ -20,13 +20,18 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
   const [query, setQuery] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const close = () => {
+    setOpen(false)
+    setQuery('')
+  }
+
   useEffect(() => {
     if (!open) return
     const onClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) close()
     }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') close()
     }
     document.addEventListener('mousedown', onClickOutside)
     document.addEventListener('keydown', onKeyDown)
@@ -34,10 +39,6 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
       document.removeEventListener('mousedown', onClickOutside)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) setQuery('')
   }, [open])
 
   const toggle = (id: string) => {
@@ -53,7 +54,7 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
         aria-haspopup="listbox"
         className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
