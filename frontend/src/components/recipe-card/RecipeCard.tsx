@@ -15,6 +15,7 @@ interface RecipeCardProps {
  * planner all render this. `category` stays a neutral chip in the body;
  * `difficulty` is a colored badge over the image (green/yellow/red for
  * easy/medium/hard) so the two aren't visually interchangeable at a glance.
+ * Deleting a recipe happens on the detail page, not from here.
  */
 export function RecipeCard({ recipe }: RecipeCardProps) {
   return (
