@@ -56,11 +56,11 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
         type="button"
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
-        aria-haspopup="listbox"
-        className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        aria-haspopup="dialog"
+        className="flex w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         Ingredients{value.length > 0 ? ` (${value.length})` : ''}
-        <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+        <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (

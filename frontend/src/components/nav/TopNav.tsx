@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { Logo } from '../Logo'
 import { NavAvatar } from './NavAvatar'
-import { NavSearchBar } from './NavSearchBar'
 import { NewRecipeButton } from './NewRecipeButton'
 import { navLinks } from './navLinks'
 
@@ -30,8 +29,6 @@ export function TopNav() {
             </NavLink>
           ))}
         </nav>
-
-        <NavSearchBar />
 
         <div className="ml-auto flex items-center gap-3">
           <NewRecipeButton />

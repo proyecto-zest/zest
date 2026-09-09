@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import { fieldInputClasses } from '../ui/fieldInputClasses'
 
@@ -24,9 +24,17 @@ export function NameFilterField({ value, onChange }: NameFilterFieldProps) {
     setDraft(value)
   }
 
+  // Always the latest onChange — otherwise a filter change that lands mid-debounce
+  // (e.g. picking a category while typing) would fire with a stale closure and
+  // overwrite it once the timer runs.
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
   useEffect(() => {
     if (draft === value) return
-    const timer = setTimeout(() => onChange(draft), DEBOUNCE_MS)
+    const timer = setTimeout(() => onChangeRef.current(draft), DEBOUNCE_MS)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft])

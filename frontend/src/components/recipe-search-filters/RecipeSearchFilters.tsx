@@ -5,7 +5,7 @@ import { IngredientFilterField } from './IngredientFilterField'
 import { NameFilterField } from './NameFilterField'
 import { SelectedIngredientChips } from './SelectedIngredientChips'
 import { SingleSelectDropdown } from './SingleSelectDropdown'
-import { hasActiveFilters, type RecipeSearchFiltersValue } from './types'
+import { emptyRecipeSearchFilters, hasActiveFilters, type RecipeSearchFiltersValue } from './types'
 
 interface VisibleFilters {
   name?: boolean
@@ -93,7 +93,7 @@ export function RecipeSearchFilters({
         {hasActiveFilters(value) && (
           <button
             type="button"
-            onClick={() => onChange({ name: '', ingredientIds: [], category: '', difficulty: '' })}
+            onClick={() => onChange(emptyRecipeSearchFilters)}
             className="inline-flex items-center gap-1 self-start rounded-lg px-2 py-3 text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <X aria-hidden="true" className="h-4 w-4" />
