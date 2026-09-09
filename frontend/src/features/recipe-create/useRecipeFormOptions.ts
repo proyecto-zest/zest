@@ -1,4 +1,4 @@
-zimport { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getIngredients } from '../../services/ingredients'
 import { getRecipeMetadata } from '../../services/recipes'
 import type { Ingredient, RecipeMetadata } from './types'
