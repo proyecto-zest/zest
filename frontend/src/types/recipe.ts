@@ -11,6 +11,8 @@ export interface RecipeCardData {
   category: string
   difficulty: string
   time: number
+  /** Not sent by the API yet — pending a backend ticket. `formatRecipeTime` falls back to minutes while it's absent. */
+  timeUnit?: string
   servings: number
 }
 

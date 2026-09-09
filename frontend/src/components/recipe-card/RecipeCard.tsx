@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Clock, Gauge } from 'lucide-react'
 import { enumLabel } from '../../lib/enumLabels'
+import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import type { RecipeCardData } from '../../types/recipe'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
 import { RecipeCardImage } from './RecipeCardImage'
@@ -26,7 +27,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         <RecipeCardImage src={recipe.imageUrls[0]} alt={recipe.title} />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
           <Clock aria-hidden="true" className="h-3 w-3 text-primary" />
-          {recipe.time}
+          {formatRecipeTime(recipe.time, recipe.timeUnit)}
         </span>
         <span
           className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
