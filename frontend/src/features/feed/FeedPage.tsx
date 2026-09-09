@@ -1,18 +1,19 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
 import { Pagination } from './Pagination'
 import { RecipeGrid, RecipeGridSkeleton } from './RecipeGrid'
 import { useRecipeFeed } from './useRecipeFeed'
 
-/** The `/` route: paginated grid of every recipe, via GET /recipes. */
+/** The `/` route: paginated grid of every recipe, via GET /recipes. Keeps `page` in the URL so it survives a back navigation instead of resetting to 1. */
 export function FeedPage() {
-  const [page, setPage] = useState(1)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const page = Number(searchParams.get('page') ?? '1')
   const { state, retry } = useRecipeFeed(page)
 
   /** Clicking a page number is usually done scrolled down by the pagination control — jump back to the top of the grid so the new page starts from its beginning, not wherever the old one ended. */
   const goToPage = (next: number) => {
-    setPage(next)
+    setSearchParams(next === 1 ? {} : { page: String(next) })
     window.scrollTo(0, 0)
   }
 
