@@ -1,9 +1,9 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   IngredientUnit,
   Prisma,
@@ -11,19 +11,26 @@ import {
   RecipeDifficulty,
   RecipeTimeUnit,
 } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
+import {
+  RecipeImageContentType,
+  RecipeImageUploadRequestDto,
+  RecipeImageUploadResponseDto,
+} from './dto/recipe-image-upload.dto';
 import {
   CreatedRecipeResponseDto,
   PaginatedRecipesResponseDto,
   RecipeDetailResponseDto,
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
+import { UpdateRecipeImagesDto } from './dto/update-recipe-images.dto';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
-  DEFAULT_RECIPE_IMAGE_KEY,
   MAX_RECIPES_LIMIT,
 } from './recipes.constants';
 
@@ -71,11 +78,19 @@ type RecipeDetailRecord = Prisma.RecipeGetPayload<{
   include: typeof recipeDetailInclude;
 }>;
 
+const imageExtensionByContentType: Record<RecipeImageContentType, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
 @Injectable()
 export class RecipesService {
+  private readonly logger = new Logger(RecipesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
+    private readonly storageService: StorageService,
   ) {}
 
   getMetadata(): RecipeMetadataResponseDto {
@@ -128,16 +143,16 @@ export class RecipesService {
     ]);
 
     return {
-      recipes: recipes.map(({ images, ...recipe }) => {
-        const imageKeys = images.length
-          ? images.map(({ s3Key }) => s3Key)
-          : [DEFAULT_RECIPE_IMAGE_KEY];
-
-        return {
+      recipes: await Promise.all(
+        recipes.map(async ({ images, ...recipe }) => ({
           ...recipe,
-          imageUrls: imageKeys.map((imageKey) => this.buildS3Url(imageKey)),
-        };
-      }),
+          imageUrls: await Promise.all(
+            images.map(({ s3Key }) =>
+              this.storageService.getSignedReadUrl(s3Key),
+            ),
+          ),
+        })),
+      ),
       pagination: {
         total,
         page,
@@ -160,9 +175,27 @@ export class RecipesService {
     return this.toRecipeDetailResponse(recipe);
   }
 
+  async createImageUploadUrl(
+    requestDto: RecipeImageUploadRequestDto,
+  ): Promise<RecipeImageUploadResponseDto> {
+    const extension = imageExtensionByContentType[requestDto.contentType];
+    const imageKey = `recipes/${randomUUID()}.${extension}`;
+
+    return {
+      uploadUrl: await this.storageService.getSignedUploadUrl(
+        imageKey,
+        requestDto.contentType,
+      ),
+      imageKey,
+    };
+  }
+
   async create(
     createRecipeDto: CreateRecipeDto,
   ): Promise<CreatedRecipeResponseDto> {
+    const imageKeys = createRecipeDto.imageKeys ?? [];
+    await this.assertImagesExist(imageKeys);
+
     return this.prisma.$transaction(async (transaction) => {
       const ingredientIds = createRecipeDto.ingredients.map(
         ({ ingredientId }) => ingredientId,
@@ -209,7 +242,7 @@ export class RecipesService {
             })),
           },
           images: {
-            create: { s3Key: DEFAULT_RECIPE_IMAGE_KEY },
+            create: imageKeys.map((s3Key) => ({ s3Key })),
           },
         },
         include: createdRecipeInclude,
@@ -218,9 +251,83 @@ export class RecipesService {
     });
   }
 
-  private toCreatedRecipeResponse(
+  async updateImages(
+    id: string,
+    updateRecipeImagesDto: UpdateRecipeImagesDto,
+  ): Promise<RecipeDetailResponseDto> {
+    const recipe = await this.prisma.recipe.findUnique({
+      where: { id },
+      include: recipeDetailInclude,
+    });
+
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
+    if (updateRecipeImagesDto.imageKeys === undefined) {
+      return this.toRecipeDetailResponse(recipe);
+    }
+
+    const newImageKeys = updateRecipeImagesDto.imageKeys;
+    await this.assertImagesExist(newImageKeys);
+
+    const previousImageKeys = recipe.images
+      .map(({ s3Key }) => s3Key)
+      .filter((s3Key) => !newImageKeys.includes(s3Key));
+    const updatedRecipe = await this.prisma.recipe.update({
+      where: { id },
+      data: {
+        images: {
+          deleteMany: {},
+          create: newImageKeys.map((s3Key) => ({ s3Key })),
+        },
+      },
+      include: recipeDetailInclude,
+    });
+
+    await Promise.all(
+      previousImageKeys.map((s3Key) => this.storageService.deleteObject(s3Key)),
+    );
+
+    return this.toRecipeDetailResponse(updatedRecipe);
+  }
+
+  async remove(id: string): Promise<void> {
+    // TODO: validar que el usuario autenticado sea el autor de la receta.
+    const recipe = await this.prisma.recipe.findUnique({
+      where: { id },
+      select: { images: { select: { s3Key: true } } },
+    });
+
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
+
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.recipeIngredient.deleteMany({
+        where: { recipeId: id },
+      });
+      await transaction.recipeStep.deleteMany({ where: { recipeId: id } });
+      await transaction.recipeImage.deleteMany({ where: { recipeId: id } });
+      await transaction.recipe.delete({ where: { id } });
+    });
+
+    const deletions = await Promise.allSettled(
+      recipe.images.map(({ s3Key }) => this.storageService.deleteObject(s3Key)),
+    );
+    deletions.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        this.logger.error(
+          `No se pudo borrar de S3 la imagen ${recipe.images[index].s3Key}`,
+          result.reason instanceof Error ? result.reason.stack : undefined,
+        );
+      }
+    });
+  }
+
+  private async toCreatedRecipeResponse(
     recipe: CreatedRecipeRecord,
-  ): CreatedRecipeResponseDto {
+  ): Promise<CreatedRecipeResponseDto> {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
@@ -247,19 +354,17 @@ export class RecipesService {
         stepNumber: step.stepNumber,
         text: step.text,
       })),
-      imageUrl: this.buildS3Url(
-        recipe.images[0]?.s3Key ?? DEFAULT_RECIPE_IMAGE_KEY,
+      imageUrls: await Promise.all(
+        recipe.images.map(({ s3Key }) =>
+          this.storageService.getSignedReadUrl(s3Key),
+        ),
       ),
     };
   }
 
-  private toRecipeDetailResponse(
+  private async toRecipeDetailResponse(
     recipe: RecipeDetailRecord,
-  ): RecipeDetailResponseDto {
-    const imageKeys = recipe.images.length
-      ? recipe.images.map(({ s3Key }) => s3Key)
-      : [DEFAULT_RECIPE_IMAGE_KEY];
-
+  ): Promise<RecipeDetailResponseDto> {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
@@ -286,14 +391,24 @@ export class RecipesService {
         stepNumber: step.stepNumber,
         text: step.text,
       })),
-      imageUrls: imageKeys.map((imageKey) => this.buildS3Url(imageKey)),
+      imageUrls: await Promise.all(
+        recipe.images.map(({ s3Key }) =>
+          this.storageService.getSignedReadUrl(s3Key),
+        ),
+      ),
     };
   }
 
-  private buildS3Url(s3Key: string): string {
-    const bucket = this.configService.getOrThrow<string>('AWS_S3_BUCKET');
-    const region = this.configService.getOrThrow<string>('AWS_S3_REGION');
+  private async assertImagesExist(imageKeys: string[]): Promise<void> {
+    const existence = await Promise.all(
+      imageKeys.map((imageKey) => this.storageService.objectExists(imageKey)),
+    );
+    const missingImageKeys = imageKeys.filter((_, index) => !existence[index]);
 
-    return `https://${bucket}.s3.${region}.amazonaws.com/${s3Key}`;
+    if (missingImageKeys.length > 0) {
+      throw new BadRequestException(
+        `Las siguientes imágenes no existen en S3: ${missingImageKeys.join(', ')}`,
+      );
+    }
   }
 }

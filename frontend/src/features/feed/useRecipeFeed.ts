@@ -4,7 +4,7 @@ import type { PaginatedRecipes } from '../../types/recipe'
 import type { RecipeSearchFiltersValue } from '../../components/recipe-search-filters'
 
 /** A multiple of 1, 2 and 3 — the grid's mobile/tablet/desktop column counts — so the last row of a page never falls short. */
-const PAGE_SIZE = 21
+const PAGE_SIZE = 18
 
 export type RecipeFeedState =
   | { status: 'loading' }

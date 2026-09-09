@@ -6,8 +6,10 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
+  Matches,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -55,6 +57,14 @@ export class CreateRecipeDto {
   @IsInt()
   @Min(1)
   servings!: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @Matches(/^recipes\/.+/, { each: true })
+  imageKeys?: string[];
 
   @IsArray()
   @ArrayMinSize(1)

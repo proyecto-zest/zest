@@ -14,6 +14,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
 import { RecipeDetailResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
@@ -23,6 +24,9 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   const prisma = new PrismaClient();
   const ingredientName = 'Ingrediente detalle ZEST-15';
   let app: INestApplication;
+  const getSignedReadUrl = jest.fn((key: string) =>
+    Promise.resolve(`https://signed.test/${key}`),
+  );
 
   beforeAll(async () => {
     await prisma.$connect();
@@ -30,7 +34,10 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(StorageService)
+      .useValue({ getSignedReadUrl })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
@@ -105,8 +112,8 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     });
     expect([...body.imageUrls].sort()).toEqual(
       [
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/detail.webp',
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/detail-secondary.webp',
+        'https://signed.test/recipes/detail.webp',
+        'https://signed.test/recipes/detail-secondary.webp',
       ].sort(),
     );
     expect(body).not.toHaveProperty('images');
@@ -124,7 +131,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
       .expect(400);
   });
 
-  it('uses the default image when the recipe has no images', async () => {
+  it('returns no image URLs when the recipe has no images', async () => {
     const recipe = await prisma.recipe.create({
       data: {
         title: 'Receta sin imagen',
@@ -142,10 +149,6 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
       .expect(200);
     const body = response.body as RecipeDetailResponseDto;
 
-    expect(body).toMatchObject({
-      imageUrls: [
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/default.webp',
-      ],
-    });
+    expect(body).toMatchObject({ imageUrls: [] });
   });
 });
