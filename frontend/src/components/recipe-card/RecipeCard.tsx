@@ -3,6 +3,7 @@ import { Clock, Gauge } from 'lucide-react'
 import { enumLabel } from '../../lib/enumLabels'
 import type { RecipeCardData } from '../../types/recipe'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
+import { EditRecipeButton } from './EditRecipeButton'
 import { RecipeCardImage } from './RecipeCardImage'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
 
@@ -36,6 +37,9 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
+        <div className="absolute bottom-3 right-3">
+          <EditRecipeButton recipeId={recipe.id} />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">

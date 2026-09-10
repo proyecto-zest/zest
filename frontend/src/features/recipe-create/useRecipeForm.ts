@@ -13,11 +13,12 @@ const emptyStep = (): StepRowValue => ({ id: crypto.randomUUID(), text: '' })
 
 const emptyFields = { title: '', description: '', category: '', time: '', timeUnit: '', difficulty: '', servings: '' }
 
-/** Owns the recipe form's state: field values plus the dynamic ingredient and step lists. */
-export function useRecipeForm() {
-  const [fields, setFields] = useState(emptyFields)
-  const ingredients = useRowList<IngredientRowValue>([emptyIngredient()], emptyIngredient)
-  const steps = useRowList<StepRowValue>([emptyStep()], emptyStep)
+/** Owns the recipe form's state: field values plus the dynamic ingredient and step lists. Pass `initialValues` to prefill it for editing — omit it to start blank, as creation does. */
+export function useRecipeForm(initialValues?: RecipeFormValues) {
+  const { ingredients: initialIngredients, steps: initialSteps, ...initialFields } = initialValues ?? emptyFields
+  const [fields, setFields] = useState(initialFields)
+  const ingredients = useRowList<IngredientRowValue>(initialIngredients ?? [emptyIngredient()], emptyIngredient)
+  const steps = useRowList<StepRowValue>(initialSteps ?? [emptyStep()], emptyStep)
 
   const setField = <K extends keyof typeof emptyFields>(field: K, value: string) =>
     setFields((prev) => ({ ...prev, [field]: value }))
