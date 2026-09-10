@@ -57,14 +57,16 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="flex w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        className={`flex w-full items-center justify-between gap-1.5 border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+          open ? 'rounded-t-lg border-b-0' : 'rounded-lg'
+        }`}
       >
         Ingredients{value.length > 0 ? ` (${value.length})` : ''}
         <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-lg border border-border bg-card p-1.5 shadow-lg">
+        <div className="absolute left-0 top-full z-10 w-full rounded-b-lg border border-input bg-card p-1.5 shadow-lg">
           <div className="relative mb-1.5">
             <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input

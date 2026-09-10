@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import {
-  NameFilterField,
   RecipeSearchFilters,
   RecipeSearchFiltersSkeleton,
   emptyRecipeSearchFilters,
@@ -41,8 +40,6 @@ export function FeedPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <NameFilterField value={filters.name} onChange={(name) => setFilters({ ...filters, name })} />
-
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-foreground">Discover</h1>
         {state.status === 'ok' && (
@@ -63,7 +60,6 @@ export function FeedPage() {
           categories={options.metadata.categories}
           difficulties={options.metadata.difficulties}
           ingredients={options.ingredients}
-          visible={{ name: false }}
         />
       )}
 
