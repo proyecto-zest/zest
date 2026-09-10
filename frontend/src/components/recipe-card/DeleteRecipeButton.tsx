@@ -8,9 +8,15 @@ import { DeleteRecipeConfirmModal } from './DeleteRecipeConfirmModal'
 export const deleteButtonClasses =
   'inline-flex items-center justify-center gap-1.5 rounded-full bg-error px-4 py-2 text-sm font-semibold text-error-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-60'
 
-/** Same look, no text/padding — a round icon button for tight spaces (e.g. a feed card corner). */
+/**
+ * A small icon button for tight spaces (e.g. a feed card corner). Deliberately
+ * NOT a flat colored pill like the time/difficulty tags sharing that corner —
+ * a card/white background, border and shadow read as an elevated, clickable
+ * control instead of another status badge (a solid red circle was easy to
+ * mistake for the "Hard" difficulty tag).
+ */
 const iconOnlyDeleteButtonClasses =
-  'inline-flex h-6 w-6 items-center justify-center rounded-full bg-error text-error-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-60'
+  'inline-flex h-7 w-7 items-center justify-center rounded-lg border border-error bg-card text-error shadow-md transition-colors hover:bg-error hover:text-error-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-60'
 
 interface DeleteRecipeButtonProps {
   recipeId: string

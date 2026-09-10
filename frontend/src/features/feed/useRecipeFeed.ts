@@ -53,12 +53,17 @@ export function useRecipeFeed(page: number) {
   const removeRecipe = (id: string) => {
     setResult((prev) => {
       if (!prev || prev.status !== 'ok') return prev
+      const total = prev.data.pagination.total - 1
       return {
         ...prev,
         data: {
           ...prev.data,
           recipes: prev.data.recipes.filter((recipe) => recipe.id !== id),
-          pagination: { ...prev.data.pagination, total: prev.data.pagination.total - 1 },
+          pagination: {
+            ...prev.data.pagination,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / prev.data.pagination.limit)),
+          },
         },
       }
     })
