@@ -37,7 +37,7 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
-        <div className="absolute bottom-3 right-3">
+        <div className="absolute bottom-3 left-3">
           <EditRecipeButton recipeId={recipe.id} />
         </div>
       </div>
