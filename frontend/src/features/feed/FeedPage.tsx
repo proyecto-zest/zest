@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
@@ -22,7 +23,10 @@ export function FeedPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-foreground">Discover</h1>
         {state.status === 'ok' && (
-          <span className="text-sm text-muted-foreground">{state.data.pagination.total} recipes</span>
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            {state.stale && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
+            {state.data.pagination.total} recipes
+          </span>
         )}
       </div>
 
@@ -42,7 +46,7 @@ export function FeedPage() {
       )}
 
       {state.status === 'ok' && state.data.recipes.length > 0 && (
-        <div className={`flex flex-col gap-6 transition-opacity ${state.stale ? 'opacity-60' : ''}`}>
+        <div className="flex flex-col gap-6">
           <RecipeGrid recipes={state.data.recipes} />
           <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
         </div>

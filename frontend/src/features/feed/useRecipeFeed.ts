@@ -7,7 +7,7 @@ const PAGE_SIZE = 18
 
 export type RecipeFeedState =
   | { status: 'loading' }
-  /** `stale: true` means a new page is in flight — `data` is still the previous page's, kept on screen instead of swapped for a skeleton. */
+  /** `stale: true` means a new page is in flight — `data` is still the previous page's, held at full opacity (see `FeedPage`'s spinner) instead of dimmed or swapped for a skeleton, so there's exactly one visual change: the swap when the new page arrives. */
   | { status: 'ok'; data: PaginatedRecipes; stale: boolean }
   | { status: 'error'; message: string }
 
