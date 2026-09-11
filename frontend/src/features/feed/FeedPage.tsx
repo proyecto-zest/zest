@@ -18,19 +18,22 @@ export function FeedPage() {
     window.scrollTo(0, 0)
   }
 
+  /** The total and the page controls stay on screen while switching pages — only the cards below are swapped for skeletons. */
+  const pagination = state.status === 'ok' || state.status === 'switchingPage' ? state.data.pagination : null
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-foreground">Discover</h1>
-        {state.status === 'ok' && (
+        {pagination && (
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {state.stale && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
-            {state.data.pagination.total} recipes
+            {state.status === 'switchingPage' && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
+            {pagination.total} recipes
           </span>
         )}
       </div>
 
-      {state.status === 'loading' && <RecipeGridSkeleton />}
+      {state.status === 'loading' && <RecipeGridSkeleton count={state.skeletonCount} />}
 
       {state.status === 'error' && (
         <div className="flex flex-col items-start gap-3">
@@ -38,6 +41,13 @@ export function FeedPage() {
           <Button variant="secondary" onClick={retry}>
             Try again
           </Button>
+        </div>
+      )}
+
+      {state.status === 'switchingPage' && (
+        <div className="flex flex-col gap-6">
+          <RecipeGridSkeleton count={state.skeletonCount} />
+          <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
         </div>
       )}
 

@@ -1,17 +1,31 @@
 import { useEffect, useState } from 'react'
 import { listRecipes } from '../../services/recipes'
-import type { PaginatedRecipes } from '../../types/recipe'
+import type { PaginatedRecipes, RecipePagination } from '../../types/recipe'
 
 /** A multiple of 1, 2 and 3 — the grid's mobile/tablet/desktop column counts — so the last row of a page never falls short. */
 const PAGE_SIZE = 18
 
+/** Cold-start skeleton count: nothing is known about the feed yet, so this is just a plausible first screenful. */
+const INITIAL_SKELETON_COUNT = 6
+
 export type RecipeFeedState =
-  | { status: 'loading' }
-  /** `stale: true` means a new page is in flight — `data` is still the previous page's, held at full opacity (see `FeedPage`'s spinner) instead of dimmed or swapped for a skeleton, so there's exactly one visual change: the swap when the new page arrives. */
-  | { status: 'ok'; data: PaginatedRecipes; stale: boolean }
+  | { status: 'loading'; skeletonCount: number }
+  | { status: 'ok'; data: PaginatedRecipes }
+  /**
+   * A page change is in flight. `data` is the page being left — its `pagination`
+   * is still valid, so the header count and the pagination controls stay put —
+   * while `skeletonCount` is how many cards the incoming page will have, so the
+   * grid can hold exactly the right amount of space instead of showing the old
+   * page's cards and then collapsing to a shorter one.
+   */
+  | { status: 'switchingPage'; data: PaginatedRecipes; skeletonCount: number }
   | { status: 'error'; message: string }
 
 type Result = { page: number } & ({ status: 'ok'; data: PaginatedRecipes } | { status: 'error'; message: string })
+
+/** How many recipes a given page holds, from the pagination metadata of any page of the same feed. */
+const countForPage = (pagination: RecipePagination, page: number) =>
+  Math.max(0, Math.min(pagination.limit, pagination.total - (page - 1) * pagination.limit))
 
 /**
  * Loads one page of GET /recipes. `state` is derived from `result` vs the
@@ -40,13 +54,15 @@ export function useRecipeFeed(page: number) {
 
   let state: RecipeFeedState
   if (isCurrent && result) {
-    state = result.status === 'ok' ? { status: 'ok', data: result.data, stale: false } : result
+    state = result.status === 'ok' ? { status: 'ok', data: result.data } : result
   } else if (result?.status === 'ok') {
-    // A new page request is in flight — keep the previous page's recipes on screen
-    // (marked stale) instead of swapping them for a skeleton, so the grid never goes empty.
-    state = { status: 'ok', data: result.data, stale: true }
+    state = {
+      status: 'switchingPage',
+      data: result.data,
+      skeletonCount: countForPage(result.data.pagination, page),
+    }
   } else {
-    state = { status: 'loading' }
+    state = { status: 'loading', skeletonCount: INITIAL_SKELETON_COUNT }
   }
 
   return { state, retry: () => setAttempt((n) => n + 1) }
