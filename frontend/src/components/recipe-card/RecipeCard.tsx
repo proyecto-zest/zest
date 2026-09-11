@@ -2,12 +2,15 @@ import { Link } from 'react-router-dom'
 import { Clock, Gauge } from 'lucide-react'
 import { enumLabel } from '../../lib/enumLabels'
 import type { RecipeCardData } from '../../types/recipe'
+import { DeleteRecipeButton } from './DeleteRecipeButton'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
 import { RecipeCardImage } from './RecipeCardImage'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
 
 interface RecipeCardProps {
   recipe: RecipeCardData
+  /** Called after this recipe is deleted from the card's own delete button. */
+  onDeleted?: (id: string) => void
 }
 
 /**
@@ -16,7 +19,7 @@ interface RecipeCardProps {
  * `difficulty` is a colored badge over the image (green/yellow/red for
  * easy/medium/hard) so the two aren't visually interchangeable at a glance.
  */
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
   return (
     <Link
       to={`/recipes/${recipe.id}`}
@@ -36,6 +39,11 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
+        {onDeleted && (
+          <div className="absolute bottom-3 right-3">
+            <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} onDeleted={onDeleted} iconOnly />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
