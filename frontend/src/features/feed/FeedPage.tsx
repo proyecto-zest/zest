@@ -1,11 +1,6 @@
 import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
-import {
-  RecipeSearchFilters,
-  RecipeSearchFiltersSkeleton,
-  emptyRecipeSearchFilters,
-  hasActiveFilters,
-} from '../../components/recipe-search-filters'
+import { RecipeSearchFilters, RecipeSearchFiltersSkeleton, hasActiveFilters } from '../../components/recipe-search-filters'
 import { Button } from '../../components/ui/Button'
 import { useRecipeFormOptions } from '../recipe-create/useRecipeFormOptions'
 import { Pagination } from './Pagination'
@@ -13,12 +8,16 @@ import { RecipeGrid, RecipeGridSkeleton } from './RecipeGrid'
 import { useRecipeFeed } from './useRecipeFeed'
 import { useRecipeSearchFiltersInUrl } from './useRecipeSearchFiltersInUrl'
 
-/** The `/` route: paginated, filterable grid of every recipe, via GET /recipes. */
+/**
+ * The `/` route: paginated, filterable grid of every recipe, via GET /recipes.
+ * Keeps `page` in the URL so deleting a recipe and navigating back lands on
+ * the same page instead of resetting to 1.
+ */
 export function FeedPage() {
   const [filters, setFilters] = useRecipeSearchFiltersInUrl()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get('page') ?? '1')
-  const { state, retry } = useRecipeFeed(page, filters)
+  const { state, retry, removeRecipe } = useRecipeFeed(page, filters)
   const options = useRecipeFormOptions()
 
   // `setFilters` replaces the whole query string with just the filter params
@@ -36,6 +35,14 @@ export function FeedPage() {
       return params
     })
     window.scrollTo(0, 0)
+  }
+
+  /** Deleting the last recipe on a page beyond the first would leave an empty page staring back — step back one instead. */
+  const handleDeleted = (id: string) => {
+    removeRecipe(id)
+    if (page > 1 && state.status === 'ok' && state.data.recipes.length === 1) {
+      goToPage(page - 1)
+    }
   }
 
   return (
@@ -82,12 +89,7 @@ export function FeedPage() {
       )}
 
       {state.status === 'ok' && state.data.recipes.length === 0 && filtered && (
-        <div className="my-8 flex flex-col items-center gap-3 text-center">
-          <p className="text-sm text-muted-foreground">No recipes match these filters.</p>
-          <Button variant="secondary" onClick={() => setFilters(emptyRecipeSearchFilters)}>
-            Clear filters
-          </Button>
-        </div>
+        <p className="my-8 text-center text-sm text-muted-foreground">No recipes match these filters.</p>
       )}
 
       {state.status === 'ok' && state.data.recipes.length === 0 && !filtered && (
@@ -96,7 +98,7 @@ export function FeedPage() {
 
       {state.status === 'ok' && state.data.recipes.length > 0 && (
         <div className={`flex flex-col gap-6 transition-opacity ${state.stale ? 'opacity-60' : ''}`}>
-          <RecipeGrid recipes={state.data.recipes} />
+          <RecipeGrid recipes={state.data.recipes} onDeleted={handleDeleted} />
           <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
         </div>
       )}

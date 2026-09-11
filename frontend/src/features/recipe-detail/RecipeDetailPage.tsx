@@ -1,6 +1,8 @@
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
+import { DeleteRecipeButton } from '../../components/recipe-card/DeleteRecipeButton'
+import { BackButton } from './BackButton'
 import { IngredientsList } from './IngredientsList'
 import { RecipeDetailHeader } from './RecipeDetailHeader'
 import { RecipeDetailSkeleton } from './RecipeDetailSkeleton'
@@ -18,28 +20,49 @@ export function RecipeDetailPage() {
 
 function RecipeDetailContent({ id }: { id: string }) {
   const { state, retry } = useRecipeDetail(id)
+  const navigate = useNavigate()
 
-  if (state.status === 'loading') return <RecipeDetailSkeleton />
-  if (state.status === 'notFound') return <RecipeNotFound />
-
-  if (state.status === 'error') {
-    return (
-      <div className="flex flex-col items-start gap-3">
-        <Alert variant="error" title="Couldn't load this recipe" message={state.message} />
-        <Button variant="secondary" onClick={retry}>
-          Try again
-        </Button>
-      </div>
-    )
+  /**
+   * The delete toast is already shown by `DeleteRecipeButton` — this just leaves
+   * the page for a recipe that no longer exists. Goes back (not to `/`) so the
+   * feed lands on the same page/scroll position it had, same fallback as `BackButton`.
+   */
+  const handleDeleted = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/')
   }
 
   return (
-    <article className="flex flex-col gap-8">
-      <RecipeDetailHeader recipe={state.recipe} />
-      <div className="grid gap-8 tablet:grid-cols-[minmax(0,340px)_1fr]">
-        <IngredientsList ingredients={state.recipe.ingredients} />
-        <StepsList steps={state.recipe.steps} />
-      </div>
-    </article>
+    <div className="flex flex-col gap-6">
+      <BackButton />
+      {state.status === 'loading' && <RecipeDetailSkeleton />}
+      {state.status === 'notFound' && <RecipeNotFound />}
+
+      {state.status === 'error' && (
+        <div className="flex flex-col items-start gap-3">
+          <Alert variant="error" title="Couldn't load this recipe" message={state.message} />
+          <Button variant="secondary" onClick={retry}>
+            Try again
+          </Button>
+        </div>
+      )}
+
+      {state.status === 'ok' && (
+        <article className="flex flex-col gap-8">
+          <RecipeDetailHeader recipe={state.recipe} />
+          <div className="grid gap-8 tablet:grid-cols-[minmax(0,340px)_1fr]">
+            <IngredientsList ingredients={state.recipe.ingredients} />
+            <StepsList steps={state.recipe.steps} />
+          </div>
+          <div className="flex justify-center pt-4">
+            <DeleteRecipeButton
+              recipeId={state.recipe.id}
+              recipeTitle={state.recipe.title}
+              onDeleted={handleDeleted}
+            />
+          </div>
+        </article>
+      )}
+    </div>
   )
 }

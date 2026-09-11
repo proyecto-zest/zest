@@ -88,5 +88,25 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
     state = { status: 'loading' }
   }
 
-  return { state, retry: () => setAttempt((n) => n + 1) }
+  /** Drops a deleted recipe from the current page's in-memory data — no refetch needed. */
+  const removeRecipe = (id: string) => {
+    setResult((prev) => {
+      if (!prev || prev.status !== 'ok') return prev
+      const total = prev.data.pagination.total - 1
+      return {
+        ...prev,
+        data: {
+          ...prev.data,
+          recipes: prev.data.recipes.filter((recipe) => recipe.id !== id),
+          pagination: {
+            ...prev.data.pagination,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / prev.data.pagination.limit)),
+          },
+        },
+      }
+    })
+  }
+
+  return { state, retry: () => setAttempt((n) => n + 1), removeRecipe }
 }

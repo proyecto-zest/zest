@@ -89,18 +89,18 @@ export function RecipeSearchFilters({
             options={[{ value: '', label: 'Any difficulty' }, ...toOptions(difficulties)]}
           />
         )}
-
-        {hasActiveFilters(value) && (
-          <button
-            type="button"
-            onClick={() => onChange(emptyRecipeSearchFilters)}
-            className="inline-flex items-center gap-1 self-start rounded-lg px-2 py-3 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            <X aria-hidden="true" className="h-4 w-4" />
-            Clear filters
-          </button>
-        )}
       </div>
+
+      {hasActiveFilters(value) && (
+        <button
+          type="button"
+          onClick={() => onChange(emptyRecipeSearchFilters)}
+          className="inline-flex items-center gap-1 self-start rounded-lg bg-card px-2 py-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10"
+        >
+          Clear filters
+          <X aria-hidden="true" className="h-3.5 w-3.5" />
+        </button>
+      )}
 
       {showIngredient && (
         <SelectedIngredientChips
