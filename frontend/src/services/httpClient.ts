@@ -20,7 +20,7 @@ export class HttpError extends Error {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   signal?: AbortSignal
   query?: QueryParams
@@ -48,6 +48,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     throw new HttpError(response.status, await readMessages(response))
   }
 
+  // A 204 (e.g. DELETE) has no body — parsing it as JSON would throw.
+  if (response.status === 204) return undefined as T
+
   return (await response.json()) as T
 }
 
@@ -55,4 +58,6 @@ export const httpClient = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) => request<T>(path, options),
   post: <T>(path: string, body: unknown, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
     request<T>(path, { ...options, method: 'POST', body }),
+  delete: <T = void>(path: string, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
+    request<T>(path, { ...options, method: 'DELETE' }),
 }

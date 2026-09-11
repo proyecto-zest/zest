@@ -18,6 +18,7 @@ import {
   MAX_RECIPES_LIMIT,
 } from '../src/recipes/recipes.constants';
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
@@ -26,6 +27,9 @@ const describeWithDatabase =
 describeWithDatabase('GET /recipes (e2e)', () => {
   const prisma = new PrismaClient();
   let app: INestApplication;
+  const getSignedReadUrl = jest.fn((key: string) =>
+    Promise.resolve(`https://signed.test/${key}`),
+  );
 
   const createRecipes = async (count: number): Promise<string[]> => {
     const ids = Array.from({ length: count }, () => randomUUID());
@@ -59,7 +63,10 @@ describeWithDatabase('GET /recipes (e2e)', () => {
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(StorageService)
+      .useValue({ getSignedReadUrl })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
@@ -117,8 +124,8 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     );
     expect([...body.recipes[0].imageUrls].sort()).toEqual(
       [
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/1.webp',
-        'https://zest-images-test.s3.us-east-1.amazonaws.com/recipes/secondary.webp',
+        'https://signed.test/recipes/1.webp',
+        'https://signed.test/recipes/secondary.webp',
       ].sort(),
     );
   });

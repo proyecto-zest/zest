@@ -1,6 +1,7 @@
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
+import { DeleteRecipeButton } from '../../components/recipe-card/DeleteRecipeButton'
 import { BackButton } from './BackButton'
 import { IngredientsList } from './IngredientsList'
 import { RecipeDetailHeader } from './RecipeDetailHeader'
@@ -19,6 +20,17 @@ export function RecipeDetailPage() {
 
 function RecipeDetailContent({ id }: { id: string }) {
   const { state, retry } = useRecipeDetail(id)
+  const navigate = useNavigate()
+
+  /**
+   * The delete toast is already shown by `DeleteRecipeButton` — this just leaves
+   * the page for a recipe that no longer exists. Goes back (not to `/`) so the
+   * feed lands on the same page/scroll position it had, same fallback as `BackButton`.
+   */
+  const handleDeleted = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate('/')
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,6 +53,13 @@ function RecipeDetailContent({ id }: { id: string }) {
           <div className="grid gap-8 tablet:grid-cols-[minmax(0,340px)_1fr]">
             <IngredientsList ingredients={state.recipe.ingredients} />
             <StepsList steps={state.recipe.steps} />
+          </div>
+          <div className="flex justify-center pt-4">
+            <DeleteRecipeButton
+              recipeId={state.recipe.id}
+              recipeTitle={state.recipe.title}
+              onDeleted={handleDeleted}
+            />
           </div>
         </article>
       )}

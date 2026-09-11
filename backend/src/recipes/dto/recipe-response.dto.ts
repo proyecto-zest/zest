@@ -40,7 +40,7 @@ export class RecipeBaseResponseDto {
 export class CreatedRecipeResponseDto extends RecipeBaseResponseDto {
   ingredients!: RecipeIngredientResponseDto[];
   steps!: RecipeStepResponseDto[];
-  imageUrl!: string;
+  imageUrls!: string[];
 }
 
 export class RecipeMetadataResponseDto {
