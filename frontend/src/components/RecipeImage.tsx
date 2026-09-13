@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
 
-interface RecipeCardImageProps {
+interface RecipeImageProps {
   /** Optional: `imageUrls[0]` is `undefined` when a recipe has no images. */
   src?: string
   alt: string
 }
 
 /**
- * Cover image with a graceful fallback. The API is expected to always send a
- * URL (it falls back to a default asset server-side), but that asset may not
- * exist in every environment, and the array itself could be empty — either
- * way, a missing or broken image must not break the card's layout.
+ * Recipe cover image with a graceful fallback, used by both `RecipeCard` and
+ * the recipe detail header. The API is expected to always send a URL (it
+ * falls back to a default asset server-side), but that asset may not exist in
+ * every environment, and the array itself could be empty — either way, a
+ * missing or broken image must not break the layout around it.
  */
-export function RecipeCardImage({ src, alt }: RecipeCardImageProps) {
+export function RecipeImage({ src, alt }: RecipeImageProps) {
   const [failed, setFailed] = useState(false)
 
   if (!src || failed) {

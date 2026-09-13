@@ -5,13 +5,13 @@ import { Logo } from '../Logo'
 import { MobileNavDrawer } from './MobileNavDrawer'
 import { NewRecipeButton } from './NewRecipeButton'
 
-/** Mobile top bar: logo, New recipe and a hamburger that opens the nav drawer. */
+/** Mobile top bar: logo/menu row. Search lives in the feed's filter panel, not here. */
 export function MobileHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
     <>
-      <header className="sticky top-0 z-nav flex h-nav-mobile items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur tablet:hidden">
+      <header className="sticky top-0 z-nav flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur tablet:hidden">
         <NavLink to="/" aria-label="Zest home">
           <Logo />
         </NavLink>
