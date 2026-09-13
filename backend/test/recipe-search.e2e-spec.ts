@@ -28,9 +28,9 @@ type SearchRecipes = {
 describeWithDatabase('GET /recipes search (e2e)', () => {
   const prisma = new PrismaClient();
   const ingredientNames = {
-    tomato: 'Tomate búsqueda ZEST-14',
-    cheese: 'Queso búsqueda ZEST-14',
-    basil: 'Albahaca búsqueda ZEST-14',
+    tomato: 'tomato search zest-14',
+    cheese: 'cheese search zest-14',
+    basil: 'basil search zest-14',
   };
   let app: INestApplication;
   let recipes: SearchRecipes;

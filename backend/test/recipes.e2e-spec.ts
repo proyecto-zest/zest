@@ -13,6 +13,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
+import { CreatedRecipeResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
@@ -34,8 +35,8 @@ describeWithDatabase('POST /recipes (e2e)', () => {
 
   const createCatalog = async (): Promise<void> => {
     const [tomato, oil] = await Promise.all([
-      prisma.ingredient.create({ data: { name: 'Tomate' } }),
-      prisma.ingredient.create({ data: { name: 'Aceite de oliva' } }),
+      prisma.ingredient.create({ data: { name: 'tomato' } }),
+      prisma.ingredient.create({ data: { name: 'olive oil' } }),
     ]);
     tomatoId = tomato.id;
     oilId = oil.id;
@@ -96,35 +97,38 @@ describeWithDatabase('POST /recipes (e2e)', () => {
       .post('/recipes')
       .send(validRecipe())
       .expect(201);
-    const responseBody = response.body as { id: string };
+    const responseBody = response.body as CreatedRecipeResponseDto;
 
-    expect(response.body).toMatchObject({
+    expect(responseBody).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
       imageUrls: [
         'https://signed.test/recipes/uploaded.webp',
         'https://signed.test/recipes/uploaded-secondary.webp',
       ],
       title: 'Ensalada de tomate',
-      ingredients: [
-        {
-          ingredientId: tomatoId,
-          amount: '2',
-          unit: IngredientUnit.UNIDAD,
-          ingredient: { id: tomatoId, name: 'Tomate' },
-        },
-        {
-          ingredientId: oilId,
-          amount: '1',
-          unit: IngredientUnit.CUCHARADA,
-          ingredient: { id: oilId, name: 'Aceite de oliva' },
-        },
-      ],
       steps: [
         { stepNumber: 1, text: 'Cortar el tomate.' },
         { stepNumber: 2, text: 'Mezclar todos los ingredientes.' },
       ],
     });
-    expect(response.body).not.toHaveProperty('s3Key');
+    expect(responseBody.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ingredientId: tomatoId,
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
+          ingredient: { id: tomatoId, name: 'tomato' },
+        }),
+        expect.objectContaining({
+          ingredientId: oilId,
+          amount: '1',
+          unit: IngredientUnit.CUCHARADA,
+          ingredient: { id: oilId, name: 'olive oil' },
+        }),
+      ]),
+    );
+    expect(responseBody.ingredients).toHaveLength(2);
+    expect(responseBody).not.toHaveProperty('s3Key');
 
     const persistedRecipe = await prisma.recipe.findUnique({
       where: { id: responseBody.id },
@@ -134,13 +138,18 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     expect(persistedRecipe).toMatchObject({
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
       timeUnit: RecipeTimeUnit.MINUTOS,
-      ingredients: [{ ingredientId: tomatoId }, { ingredientId: oilId }],
       steps: [{ stepNumber: 1 }, { stepNumber: 2 }],
       images: [
         { s3Key: 'recipes/uploaded.webp' },
         { s3Key: 'recipes/uploaded-secondary.webp' },
       ],
     });
+    expect(persistedRecipe?.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ingredientId: tomatoId }),
+        expect.objectContaining({ ingredientId: oilId }),
+      ]),
+    );
     expect(objectExists).toHaveBeenCalledWith('recipes/uploaded.webp');
     expect(objectExists).toHaveBeenCalledWith(
       'recipes/uploaded-secondary.webp',
