@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react'
 import { listRecipes } from '../../services/recipes'
-import type { PaginatedRecipes } from '../../types/recipe'
+import type { PaginatedRecipes, RecipePagination } from '../../types/recipe'
 import type { RecipeSearchFiltersValue } from '../../components/recipe-search-filters'
 
 /** A multiple of 1, 2 and 3 — the grid's mobile/tablet/desktop column counts — so the last row of a page never falls short. */
 const PAGE_SIZE = 18
 
+/** Skeleton count when the incoming result's size can't be known yet (cold start, or a filter change). */
+const UNKNOWN_SKELETON_COUNT = 6
+
 export type RecipeFeedState =
-  | { status: 'loading' }
-  /** `stale: true` means a new page/filters request is in flight — `data` is still the previous page's, kept on screen instead of swapped for a skeleton. */
-  | { status: 'ok'; data: PaginatedRecipes; stale: boolean }
+  | { status: 'loading'; skeletonCount: number }
+  | { status: 'ok'; data: PaginatedRecipes }
+  /**
+   * A new page/filters request is in flight. `data` is the result being left —
+   * its `pagination` is still valid, so the header count and the page controls
+   * stay put — while `skeletonCount` is how many cards the incoming result will
+   * have, so the grid holds the right amount of space instead of showing the
+   * previous cards and then collapsing to a shorter list.
+   */
+  | { status: 'switchingPage'; data: PaginatedRecipes; skeletonCount: number }
   /** `staleData`, when present, is a previous page's recipes shown (atenuated) behind the error banner instead of the grid vanishing. */
   | { status: 'error'; message: string; staleData?: PaginatedRecipes }
 
@@ -22,6 +32,10 @@ const sameFilters = (a: RecipeSearchFiltersValue, b: RecipeSearchFiltersValue) =
   a.difficulty === b.difficulty &&
   a.ingredientIds.length === b.ingredientIds.length &&
   a.ingredientIds.every((id, i) => id === b.ingredientIds[i])
+
+/** How many recipes a given page holds, from the pagination metadata of any page of the same feed. */
+const countForPage = (pagination: RecipePagination, page: number) =>
+  Math.max(0, Math.min(pagination.limit, pagination.total - (page - 1) * pagination.limit))
 
 /**
  * Loads one page of GET /recipes for the given filters. `state` is derived
@@ -76,16 +90,22 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
   let state: RecipeFeedState
   if (isCurrent && result) {
     if (result.status === 'ok') {
-      state = { status: 'ok', data: result.data, stale: false }
+      state = { status: 'ok', data: result.data }
     } else {
       state = { status: 'error', message: result.message, staleData: lastGoodData ?? undefined }
     }
   } else if (lastGoodData) {
-    // A new page/filters request is in flight — keep the previous page's recipes on screen
-    // (marked stale) instead of swapping them for a skeleton, so the grid never goes empty.
-    state = { status: 'ok', data: lastGoodData, stale: true }
+    // Only a page change within the same filters has a predictable size: the
+    // pagination metadata already says how many recipes the target page holds.
+    // A filter change can return anything, so it falls back to a plain screenful.
+    const onlyPageChanged = result !== null && sameFilters(result.filters, filters)
+    state = {
+      status: 'switchingPage',
+      data: lastGoodData,
+      skeletonCount: onlyPageChanged ? countForPage(lastGoodData.pagination, page) : UNKNOWN_SKELETON_COUNT,
+    }
   } else {
-    state = { status: 'loading' }
+    state = { status: 'loading', skeletonCount: UNKNOWN_SKELETON_COUNT }
   }
 
   /** Drops a deleted recipe from the current page's in-memory data — no refetch needed. */
