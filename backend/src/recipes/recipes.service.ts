@@ -52,6 +52,7 @@ const recipeCardSelect = {
   category: true,
   difficulty: true,
   time: true,
+  timeUnit: true,
   servings: true,
   images: {
     select: { s3Key: true },

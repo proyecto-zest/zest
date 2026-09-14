@@ -4,8 +4,8 @@ import { IngredientsService } from './ingredients.service';
 describe('IngredientsService', () => {
   it('returns only id and name for the complete catalog', async () => {
     const ingredients = [
-      { id: '11111111-1111-4111-8111-111111111111', name: 'Tomate' },
-      { id: '22222222-2222-4222-8222-222222222222', name: 'Zanahoria' },
+      { id: '11111111-1111-4111-8111-111111111111', name: 'tomato' },
+      { id: '22222222-2222-4222-8222-222222222222', name: 'carrot' },
     ];
     const findMany = jest.fn().mockResolvedValue(ingredients);
     const service = new IngredientsService({

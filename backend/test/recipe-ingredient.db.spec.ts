@@ -6,7 +6,11 @@ import {
   RecipeTimeUnit,
 } from '@prisma/client';
 
-import { loadIngredientNames, seedIngredients } from '../prisma/seed';
+import {
+  loadIngredientNames,
+  seedIngredients,
+  stableIngredientId,
+} from '../prisma/seed';
 import { resetTestDatabase } from './test-database';
 
 const describeWithDatabase =
@@ -41,12 +45,12 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
             {
               amount: '2',
               unit: IngredientUnit.UNIDAD,
-              ingredient: { create: { name: 'Tomate' } },
+              ingredient: { create: { name: 'tomato' } },
             },
             {
               amount: '1',
               unit: IngredientUnit.CUCHARADA,
-              ingredient: { create: { name: 'Aceite de oliva' } },
+              ingredient: { create: { name: 'olive oil' } },
             },
           ],
         },
@@ -70,12 +74,12 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
         {
           amount: '1',
           unit: IngredientUnit.CUCHARADA,
-          ingredient: { name: 'Aceite de oliva' },
+          ingredient: { name: 'olive oil' },
         },
         {
           amount: '2',
           unit: IngredientUnit.UNIDAD,
-          ingredient: { name: 'Tomate' },
+          ingredient: { name: 'tomato' },
         },
       ],
     });
@@ -83,7 +87,7 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
 
   it('rejects the same ingredient twice in one recipe', async () => {
     const ingredient = await prisma.ingredient.create({
-      data: { name: 'Papa' },
+      data: { name: 'potato' },
     });
     const recipe = await prisma.recipe.create({
       data: {
@@ -111,22 +115,35 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
   });
 
   it('rejects duplicate ingredient names', async () => {
-    await prisma.ingredient.create({ data: { name: 'Cebolla' } });
+    await prisma.ingredient.create({ data: { name: 'onion' } });
 
     await expect(
-      prisma.ingredient.create({ data: { name: 'Cebolla' } }),
+      prisma.ingredient.create({ data: { name: 'onion' } }),
     ).rejects.toMatchObject({ code: 'P2002' });
   });
 
   it('seeds all default ingredients without duplicating them', async () => {
     const ingredientNames = loadIngredientNames();
 
-    expect(ingredientNames).toHaveLength(213);
-    expect(new Set(ingredientNames).size).toBe(213);
+    expect(ingredientNames).toHaveLength(360);
+    expect(new Set(ingredientNames).size).toBe(360);
+    expect(
+      ingredientNames.every(
+        (ingredientName) =>
+          ingredientName === ingredientName.toLocaleLowerCase('en'),
+      ),
+    ).toBe(true);
 
     await seedIngredients(prisma);
     await seedIngredients(prisma);
 
-    await expect(prisma.ingredient.count()).resolves.toBe(213);
+    const seededIngredients = await prisma.ingredient.findMany({
+      select: { id: true, name: true },
+    });
+
+    expect(seededIngredients).toHaveLength(360);
+    expect(new Set(seededIngredients.map(({ id }) => id))).toEqual(
+      new Set(ingredientNames.map(stableIngredientId)),
+    );
   });
 });

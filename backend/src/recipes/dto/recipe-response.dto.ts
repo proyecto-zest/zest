@@ -57,6 +57,7 @@ export class RecipeCardResponseDto {
   category!: RecipeCategory;
   difficulty!: RecipeDifficulty;
   time!: number;
+  timeUnit!: RecipeTimeUnit;
   servings!: number;
 }
 

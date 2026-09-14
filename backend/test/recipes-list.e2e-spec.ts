@@ -119,9 +119,11 @@ describeWithDatabase('GET /recipes (e2e)', () => {
         'category',
         'difficulty',
         'time',
+        'timeUnit',
         'servings',
       ].sort(),
     );
+    expect(body.recipes[0].timeUnit).toBe(RecipeTimeUnit.MINUTOS);
     expect([...body.recipes[0].imageUrls].sort()).toEqual(
       [
         'https://signed.test/recipes/1.webp',
