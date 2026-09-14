@@ -48,11 +48,24 @@ enum IngredientUnit {
   A_GUSTO
 }
 
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  auth0Sub      String   @unique @map("auth0_sub") @db.VarChar
+  name          String   @db.VarChar
+  email         String   @unique @db.VarChar
+  emailVerified Boolean  @default(false) @map("email_verified")
+  avatarUrl     String?  @map("avatar_url") @db.VarChar
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  recipes       Recipe[]
+
+  @@map("users")
+}
+
 model Recipe {
   id String @id @default(uuid()) @db.Uuid
 
-  // TODO: pasar a @relation con User y a obligatorio — ver ticket del modelo User
-  authorId    String?            @map("author_id") @db.Uuid
+  authorId    String             @map("author_id") @db.Uuid
   title       String             @db.VarChar
   description String             @db.Text
   category    RecipeCategory
@@ -64,6 +77,7 @@ model Recipe {
   ingredients RecipeIngredient[]
   steps       RecipeStep[]
   images      RecipeImage[]
+  author      User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
   @@map("recipes")
 }

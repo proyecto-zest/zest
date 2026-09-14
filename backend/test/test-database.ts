@@ -52,6 +52,6 @@ export async function ensureTestDatabaseExists(): Promise<void> {
 export async function resetTestDatabase(prisma: PrismaClient): Promise<void> {
   assertIsolatedTestDatabase();
   await prisma.$executeRaw`
-    TRUNCATE TABLE "recipes", "ingredients" RESTART IDENTITY CASCADE
+    TRUNCATE TABLE "recipes", "ingredients", "users" RESTART IDENTITY CASCADE
   `;
 }
