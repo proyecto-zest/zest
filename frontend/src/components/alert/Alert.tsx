@@ -8,12 +8,14 @@ interface AlertProps {
   /** One message, or several — validation errors usually come as a list. */
   message: string | string[]
   title?: string
+  /** Id on the title element, e.g. for a wrapping `Modal`'s `aria-labelledby`. */
+  titleId?: string
   /** Passing a handler is what makes the close button appear. */
   onDismiss?: () => void
 }
 
 /** The single component for every error and success message in the app. */
-export function Alert({ variant, message, title, onDismiss }: AlertProps) {
+export function Alert({ variant, message, title, titleId, onDismiss }: AlertProps) {
   const { container, icon, role, ariaLive } = alertVariants[variant]
 
   return (
@@ -25,7 +27,11 @@ export function Alert({ variant, message, title, onDismiss }: AlertProps) {
       <AlertIcon variant={variant} className={icon} />
 
       <div className="min-w-0 flex-1">
-        {title && <p className="mb-1 font-semibold">{title}</p>}
+        {title && (
+          <p id={titleId} className="mb-1 font-semibold">
+            {title}
+          </p>
+        )}
         <AlertMessage message={message} />
       </div>
 

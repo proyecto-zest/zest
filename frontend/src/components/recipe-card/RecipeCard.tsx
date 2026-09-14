@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom'
 import { Clock, Gauge } from 'lucide-react'
+import { RecipeImage } from '../RecipeImage'
 import { enumLabel } from '../../lib/enumLabels'
 import type { RecipeCardData } from '../../types/recipe'
+import { DeleteRecipeButton } from './DeleteRecipeButton'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
 import { EditRecipeButton } from './EditRecipeButton'
-import { RecipeCardImage } from './RecipeCardImage'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
 
 interface RecipeCardProps {
   recipe: RecipeCardData
+  /** Called after this recipe is deleted from the card's own delete button. */
+  onDeleted?: (id: string) => void
 }
 
 /**
@@ -17,14 +20,14 @@ interface RecipeCardProps {
  * `difficulty` is a colored badge over the image (green/yellow/red for
  * easy/medium/hard) so the two aren't visually interchangeable at a glance.
  */
-export function RecipeCard({ recipe }: RecipeCardProps) {
+export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
   return (
     <Link
       to={`/recipes/${recipe.id}`}
       className={`group ${recipeCardShellClasses} hover:shadow-lg hover:shadow-foreground/5`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <RecipeCardImage src={recipe.imageUrls[0]} alt={recipe.title} />
+        <RecipeImage src={recipe.imageUrls[0]} alt={recipe.title} />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
           <Clock aria-hidden="true" className="h-3 w-3 text-primary" />
           {recipe.time}
@@ -40,6 +43,11 @@ export function RecipeCard({ recipe }: RecipeCardProps) {
         <div className="absolute bottom-3 left-3">
           <EditRecipeButton recipeId={recipe.id} />
         </div>
+        {onDeleted && (
+          <div className="absolute bottom-3 right-3">
+            <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} onDeleted={onDeleted} iconOnly />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
