@@ -24,7 +24,7 @@ import {
   RecipeDetailResponseDto,
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
-import { UpdateRecipeImagesDto } from './dto/update-recipe-images.dto';
+import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { RecipesService } from './recipes.service';
 
 @Controller('recipes')
@@ -65,11 +65,11 @@ export class RecipesController {
   }
 
   @Put(':id')
-  updateImages(
+  update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateRecipeImagesDto: UpdateRecipeImagesDto,
+    @Body() updateRecipeDto: UpdateRecipeDto,
   ): Promise<RecipeDetailResponseDto> {
-    return this.recipesService.updateImages(id, updateRecipeImagesDto);
+    return this.recipesService.update(id, updateRecipeDto);
   }
 
   @Delete(':id')
