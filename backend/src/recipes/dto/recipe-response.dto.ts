@@ -27,7 +27,7 @@ export class RecipeStepResponseDto {
 
 export class RecipeBaseResponseDto {
   id!: string;
-  authorId!: string | null;
+  authorId!: string;
   title!: string;
   description!: string;
   category!: RecipeCategory;

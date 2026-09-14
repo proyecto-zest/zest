@@ -16,6 +16,7 @@ import { configureApp } from '../src/configure-app';
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -83,6 +84,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     objectExists.mockResolvedValue(true);
     deleteObject.mockResolvedValue(undefined);
     await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
     await createCatalog();
   });
 
@@ -253,6 +255,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
   it('replaces image references and deletes previous S3 objects', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta existente',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
@@ -290,6 +293,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
   it('keeps the current image when an update has no new key', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta existente',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
@@ -315,6 +319,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
   it('deletes the recipe, its relations and its S3 object', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
@@ -360,6 +365,7 @@ describeWithDatabase('POST /recipes (e2e)', () => {
     deleteObject.mockRejectedValueOnce(new Error('S3 unavailable'));
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
