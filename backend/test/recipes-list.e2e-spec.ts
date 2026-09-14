@@ -13,6 +13,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
 import {
+  DEFAULT_RECIPE_AUTHOR_ID,
   DEFAULT_RECIPES_LIMIT,
   DEFAULT_RECIPES_PAGE,
   MAX_RECIPES_LIMIT,
@@ -20,6 +21,7 @@ import {
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -37,6 +39,7 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     await prisma.recipe.createMany({
       data: ids.map((id, index) => ({
         id,
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: `Receta ${index + 1}`,
         description: `Descripción ${index + 1}`,
         category: RecipeCategory.ALMUERZO,
@@ -73,7 +76,10 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     await app.init();
   });
 
-  beforeEach(() => resetTestDatabase(prisma));
+  beforeEach(async () => {
+    await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
+  });
 
   afterAll(async () => {
     await app.close();

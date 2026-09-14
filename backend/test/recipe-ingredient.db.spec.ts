@@ -7,7 +7,9 @@ import {
 } from '@prisma/client';
 
 import { loadIngredientNames, seedIngredients } from '../prisma/seed';
+import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -20,7 +22,10 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
     await resetTestDatabase(prisma);
   });
 
-  beforeEach(() => resetTestDatabase(prisma));
+  beforeEach(async () => {
+    await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
+  });
 
   afterAll(async () => {
     await prisma.$disconnect();
@@ -29,6 +34,7 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
   it('creates and reads a recipe with its ingredients', async () => {
     const createdRecipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Ensalada de tomate',
         description: 'Una ensalada simple y fresca.',
         category: RecipeCategory.ENTRADA,
@@ -64,7 +70,7 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
     });
 
     expect(recipe).toMatchObject({
-      authorId: null,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       title: 'Ensalada de tomate',
       ingredients: [
         {
@@ -87,6 +93,7 @@ describeWithDatabase('Recipe and Ingredient models (database)', () => {
     });
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Papas al horno',
         description: 'Papas doradas al horno.',
         category: RecipeCategory.ALMUERZO,
