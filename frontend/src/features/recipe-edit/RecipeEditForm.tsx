@@ -48,7 +48,10 @@ export function RecipeEditForm({ recipeId, initialValues, catalog, metadata }: R
     if (saved) {
       setConfirming(false)
       showToast(`"${payload.title}" was updated.`)
-      navigate(`/recipes/${recipeId}`)
+      // `replace`: swaps the `/edit` history entry instead of stacking on it,
+      // so Back from the detail page goes to where the user was before
+      // editing (the feed), not back into the edit form.
+      navigate(`/recipes/${recipeId}`, { replace: true })
     } else {
       // Failure stays on the form (nothing is lost) — close the confirm dialog
       // so the inline server error from `RecipeEditAlerts` is visible.

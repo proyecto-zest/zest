@@ -12,7 +12,9 @@ export function RecipeEditFormActions({ recipeId, submitting }: RecipeEditFormAc
 
   return (
     <div className="flex justify-end gap-3">
-      <Button variant="secondary" onClick={() => navigate(`/recipes/${recipeId}`)}>
+      {/* `replace`: swaps the `/edit` history entry so Back from the detail
+          page goes to where the user was before editing, not back here. */}
+      <Button variant="secondary" onClick={() => navigate(`/recipes/${recipeId}`, { replace: true })}>
         Cancel
       </Button>
       <Button variant="primary" type="submit" disabled={submitting}>
