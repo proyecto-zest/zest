@@ -18,10 +18,11 @@ export function RecipeEditAlerts({ validationErrors, onDismissValidation, update
   return (
     <>
       {validationErrors.length > 0 && (
-        <Modal onClose={onDismissValidation}>
+        <Modal onClose={onDismissValidation} labelledBy="edit-validation-errors-title">
           <Alert
             variant="error"
             title="Please fix the following"
+            titleId="edit-validation-errors-title"
             message={validationErrors}
             onDismiss={onDismissValidation}
           />

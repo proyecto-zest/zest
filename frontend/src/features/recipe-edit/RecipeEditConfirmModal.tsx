@@ -10,10 +10,12 @@ interface RecipeEditConfirmModalProps {
 /** "Save changes?" confirmation — the PUT never fires until this is explicitly confirmed. */
 export function RecipeEditConfirmModal({ pending, onConfirm, onCancel }: RecipeEditConfirmModalProps) {
   return (
-    <Modal onClose={onCancel}>
+    <Modal onClose={onCancel} labelledBy="save-recipe-title">
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6">
         <div>
-          <h2 className="font-serif text-xl font-bold text-foreground">Save changes?</h2>
+          <h2 id="save-recipe-title" className="font-serif text-xl font-bold text-foreground">
+            Save changes?
+          </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
             This will update the recipe with your changes.
           </p>
