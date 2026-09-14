@@ -13,6 +13,7 @@ import {
   RecipeDetailResponseDto,
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
+import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { RecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
 
@@ -109,17 +110,19 @@ describe('RecipesController', () => {
     expect(createImageUploadUrl).toHaveBeenCalledWith(requestDto);
   });
 
-  it('delegates an images update to the service', async () => {
+  it('delegates recipe replacement to the service', async () => {
     const recipeId = '33333333-3333-4333-8333-333333333333';
-    const dto = { imageKeys: ['recipes/new.webp'] };
+    const dto = {
+      imageKeys: ['recipes/new.webp'],
+    } as UpdateRecipeDto;
     const recipe = { id: recipeId } as RecipeDetailResponseDto;
-    const updateImages = jest.fn().mockResolvedValue(recipe);
+    const update = jest.fn().mockResolvedValue(recipe);
     const controller = new RecipesController({
-      updateImages,
+      update,
     } as unknown as RecipesService);
 
-    await expect(controller.updateImages(recipeId, dto)).resolves.toBe(recipe);
-    expect(updateImages).toHaveBeenCalledWith(recipeId, dto);
+    await expect(controller.update(recipeId, dto)).resolves.toBe(recipe);
+    expect(update).toHaveBeenCalledWith(recipeId, dto);
   });
 
   it('delegates recipe deletion to the service', async () => {

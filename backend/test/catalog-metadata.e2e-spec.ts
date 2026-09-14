@@ -10,7 +10,11 @@ import { Test } from '@nestjs/testing';
 import { Server } from 'node:http';
 import request from 'supertest';
 
-import { loadIngredientNames, seedIngredients } from '../prisma/seed';
+import {
+  loadIngredientNames,
+  seedIngredients,
+  stableIngredientId,
+} from '../prisma/seed';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/configure-app';
 import { RecipeMetadataResponseDto } from '../src/recipes/dto/recipe-response.dto';
@@ -47,20 +51,24 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
     await prisma.$disconnect();
   });
 
-  it('GET /ingredients returns all 213 catalog entries with id and name', async () => {
+  it('GET /ingredients returns the complete English catalog', async () => {
     const response = await request(app.getHttpServer() as Server)
       .get('/ingredients')
       .expect(200);
     const ingredients = response.body as IngredientResponse[];
 
-    expect(ingredients).toHaveLength(213);
+    expect(ingredients).toHaveLength(360);
     expect(new Set(ingredients.map(({ name }) => name))).toEqual(
       new Set(loadIngredientNames()),
+    );
+    expect(new Set(ingredients.map(({ id }) => id))).toEqual(
+      new Set(loadIngredientNames().map(stableIngredientId)),
     );
     for (const ingredient of ingredients) {
       expect(Object.keys(ingredient).sort()).toEqual(['id', 'name']);
       expect(typeof ingredient.id).toBe('string');
       expect(typeof ingredient.name).toBe('string');
+      expect(ingredient.name).toBe(ingredient.name.toLocaleLowerCase('en'));
     }
   });
 
