@@ -1,10 +1,11 @@
+import { useState } from 'react'
 import { Card } from '../../../components/Card'
 import { NumberField } from '../../../components/ui/NumberField'
 import { SelectField } from '../../../components/ui/SelectField'
 import { TextAreaField } from '../../../components/ui/TextAreaField'
 import { TextField } from '../../../components/ui/TextField'
 import { toOptions } from '../../../lib/enumLabels'
-import { DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH } from '../fieldLimits'
+import { DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH, servingsRangeError } from '../fieldLimits'
 import type { RecipeFormValues, RecipeMetadata } from '../types'
 import { TimeAndDifficultyRow } from './TimeAndDifficultyRow'
 
@@ -18,6 +19,15 @@ interface RecipeDetailsSectionProps {
 
 /** Title, description, category, time, difficulty and servings. */
 export function RecipeDetailsSection({ values, metadata, setField }: RecipeDetailsSectionProps) {
+  const [servingsError, setServingsError] = useState<string | undefined>(undefined)
+
+  const handleServingsChange = (raw: string) => {
+    const error = servingsRangeError(raw)
+    setServingsError(error)
+    if (error) return
+    setField('servings', raw)
+  }
+
   return (
     <Card>
       <div className="flex flex-col gap-4">
@@ -48,8 +58,9 @@ export function RecipeDetailsSection({ values, metadata, setField }: RecipeDetai
         <NumberField
           label="Servings"
           value={values.servings}
-          onChange={(v) => setField('servings', v)}
+          onChange={handleServingsChange}
           placeholder="4"
+          error={servingsError}
           required
         />
       </div>

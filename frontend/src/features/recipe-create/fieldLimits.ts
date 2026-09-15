@@ -7,6 +7,9 @@ export const STEP_MAX_LENGTH = 500
 export const MINUTES_MAX = 59
 export const HOURS_MAX = 23
 
+/** No home recipe realistically feeds more than this many people. */
+export const SERVINGS_MAX = 100
+
 /** Shared by the live input guard and submit-time validation, so the two can't drift apart. */
 export function timeRangeError(time: string, timeUnit: string): string | undefined {
   const value = Number(time)
@@ -16,5 +19,10 @@ export function timeRangeError(time: string, timeUnit: string): string | undefin
   if (timeUnit === 'HORAS' && value > HOURS_MAX) {
     return `Hours can't be more than ${HOURS_MAX}.`
   }
+  return undefined
+}
+
+export function servingsRangeError(servings: string): string | undefined {
+  if (Number(servings) > SERVINGS_MAX) return `Servings can't be more than ${SERVINGS_MAX}.`
   return undefined
 }
