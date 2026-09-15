@@ -18,4 +18,6 @@ export interface CreateRecipePayload {
   servings: number
   ingredients: CreateRecipeIngredientPayload[]
   steps: string[]
+  /** S3 keys of images already uploaded from the client. Omitted when there's no image. */
+  imageKeys?: string[]
 }
