@@ -33,10 +33,10 @@ export function RecipeEditForm({ recipeId, initialValues, catalog, metadata }: R
   const { showToast } = useToast()
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [confirming, setConfirming] = useState(false)
+  const errors = validateRecipeForm(form.values)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    const errors = validateRecipeForm(form.values)
     setValidationErrors(errors)
     if (errors.length > 0) return
     setConfirming(true)
@@ -72,7 +72,11 @@ export function RecipeEditForm({ recipeId, initialValues, catalog, metadata }: R
       <IngredientsSection form={form} catalog={catalog} units={metadata.units} />
       <StepsSection form={form} />
 
-      <RecipeEditFormActions recipeId={recipeId} submitting={update.state.status === 'loading'} />
+      <RecipeEditFormActions
+        recipeId={recipeId}
+        submitting={update.state.status === 'loading'}
+        disabled={errors.length > 0}
+      />
 
       {confirming && (
         <RecipeEditConfirmModal

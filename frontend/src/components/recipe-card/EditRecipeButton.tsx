@@ -23,7 +23,7 @@ export function EditRecipeButton({ recipeId }: EditRecipeButtonProps) {
         e.stopPropagation()
         navigate(`/recipes/${recipeId}/edit`)
       }}
-      className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-background/90 text-foreground backdrop-blur transition-colors hover:bg-background"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-md transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
     >
       <Pencil aria-hidden="true" className="h-3 w-3" />
     </button>

@@ -4,10 +4,12 @@ import { Button } from '../../components/ui/Button'
 interface RecipeEditFormActionsProps {
   recipeId: string
   submitting: boolean
+  /** True while the form has any invalid field — blocks saving before the request fires. */
+  disabled: boolean
 }
 
 /** Cancel (back to the recipe's detail page) and the submit button, with its loading label. */
-export function RecipeEditFormActions({ recipeId, submitting }: RecipeEditFormActionsProps) {
+export function RecipeEditFormActions({ recipeId, submitting, disabled }: RecipeEditFormActionsProps) {
   const navigate = useNavigate()
 
   return (
@@ -17,7 +19,7 @@ export function RecipeEditFormActions({ recipeId, submitting }: RecipeEditFormAc
       <Button variant="secondary" onClick={() => navigate(`/recipes/${recipeId}`, { replace: true })}>
         Cancel
       </Button>
-      <Button variant="primary" type="submit" disabled={submitting}>
+      <Button variant="primary" type="submit" disabled={submitting || disabled}>
         {submitting ? 'Saving…' : 'Save changes'}
       </Button>
     </div>

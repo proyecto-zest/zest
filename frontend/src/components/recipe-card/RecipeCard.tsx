@@ -40,14 +40,12 @@ export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
           <EditRecipeButton recipeId={recipe.id} />
-        </div>
-        {onDeleted && (
-          <div className="absolute bottom-3 right-3">
+          {onDeleted && (
             <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} onDeleted={onDeleted} iconOnly />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">

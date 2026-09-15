@@ -1,4 +1,10 @@
-import { DESCRIPTION_MAX_LENGTH, STEP_MAX_LENGTH, TITLE_MAX_LENGTH, timeRangeError } from './fieldLimits'
+import {
+  DESCRIPTION_MAX_LENGTH,
+  STEP_MAX_LENGTH,
+  TITLE_MAX_LENGTH,
+  servingsRangeError,
+  timeRangeError,
+} from './fieldLimits'
 import type { RecipeFormValues } from './types'
 
 /**
@@ -24,6 +30,8 @@ export function validateRecipeForm(values: RecipeFormValues): string[] {
   if (!values.servings.trim() || Number(values.servings) < 1) {
     errors.push('Servings must be at least 1.')
   }
+  const servingsError = servingsRangeError(values.servings)
+  if (servingsError) errors.push(servingsError)
 
   if (values.ingredients.length === 0) errors.push('Add at least one ingredient.')
   values.ingredients.forEach((row, index) => {
