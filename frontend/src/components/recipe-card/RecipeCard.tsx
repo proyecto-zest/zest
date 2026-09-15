@@ -49,7 +49,9 @@ export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
       <div className="flex flex-1 flex-col gap-3 p-4">
         <span className={`self-start ${recipeCardChipClasses}`}>{enumLabel(recipe.category)}</span>
 
-        <h3 className="line-clamp-2 font-serif text-lg font-bold leading-snug text-foreground">{recipe.title}</h3>
+        <h3 className="line-clamp-2 break-words font-serif text-lg font-bold leading-snug text-foreground">
+          {recipe.title}
+        </h3>
       </div>
     </Link>
   )

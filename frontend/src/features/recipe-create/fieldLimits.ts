@@ -10,6 +10,13 @@ export const HOURS_MAX = 23
 /** No home recipe realistically feeds more than this many people. */
 export const SERVINGS_MAX = 100
 
+/**
+ * `amount` is free text (`String` column — "2", "1.5", "1/2 cup"...), so it
+ * has no numeric range check. This just stops someone from pasting or typing
+ * an absurdly long value that breaks the detail page's layout.
+ */
+export const INGREDIENT_AMOUNT_MAX_LENGTH = 12
+
 /** Shared by the live input guard and submit-time validation, so the two can't drift apart. */
 export function timeRangeError(time: string, timeUnit: string): string | undefined {
   const value = Number(time)
