@@ -12,6 +12,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { RecipeDetailResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { StorageService } from '../src/storage/storage.service';
@@ -35,6 +36,8 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .overrideProvider(StorageService)
       .useValue({ getSignedReadUrl })
       .compile();
