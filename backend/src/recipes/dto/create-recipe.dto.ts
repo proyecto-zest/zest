@@ -10,7 +10,14 @@ import {
   IsString,
   IsUUID,
   Matches,
+  Max,
+  MaxLength,
   Min,
+  Validate,
+  ValidateIf,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
   ValidateNested,
 } from 'class-validator';
 import {
@@ -19,6 +26,32 @@ import {
   RecipeDifficulty,
   RecipeTimeUnit,
 } from '@prisma/client';
+
+@ValidatorConstraint({ name: 'recipeTimeRange', async: false })
+class RecipeTimeRangeConstraint implements ValidatorConstraintInterface {
+  validate(time: unknown, { object }: ValidationArguments): boolean {
+    if (typeof time !== 'number') {
+      return true;
+    }
+
+    const { timeUnit } = object as CreateRecipeDto;
+    const maximum =
+      timeUnit === RecipeTimeUnit.MINUTOS
+        ? 59
+        : timeUnit === RecipeTimeUnit.HORAS
+          ? 23
+          : undefined;
+
+    return maximum === undefined || time <= maximum;
+  }
+
+  defaultMessage({ object }: ValidationArguments): string {
+    const { timeUnit } = object as CreateRecipeDto;
+    const maximum = timeUnit === RecipeTimeUnit.MINUTOS ? 59 : 23;
+
+    return `time must not be greater than ${maximum} when timeUnit is ${timeUnit}`;
+  }
+}
 
 export class CreateRecipeIngredientDto {
   @IsUUID()
@@ -35,10 +68,12 @@ export class CreateRecipeIngredientDto {
 export class CreateRecipeDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   description!: string;
 
   @IsEnum(RecipeCategory)
@@ -46,6 +81,12 @@ export class CreateRecipeDto {
 
   @IsInt()
   @Min(1)
+  @ValidateIf(
+    (recipe: CreateRecipeDto) =>
+      recipe.timeUnit === RecipeTimeUnit.MINUTOS ||
+      recipe.timeUnit === RecipeTimeUnit.HORAS,
+  )
+  @Validate(RecipeTimeRangeConstraint)
   time!: number;
 
   @IsEnum(RecipeTimeUnit)
@@ -56,6 +97,7 @@ export class CreateRecipeDto {
 
   @IsInt()
   @Min(1)
+  @Max(100)
   servings!: number;
 
   @IsOptional()
@@ -79,5 +121,6 @@ export class CreateRecipeDto {
   @ArrayMinSize(1)
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
+  @MaxLength(500, { each: true })
   steps!: string[];
 }

@@ -224,6 +224,47 @@ describeWithDatabase('Recipes (e2e)', () => {
     await expect(prisma.recipe.count()).resolves.toBe(0);
   });
 
+  it.each([
+    [
+      'title',
+      { title: 'a'.repeat(101) },
+      'title must be shorter than or equal to 100 characters',
+    ],
+    [
+      'description',
+      { description: 'a'.repeat(501) },
+      'description must be shorter than or equal to 500 characters',
+    ],
+    [
+      'step',
+      { steps: ['a'.repeat(501)] },
+      'each value in steps must be shorter than or equal to 500 characters',
+    ],
+    ['servings', { servings: 101 }, 'servings must not be greater than 100'],
+    [
+      'minutes',
+      { time: 60, timeUnit: RecipeTimeUnit.MINUTOS },
+      'time must not be greater than 59 when timeUnit is MINUTOS',
+    ],
+    [
+      'hours',
+      { time: 24, timeUnit: RecipeTimeUnit.HORAS },
+      'time must not be greater than 23 when timeUnit is HORAS',
+    ],
+  ])(
+    'returns 400 with a clear message when %s exceeds its limit',
+    async (_field, overrides, expectedMessage) => {
+      const response = await request(app.getHttpServer() as Server)
+        .post('/recipes')
+        .send({ ...validRecipe(), ...overrides })
+        .expect(400);
+      const body = response.body as { message: string[] };
+
+      expect(body.message).toContain(expectedMessage);
+      await expect(prisma.recipe.count()).resolves.toBe(0);
+    },
+  );
+
   it('creates a recipe without images when imageKeys is omitted', async () => {
     const response = await request(app.getHttpServer() as Server)
       .post('/recipes')
@@ -475,6 +516,27 @@ describeWithDatabase('Recipes (e2e)', () => {
     await expect(
       prisma.recipe.findUniqueOrThrow({ where: { id: recipe.id } }),
     ).resolves.toMatchObject({ title: 'Receta existente', servings: 2 });
+  });
+
+  it('inherits the conditional time limit when updating a recipe', async () => {
+    const recipe = await createExistingRecipe();
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({
+        ...validUpdate(),
+        time: 24,
+        timeUnit: RecipeTimeUnit.HORAS,
+      })
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'time must not be greater than 23 when timeUnit is HORAS',
+    );
+    await expect(
+      prisma.recipe.findUniqueOrThrow({ where: { id: recipe.id } }),
+    ).resolves.toMatchObject({ title: 'Receta existente', time: 20 });
   });
 
   it('replaces image references and deletes previous S3 objects', async () => {
