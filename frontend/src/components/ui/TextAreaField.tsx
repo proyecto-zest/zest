@@ -11,6 +11,8 @@ interface TextAreaFieldProps {
   required?: boolean
   disabled?: boolean
   error?: string
+  /** Shows a "N left" counter and hard-caps input length. */
+  maxLength?: number
   'aria-label'?: string
 }
 
@@ -24,16 +26,17 @@ export function TextAreaField({
   required,
   disabled,
   error,
+  maxLength,
   'aria-label': ariaLabel,
 }: TextAreaFieldProps) {
   const id = useId()
   const errorId = `${id}-error`
-
   return (
     <FieldWrap
       label={label}
       required={required}
       error={error}
+      hint={maxLength ? `${maxLength - value.length} left` : undefined}
       errorId={errorId}
       htmlFor={label ? id : undefined}
       className="min-w-0 flex-1"
@@ -46,6 +49,7 @@ export function TextAreaField({
         rows={rows}
         required={required}
         disabled={disabled}
+        maxLength={maxLength}
         aria-label={label ? undefined : ariaLabel}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
