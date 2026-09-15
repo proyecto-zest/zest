@@ -4,6 +4,7 @@ import { SelectField } from '../../../components/ui/SelectField'
 import { TextAreaField } from '../../../components/ui/TextAreaField'
 import { TextField } from '../../../components/ui/TextField'
 import { toOptions } from '../../../lib/enumLabels'
+import { DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH } from '../fieldLimits'
 import type { RecipeFormValues, RecipeMetadata } from '../types'
 import { TimeAndDifficultyRow } from './TimeAndDifficultyRow'
 
@@ -25,6 +26,7 @@ export function RecipeDetailsSection({ values, metadata, setField }: RecipeDetai
           value={values.title}
           onChange={(v) => setField('title', v)}
           placeholder="e.g. Lemon Garlic Pasta"
+          maxLength={TITLE_MAX_LENGTH}
           required
         />
         <TextAreaField
@@ -32,6 +34,7 @@ export function RecipeDetailsSection({ values, metadata, setField }: RecipeDetai
           value={values.description}
           onChange={(v) => setField('description', v)}
           placeholder="A short, mouth-watering summary…"
+          maxLength={DESCRIPTION_MAX_LENGTH}
           required
         />
         <SelectField

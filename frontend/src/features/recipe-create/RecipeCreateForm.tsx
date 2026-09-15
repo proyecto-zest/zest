@@ -25,10 +25,10 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const errors = validateRecipeForm(form.values)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    const errors = validateRecipeForm(form.values)
     setValidationErrors(errors)
     if (errors.length > 0) return
 
@@ -54,7 +54,7 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
       <IngredientsSection form={form} catalog={catalog} units={metadata.units} />
       <StepsSection form={form} />
 
-      <RecipeFormActions submitting={creation.state.status === 'loading'} />
+      <RecipeFormActions submitting={creation.state.status === 'loading'} disabled={errors.length > 0} />
     </form>
   )
 }
