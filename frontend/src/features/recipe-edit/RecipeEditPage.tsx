@@ -46,6 +46,7 @@ function RecipeEditContent({ id }: { id: string }) {
           <RecipeEditForm
             recipeId={id}
             initialValues={toEditFormValues(recipeState.recipe)}
+            initialImageUrl={recipeState.recipe.imageUrls[0]}
             catalog={options.ingredients}
             metadata={options.metadata}
           />

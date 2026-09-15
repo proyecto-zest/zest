@@ -6,10 +6,12 @@ interface RecipeEditFormActionsProps {
   submitting: boolean
   /** True while the form has any invalid field — blocks saving before the request fires. */
   disabled: boolean
+  /** Submitting, but still on the image upload — worth saying so, it's the slow part. */
+  uploading?: boolean
 }
 
 /** Cancel (back to the recipe's detail page) and the submit button, with its loading label. */
-export function RecipeEditFormActions({ recipeId, submitting, disabled }: RecipeEditFormActionsProps) {
+export function RecipeEditFormActions({ recipeId, submitting, disabled, uploading }: RecipeEditFormActionsProps) {
   const navigate = useNavigate()
 
   return (
@@ -20,7 +22,7 @@ export function RecipeEditFormActions({ recipeId, submitting, disabled }: Recipe
         Cancel
       </Button>
       <Button variant="primary" type="submit" disabled={submitting || disabled}>
-        {submitting ? 'Saving…' : 'Save changes'}
+        {uploading ? 'Uploading image…' : submitting ? 'Saving…' : 'Save changes'}
       </Button>
     </div>
   )

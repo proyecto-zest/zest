@@ -56,7 +56,14 @@ function RecipeDetailContent({ id }: { id: string }) {
             <StepsList steps={state.recipe.steps} />
           </div>
           <div className="flex justify-center gap-3 pt-4">
-            <Button variant="secondary" onClick={() => navigate(`/recipes/${state.recipe.id}/edit`)}>
+            {/* `replace`: swaps this history entry for `/edit` instead of
+                stacking on it, so Back from `/edit` (Cancel or Save, both use
+                `replace` too) lands on the feed — not on a repeated `/detail`
+                entry that bounces Back in place. */}
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/recipes/${state.recipe.id}/edit`, { replace: true })}
+            >
               <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
               Edit
             </Button>
