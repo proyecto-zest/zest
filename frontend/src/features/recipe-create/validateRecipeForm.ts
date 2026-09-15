@@ -1,5 +1,6 @@
 import {
   DESCRIPTION_MAX_LENGTH,
+  INGREDIENT_AMOUNT_MAX_LENGTH,
   STEP_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   servingsRangeError,
@@ -37,6 +38,9 @@ export function validateRecipeForm(values: RecipeFormValues): string[] {
   values.ingredients.forEach((row, index) => {
     if (!row.ingredientId) errors.push(`Ingredient #${index + 1}: pick an ingredient.`)
     if (!row.amount.trim()) errors.push(`Ingredient #${index + 1}: amount is required.`)
+    if (row.amount.length > INGREDIENT_AMOUNT_MAX_LENGTH) {
+      errors.push(`Ingredient #${index + 1}: amount must be ${INGREDIENT_AMOUNT_MAX_LENGTH} characters or fewer.`)
+    }
     if (!row.unit) errors.push(`Ingredient #${index + 1}: pick a unit.`)
   })
 

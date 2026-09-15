@@ -12,6 +12,7 @@ interface NumberFieldProps {
   error?: string
   /** Allow one decimal point, for quantities like "1.5" instead of whole numbers only. */
   allowDecimal?: boolean
+  maxLength?: number
   'aria-label'?: string
 }
 
@@ -31,6 +32,7 @@ export function NumberField({
   disabled,
   error,
   allowDecimal,
+  maxLength,
   'aria-label': ariaLabel,
 }: NumberFieldProps) {
   const id = useId()
@@ -48,6 +50,7 @@ export function NumberField({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        maxLength={maxLength}
         aria-label={label ? undefined : ariaLabel}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}

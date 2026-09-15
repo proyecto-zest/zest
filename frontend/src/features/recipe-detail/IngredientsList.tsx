@@ -16,8 +16,8 @@ export function IngredientsList({ ingredients }: IngredientsListProps) {
             key={row.ingredientId}
             className="flex items-center justify-between gap-2 border-b border-border py-2.5 text-sm last:border-0"
           >
-            <span className="text-foreground">{row.ingredient.name}</span>
-            <span className="shrink-0 font-medium text-muted-foreground">
+            <span className="min-w-0 break-words text-foreground">{row.ingredient.name}</span>
+            <span className="max-w-[45%] shrink-0 break-words text-right font-medium text-muted-foreground">
               {row.amount} {enumLabel(row.unit)}
             </span>
           </li>
