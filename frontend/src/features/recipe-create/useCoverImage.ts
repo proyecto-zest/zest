@@ -40,9 +40,10 @@ export function useCoverImage(initialPreview?: string) {
     setError(null)
   }
 
+  /** Always clears to no image — including the recipe's existing one on edit, not back to it. */
   const clear = () => {
     releaseObjectUrl()
-    setPreview(initialPreview ?? null)
+    setPreview(null)
     setFile(null)
     setError(null)
   }

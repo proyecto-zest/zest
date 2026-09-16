@@ -1,23 +1,19 @@
 import { Alert } from '../../components/alert'
-import type { CreateRecipeState } from './useCreateRecipe'
+import type { UpdateRecipeState } from './useUpdateRecipe'
 
-interface RecipeFormAlertsProps {
+interface RecipeEditAlertsProps {
   validationErrors: string[]
   onDismissValidation: () => void
-  creation: CreateRecipeState
-  onDismissCreation: () => void
+  update: UpdateRecipeState
+  onDismissUpdate: () => void
 }
 
 /**
  * Validation and server errors both render the same way — an inline `Alert`
  * above the form — so which one fired isn't a different visual experience.
+ * The form's values are untouched either way, nothing is lost on failure.
  */
-export function RecipeFormAlerts({
-  validationErrors,
-  onDismissValidation,
-  creation,
-  onDismissCreation,
-}: RecipeFormAlertsProps) {
+export function RecipeEditAlerts({ validationErrors, onDismissValidation, update, onDismissUpdate }: RecipeEditAlertsProps) {
   return (
     <>
       {validationErrors.length > 0 && (
@@ -28,8 +24,8 @@ export function RecipeFormAlerts({
           onDismiss={onDismissValidation}
         />
       )}
-      {creation.status === 'error' && (
-        <Alert variant="error" message={creation.messages} onDismiss={onDismissCreation} />
+      {update.status === 'error' && (
+        <Alert variant="error" message={update.messages} onDismiss={onDismissUpdate} />
       )}
     </>
   )

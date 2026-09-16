@@ -6,6 +6,7 @@ import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import type { RecipeCardData } from '../../types/recipe'
 import { DeleteRecipeButton } from './DeleteRecipeButton'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
+import { EditRecipeButton } from './EditRecipeButton'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
 
 interface RecipeCardProps {
@@ -40,17 +41,20 @@ export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
-        {onDeleted && (
-          <div className="absolute bottom-3 right-3">
+        <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <EditRecipeButton recipeId={recipe.id} />
+          {onDeleted && (
             <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} onDeleted={onDeleted} iconOnly />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <span className={`self-start ${recipeCardChipClasses}`}>{enumLabel(recipe.category)}</span>
 
-        <h3 className="line-clamp-2 font-serif text-lg font-bold leading-snug text-foreground">{recipe.title}</h3>
+        <h3 className="line-clamp-2 break-words font-serif text-lg font-bold leading-snug text-foreground">
+          {recipe.title}
+        </h3>
       </div>
     </Link>
   )
