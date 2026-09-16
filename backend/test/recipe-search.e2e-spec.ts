@@ -67,7 +67,12 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
   const createSearchData = async (): Promise<void> => {
     const [tomato, cheese, basil] = await Promise.all([
-      prisma.ingredient.create({ data: { name: ingredientNames.tomato } }),
+      prisma.ingredient.create({
+        data: {
+          id: 'c02dfc85-b49c-5084-be73-00889918b2da',
+          name: ingredientNames.tomato,
+        },
+      }),
       prisma.ingredient.create({ data: { name: ingredientNames.cheese } }),
       prisma.ingredient.create({ data: { name: ingredientNames.basil } }),
     ]);

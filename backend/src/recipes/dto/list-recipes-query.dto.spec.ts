@@ -33,7 +33,7 @@ describe('ListRecipesQueryDto', () => {
 
   it('transforms one or more ingredient ids into an array', async () => {
     const firstIngredientId = '11111111-1111-4111-8111-111111111111';
-    const secondIngredientId = '22222222-2222-4222-8222-222222222222';
+    const secondIngredientId = 'c02dfc85-b49c-5084-be73-00889918b2da';
     const singleIngredientQuery = plainToInstance(ListRecipesQueryDto, {
       ingredient: firstIngredientId,
     });

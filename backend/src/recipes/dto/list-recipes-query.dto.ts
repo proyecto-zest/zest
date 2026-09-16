@@ -35,7 +35,7 @@ export class ListRecipesQueryDto {
   @Transform(({ value }: TransformFnParams): unknown[] =>
     Array.isArray(value) ? value : [value],
   )
-  @IsUUID('4', { each: true })
+  @IsUUID('all', { each: true })
   ingredient?: string[];
 
   @IsOptional()
