@@ -21,10 +21,7 @@ type RecipeSeedIngredient = {
 };
 
 type RecipeSeedImage = {
-  sourceUrl: string;
-  author: string;
-  license: string;
-  licenseUrl?: string;
+  s3Key: string;
 };
 
 export type RecipeSeed = {
@@ -114,13 +111,6 @@ export function stableRecipeImageId(slug: string, index: number): string {
   return stableUuid('demo-recipe-image', `${slug}:${index + 1}`);
 }
 
-export function recipeImageKey(slug: string, index: number): string {
-  const recipeId = stableRecipeId(slug);
-  const imageId = stableRecipeImageId(slug, index);
-
-  return `recipes/${recipeId}/${imageId}.webp`;
-}
-
 export async function seedIngredients(prisma: PrismaClient): Promise<void> {
   const ingredientNames = loadIngredientNames();
 
@@ -173,12 +163,7 @@ function isRecipeSeedImage(value: unknown): value is RecipeSeedImage {
 
   const image = value as Record<string, unknown>;
 
-  return (
-    isNonEmptyString(image.sourceUrl) &&
-    isNonEmptyString(image.author) &&
-    isNonEmptyString(image.license) &&
-    (image.licenseUrl === undefined || isNonEmptyString(image.licenseUrl))
-  );
+  return isNonEmptyString(image.s3Key) && image.s3Key.startsWith('recipes/');
 }
 
 function isRecipeSeed(value: unknown): value is RecipeSeed {
@@ -224,15 +209,20 @@ export function loadDemoRecipes(): RecipeSeed[] {
     throw new Error('Invalid demo recipe seed data');
   }
 
+  const imageKeys = parsed.flatMap((recipe) =>
+    recipe.images.map((image) => image.s3Key),
+  );
+
   if (
     new Set(parsed.map((recipe) => recipe.slug)).size !== parsed.length ||
     !DEMO_AUTHORS.every((author) =>
       parsed.some((recipe) => recipe.author === author),
     ) ||
+    new Set(imageKeys).size !== imageKeys.length ||
     !parsed.some((recipe) => recipe.images.length > 1)
   ) {
     throw new Error(
-      'Demo recipes need unique slugs, all demo authors, and a gallery',
+      'Demo recipes need unique slugs, authors, image keys, and a gallery',
     );
   }
 
@@ -315,10 +305,10 @@ export async function seedRecipes(prisma: PrismaClient): Promise<void> {
         })),
       });
       await transaction.recipeImage.createMany({
-        data: recipe.images.map((_image, index) => ({
+        data: recipe.images.map((image, index) => ({
           id: stableRecipeImageId(recipe.slug, index),
           recipeId,
-          s3Key: recipeImageKey(recipe.slug, index),
+          s3Key: image.s3Key,
         })),
       });
     });

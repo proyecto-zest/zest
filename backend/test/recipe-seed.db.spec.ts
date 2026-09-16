@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 
 import {
   loadDemoRecipes,
-  recipeImageKey,
   seedIngredients,
   seedRecipes,
   stableDemoAuthorId,
@@ -70,16 +69,17 @@ describeWithDatabase('Demo recipe seed (database)', () => {
     }
 
     const expectedKeys = recipes.flatMap((recipe) =>
-      recipe.images.map((_image, index) => recipeImageKey(recipe.slug, index)),
+      recipe.images.map(({ s3Key }) => s3Key),
     );
     const persistedKeys = seededRecipes.flatMap(({ images }) =>
       images.map(({ s3Key }) => s3Key),
     );
 
     expect(new Set(persistedKeys)).toEqual(new Set(expectedKeys));
+    expect(new Set(expectedKeys).size).toBe(expectedKeys.length);
     expect(
       persistedKeys.every((key) =>
-        /^recipes\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/.test(key),
+        /^recipes\/.+\.(jpg|jpeg|png|webp)$/.test(key),
       ),
     ).toBe(true);
   });

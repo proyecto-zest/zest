@@ -25,20 +25,7 @@
       "Spread the avocado over the toast and place a poached egg on each serving.",
       "Finish with sliced scallion and red pepper flakes, then serve immediately."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Avocado_Toast_Melbourne.jpg",
-        "author": "Finbar Concaig",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      },
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sliced_Avocado_Toast.jpg",
-        "author": "Kjokkenutstyr",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/bf1f25ca-ae57-422d-85c1-b4d67593ae54.jpg"}]
   },
   {
     "slug": "blueberry-oatmeal",
@@ -64,14 +51,7 @@
       "Fold in half of the blueberries and cook for 1 minute so they begin to soften.",
       "Divide between bowls and top with the remaining blueberries, honey, and cinnamon."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bl%C3%A5b%C3%A4rsgr%C3%B6t.jpg",
-        "author": "Anfa",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
-    ]
+    "images": [{"s3Key": "recipes/885ec8e1-b1d0-456a-bf7b-43208efb5082.jpg"}]
   },
   {
     "slug": "spinach-mushroom-omelet",
@@ -99,14 +79,7 @@
       "Melt the remaining butter in the pan, add the eggs, and gently pull the cooked edges toward the center.",
       "Add the mushroom mixture and cheddar to one half, fold the omelet, and cook for 1 more minute before serving."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Spinach_mushroom_omelet.jpg",
-        "author": "Jarrod Baniqued",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
-    ]
+    "images": [{"s3Key": "recipes/43912a4e-3042-45e3-8707-544589d0e6a8.jpg"}]
   },
   {
     "slug": "banana-oat-pancakes",
@@ -134,14 +107,7 @@
       "Melt a little butter in a skillet over medium heat and cook small pancakes for about 2 minutes per side.",
       "Serve the pancakes warm with maple syrup."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Healthy_Banana_Pancakes.jpg",
-        "author": "FitTasteTic",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/c9e38b47-0e66-4736-820c-4427de30ee22.webp"}]
   },
   {
     "slug": "berry-yogurt-parfait",
@@ -167,14 +133,7 @@
       "Layer yogurt, berries, and the toasted oat mixture in two glasses.",
       "Drizzle with honey and serve immediately."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Berry_Parfait,_Chick-fil%E2%80%90A,_Northern_Blvd.jpg",
-        "author": "Elyaqim Mosheh Adam",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/65368949-0910-45af-a0c5-82bd49923f53.jpg"}]
   },
   {
     "slug": "classic-caprese-salad",
@@ -201,20 +160,7 @@
       "Tuck basil leaves between the slices.",
       "Drizzle with olive oil and balsamic vinegar, season with salt and pepper, and serve."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Insalata_Caprese_(from_Poznan).JPG",
-        "author": "MOs810",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
-      },
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Caprese-1.jpg",
-        "author": "Rainer Zenz",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/26748142-8420-4cfc-b30c-766392f2e1db.jpg"}]
   },
   {
     "slug": "roasted-pumpkin-soup",
@@ -244,14 +190,7 @@
       "Blend until completely smooth, then stir in the cream and nutmeg.",
       "Adjust the seasoning and warm gently without boiling before serving."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Autumn_Soup_(Unsplash)_cropped.jpg",
-        "author": "Cala",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
-    ]
+    "images": [{"s3Key": "recipes/4885b19d-2f42-54a9-b5a1-c3d4e352b801/3346462d-e4bb-589a-9140-0a0caf732d16.webp"}]
   },
   {
     "slug": "mediterranean-chickpea-salad",
@@ -281,14 +220,7 @@
       "Add the vegetables, chickpeas, parsley, and crumbled feta and toss gently.",
       "Rest for 10 minutes before serving so the flavors combine."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Colorful_healthy_Chickpea_Salad_-_49859083608.jpg",
-        "author": "FitTasteTic",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/a0340ad0-95e8-5332-b4a6-9cf41e9306b2/d2e9fefc-cfab-53b4-9ee3-11a6a387b9a7.webp"}]
   },
   {
     "slug": "garlic-butter-shrimp",
@@ -317,13 +249,7 @@
       "Lower the heat and cook the garlic and red pepper flakes in the remaining butter for 30 seconds.",
       "Return the shrimp to the pan, add lemon juice and parsley, toss well, and serve immediately."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Shrimp_scampi_food.jpg",
-        "author": "Jon Sullivan",
-        "license": "Public domain"
-      }
-    ]
+    "images": [{"s3Key": "recipes/b44dc84f-b08f-4122-b710-374588c0be46.jpg"}]
   },
   {
     "slug": "tomato-basil-bruschetta",
@@ -351,14 +277,7 @@
       "Rub each warm slice with a cut garlic clove.",
       "Spoon the tomato mixture over the bread just before serving."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tomato_Bruschetta.jpg",
-        "author": "Michael Spencer",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/f6229ca1-0112-4d6e-ace7-3487ceeca5ef.jpg"}]
   },
   {
     "slug": "mango-chicken-with-rice",
@@ -389,14 +308,7 @@
       "Add the sliced onion, bell pepper, and garlic and stir-fry until the vegetables are crisp-tender.",
       "Pour in the mango sauce, simmer until the chicken is cooked through, fold in the remaining diced mango, and serve over rice."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mango_chicken,_tea_leaf_salad,_and_white_rice_-_San_Francisco.jpg",
-        "author": "Daderot",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
-    ]
+    "images": [{"s3Key": "recipes/00c534e1-da7a-4149-b28b-5649f5eb3775.jpg"}]
   },
   {
     "slug": "ginger-beef-stir-fry",
@@ -426,14 +338,7 @@
       "Stir-fry the broccoli and bell pepper for 4 minutes, adding a splash of water to help the broccoli steam.",
       "Return the beef, add the sauce, and toss for 1 to 2 minutes until glossy; finish with sliced scallions."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ginger_beef_stir_fry.jpg",
-        "author": "Jules Clancy",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/e882cab5-bbce-4fa1-9908-8a13fac87aae.jpg"}]
   },
   {
     "slug": "lentil-curry-with-basmati-rice",
@@ -465,14 +370,7 @@
       "Stir in the chopped tomatoes, lentils, and vegetable broth.",
       "Simmer uncovered for 25 to 30 minutes, stirring occasionally, until the lentils are tender; stir in the cream, season, and serve with the rice."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hawai_Thongba_(cooked_lentil_curry)_%26_rice_-_Traditional_Meitei_cuisine_-_Gastronomic_cultural_heritage_of_Manipur_(Kangleipak)_%26_domestic_and_international_Meitei_diasporas.jpg",
-        "author": "Ishani Nath",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/554644da-9600-4f58-8ce0-77f754d72221.jpg"}]
   },
   {
     "slug": "lemon-salmon-with-asparagus",
@@ -501,14 +399,7 @@
       "Roast for 12 to 15 minutes, until the salmon flakes easily and the asparagus is tender-crisp.",
       "Finish with lemon juice and chopped dill before serving."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Asparagus_with_salmon.jpg",
-        "author": "Frank Wouters",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/12804561-13f6-4725-aca1-bfb77f1721ab.jpg"}]
   },
   {
     "slug": "creamy-mushroom-risotto",
@@ -538,20 +429,7 @@
       "Add the wine and stir until absorbed, then add hot broth one ladle at a time, stirring until each addition is nearly absorbed.",
       "After 18 to 20 minutes, fold in the mushrooms, parmesan, and thyme; adjust the consistency with a final splash of broth and serve."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:-2019-12-22_Mushroom_Risotto_with_onion_and_herbs_finished_with_Parmesan_and_Mushroom,_Trimingham.JPG",
-        "author": "Kolforn",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      },
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mushroom_Risotto_(4790048026).jpg",
-        "author": "Katrin Gilger",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/8e3396b2-ce2f-47a9-8fbb-98f54d603db6.jpg"}]
   },
   {
     "slug": "chicken-tacos-with-avocado-salsa",
@@ -581,14 +459,7 @@
       "Warm the tortillas in a dry skillet until soft and lightly toasted.",
       "Fill each tortilla with chicken and avocado salsa and serve with lime wedges."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chicken_Tacos.jpg",
-        "author": "Jeffrey W.",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/22f79f65-f830-4b50-880c-e4524a2d8003.jpg"}]
   },
   {
     "slug": "classic-beef-lasagna",
@@ -620,18 +491,8 @@
       "Cover and bake at 190°C for 30 minutes, uncover for another 15 minutes, then rest for 15 minutes before slicing."
     ],
     "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lasagna_Napoletana.JPG",
-        "author": "Schellenberg",
-        "license": "CC BY 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
-      },
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lasagna_Serving.jpg",
-        "author": "Miansari66",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
+      { "s3Key": "recipes/220f81a2-cad8-4573-9cfb-1098f5838401.jpg" },
+      { "s3Key": "recipes/4de38b36-c903-4771-a781-94fde9365e72.webp" }
     ]
   },
   {
@@ -662,14 +523,7 @@
       "Roast at 200°C for 20 minutes, reduce to 180°C, and continue roasting for about 70 minutes, basting twice with the pan juices.",
       "Confirm the thickest part of the thigh reaches 74°C, then rest the chicken for 15 minutes while making a quick pan sauce with the broth."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Grilled_chicken_with_lemon_and_herbs_served_on_a_dark_platter.jpg",
-        "author": "Shixart1985",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/717b73e1-a2f1-48de-aed8-550b2712e434.jpg"}]
   },
   {
     "slug": "eggplant-parmesan",
@@ -699,14 +553,7 @@
       "Layer tomato sauce, eggplant, mozzarella, parmesan, and basil in a baking dish, finishing with cheese.",
       "Bake at 190°C for 25 minutes until bubbling, then rest for 10 minutes before serving."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Melanzane_alla_parmigiana_finished.jpg",
-        "author": "Joy",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/961337d0-7e7f-4585-a71b-4882c59b272c.jpg"}]
   },
   {
     "slug": "shrimp-pad-thai",
@@ -737,14 +584,7 @@
       "Add the remaining oil, scramble the eggs, then add the noodles and sauce and toss until the noodles are tender.",
       "Return the shrimp, fold in the bean sprouts and scallions, and serve topped with crushed peanuts and lime."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Phat_Thai_kung_Chang_Khien_street_stall.jpg",
-        "author": "Takeaway",
-        "license": "CC BY-SA 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/2317471d-fac0-41f2-a6bc-86e9d64a9d12.jpg"}]
   },
   {
     "slug": "spaghetti-bolognese",
@@ -775,14 +615,7 @@
       "Add the tomato sauce, salt, and pepper and simmer gently for 40 minutes, stirring occasionally.",
       "Cook the spaghetti until al dente, toss it with the sauce and a splash of pasta water, and serve with parmesan."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:2015-05-24_Bolognesesauce_anagoria.JPG",
-        "author": "Anagoria",
-        "license": "CC BY 3.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/cbd86979-cbac-44b5-8861-7b39d194f52a.jpg"}]
   },
   {
     "slug": "gnocchi-with-peas-and-parmesan",
@@ -811,14 +644,7 @@
       "Transfer the floating gnocchi directly to the skillet and toss with parmesan until the sauce becomes glossy.",
       "Finish with lemon zest, parsley, and black pepper."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Homemade_Gnocchi_with_Peas_and_Parmesan.jpg",
-        "author": "Oliver Tacke",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
-    ]
+    "images": [{"s3Key": "recipes/7780254a-8021-4289-a990-28122358a3b9.jpg"}]
   },
   {
     "slug": "black-bean-burgers",
@@ -849,14 +675,7 @@
       "Cook the patties in a lightly oiled skillet for 4 to 5 minutes per side until browned and heated through.",
       "Serve on toasted bread with sliced avocado and tomato."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Black_Bean_Burger_with_the_Works_(4733183268).jpg",
-        "author": "Vegan Feast Catering",
-        "license": "CC BY 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/b0efe767-8e07-4f53-acfc-a96519ab8afd.jpg"}]
   },
   {
     "slug": "chicken-vegetable-couscous",
@@ -889,14 +708,7 @@
       "Pour the remaining hot broth over the couscous, cover for 5 minutes, then fluff with a fork.",
       "Serve the chicken, vegetables, and their broth over the couscous and finish with chopped parsley."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Couscousalgeriennr1.jpg",
-        "author": "Slothtysloth",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/e0ee3557-0ed4-4d69-8dca-06508b68337c.jpg"}]
   },
   {
     "slug": "strawberry-cheesecake",
@@ -926,14 +738,7 @@
       "Cool gradually, then refrigerate for at least 4 hours.",
       "Simmer half of the strawberries with the remaining sugar, lemon juice, and cornstarch until glossy; cool and spoon over the cheesecake with the fresh berries."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Strawberry_cheesecake_round.jpg",
-        "author": "Josefine Linnea Jonsson",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/85c17850-ec50-4fa8-8a59-117dded0c835.jpg"}]
   },
   {
     "slug": "fudgy-chocolate-brownies",
@@ -962,14 +767,7 @@
       "Fold in the flour, cocoa, salt, and chopped walnuts just until no dry streaks remain.",
       "Bake for 25 to 30 minutes, until the edges are set but the center remains moist; cool fully before slicing."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chocolate_brownies_(13498738854).jpg",
-        "author": "James Petts",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/627046cd-c692-474d-90c5-04cf9056ce17.jpg"}]
   },
   {
     "slug": "apple-cinnamon-crumble",
@@ -998,14 +796,7 @@
       "Scatter the topping over the apples and bake at 185°C for 40 to 45 minutes.",
       "Rest for 10 minutes and serve while the filling is still warm."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Apple_crumble_-_home_cooking,_New_Orleans.jpg",
-        "author": "Infrogmation of New Orleans",
-        "license": "CC BY-SA 2.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/d8243ca9-b5e4-412d-8c35-0bc54ee226ab.jpg"}]
   },
   {
     "slug": "fresh-fruit-salad",
@@ -1035,14 +826,7 @@
       "Pour the dressing over the fruit, add the mint, and toss gently.",
       "Chill for 15 minutes or serve immediately."
     ],
-    "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fruit_Salad_Or_Fruit_Bowl.jpg",
-        "author": "Manjeshwari Poet Mysore",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
-    ]
+    "images": [{"s3Key": "recipes/86123371-8e7c-4461-8c6c-78d73ae7048a.jpg"}]
   },
   {
     "slug": "classic-hummus-with-pita",
@@ -1073,18 +857,8 @@
       "Spoon the hummus into a bowl and finish with olive oil, paprika, and chopped parsley."
     ],
     "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Houmous.jpg",
-        "author": "Popo le Chien",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      },
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Homemade_hummus_and_pita_03.jpg",
-        "author": "Satdeep Gill",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
-      }
+      { "s3Key": "recipes/5057a2bc-163d-4806-9c6f-8bf4af83b2a5.jpg" },
+      { "s3Key": "recipes/cfead0ba-d5c8-4af3-b61c-2c5f78d659bb.webp" }
     ]
   },
   {
@@ -1111,12 +885,7 @@
       "Pour in the espresso, stir well, and serve immediately."
     ],
     "images": [
-      {
-        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Iced_coffee.jpg",
-        "author": "Kim Dae Jeung",
-        "license": "CC0",
-        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-      }
+      { "s3Key": "recipes/78a359bd-f4e8-5936-ab75-cf6a69fa9d2c/1d1d5366-1875-50a0-9a43-2771cb456322.webp" }
     ]
   }
 ]
