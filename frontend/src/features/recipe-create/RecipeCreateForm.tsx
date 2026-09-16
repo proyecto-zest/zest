@@ -29,10 +29,10 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
   const { showToast } = useToast()
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
+  const errors = validateRecipeForm(form.values)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    const errors = validateRecipeForm(form.values)
     setValidationErrors(errors)
     if (errors.length > 0) return
 
@@ -79,7 +79,11 @@ export function RecipeCreateForm({ catalog, metadata }: RecipeCreateFormProps) {
       <IngredientsSection form={form} catalog={catalog} units={metadata.units} />
       <StepsSection form={form} />
 
-      <RecipeFormActions submitting={uploading || creation.state.status === 'loading'} uploading={uploading} />
+      <RecipeFormActions
+        submitting={uploading || creation.state.status === 'loading'}
+        disabled={errors.length > 0}
+        uploading={uploading}
+      />
     </form>
   )
 }

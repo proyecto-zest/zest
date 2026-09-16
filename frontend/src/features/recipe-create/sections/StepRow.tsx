@@ -1,6 +1,7 @@
 import type { DragEventHandler } from 'react'
 import { TextAreaField } from '../../../components/ui/TextAreaField'
 import { RemoveRowButton } from '../../../components/ui/RemoveRowButton'
+import { STEP_MAX_LENGTH } from '../fieldLimits'
 
 interface StepRowProps {
   stepNumber: number
@@ -48,6 +49,7 @@ export function StepRow({
         onChange={onChange}
         placeholder="Describe this step…"
         rows={2}
+        maxLength={STEP_MAX_LENGTH}
         aria-label={`Step ${stepNumber}`}
       />
       {canRemove && <RemoveRowButton onClick={onRemove} />}

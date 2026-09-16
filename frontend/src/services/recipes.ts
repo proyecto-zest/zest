@@ -29,6 +29,10 @@ export const listRecipes = (params: ListRecipesParams, options?: { signal?: Abor
 export const deleteRecipe = (id: string, options?: { signal?: AbortSignal }) =>
   httpClient.delete(`/recipes/${id}`, options)
 
-/** The full recipe for the detail view. 404s (unknown id) surface as `HttpError` with `status: 404`. */
+/** The full recipe for the detail/edit views. 404s (unknown id) surface as `HttpError` with `status: 404`. */
 export const getRecipe = (id: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<RecipeDetailData>(`/recipes/${id}`, options)
+
+/** Updates a recipe with the full payload — same shape as create (PUT /recipes/:id extends the create DTO). */
+export const updateRecipe = (id: string, payload: CreateRecipePayload) =>
+  httpClient.put<RecipeDetailData>(`/recipes/${id}`, payload)
