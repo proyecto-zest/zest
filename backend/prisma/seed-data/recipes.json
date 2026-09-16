@@ -1,0 +1,1122 @@
+[
+  {
+    "slug": "avocado-toast-with-poached-eggs",
+    "author": "santiago",
+    "title": "Avocado Toast with Poached Eggs",
+    "description": "Crisp sourdough topped with lemony avocado, softly poached eggs, scallions, and a pinch of red pepper flakes.",
+    "category": "DESAYUNO",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 2,
+    "ingredients": [
+      { "name": "sourdough bread", "amount": "4", "unit": "UNIDAD" },
+      { "name": "avocado", "amount": "2", "unit": "UNIDAD" },
+      { "name": "egg", "amount": "2", "unit": "UNIDAD" },
+      { "name": "lemon juice", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "scallion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "red pepper flake", "amount": "1", "unit": "PIZCA" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Toast the sourdough until the edges are crisp and golden.",
+      "Mash the avocado with the lemon juice and a pinch of salt.",
+      "Bring a shallow pan of water to a gentle simmer and poach the eggs for 3 to 4 minutes, until the whites are set and the yolks remain soft.",
+      "Spread the avocado over the toast and place a poached egg on each serving.",
+      "Finish with sliced scallion and red pepper flakes, then serve immediately."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Avocado_Toast_Melbourne.jpg",
+        "author": "Finbar Concaig",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sliced_Avocado_Toast.jpg",
+        "author": "Kjokkenutstyr",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "blueberry-oatmeal",
+    "author": "tiago",
+    "title": "Creamy Blueberry Oatmeal",
+    "description": "Warm rolled oats simmered in milk and finished with blueberries, honey, and cinnamon for an easy everyday breakfast.",
+    "category": "DESAYUNO",
+    "time": 15,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 2,
+    "ingredients": [
+      { "name": "oats", "amount": "1", "unit": "TAZA" },
+      { "name": "milk", "amount": "2", "unit": "TAZA" },
+      { "name": "blueberry", "amount": "1", "unit": "TAZA" },
+      { "name": "honey", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "cinnamon", "amount": "1/2", "unit": "CUCHARADITA" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Combine the oats, milk, and salt in a small saucepan.",
+      "Cook over medium-low heat for 6 to 8 minutes, stirring often, until creamy.",
+      "Fold in half of the blueberries and cook for 1 minute so they begin to soften.",
+      "Divide between bowls and top with the remaining blueberries, honey, and cinnamon."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bl%C3%A5b%C3%A4rsgr%C3%B6t.jpg",
+        "author": "Anfa",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "spinach-mushroom-omelet",
+    "author": "ines",
+    "title": "Spinach and Mushroom Omelet",
+    "description": "A tender folded omelet filled with sautéed mushrooms, spinach, and melted cheddar cheese.",
+    "category": "DESAYUNO",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 2,
+    "ingredients": [
+      { "name": "egg", "amount": "4", "unit": "UNIDAD" },
+      { "name": "button mushroom", "amount": "150", "unit": "GRAMO" },
+      { "name": "spinach", "amount": "2", "unit": "TAZA" },
+      { "name": "cheddar cheese", "amount": "60", "unit": "GRAMO" },
+      { "name": "butter", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" },
+      { "name": "black pepper", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Slice the mushrooms and sauté them in half of the butter over medium-high heat until browned.",
+      "Add the spinach and cook just until wilted, then season lightly and transfer the filling to a plate.",
+      "Whisk the eggs with salt and pepper until evenly combined.",
+      "Melt the remaining butter in the pan, add the eggs, and gently pull the cooked edges toward the center.",
+      "Add the mushroom mixture and cheddar to one half, fold the omelet, and cook for 1 more minute before serving."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Spinach_mushroom_omelet.jpg",
+        "author": "Jarrod Baniqued",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "banana-oat-pancakes",
+    "author": "santiago",
+    "title": "Banana Oat Pancakes",
+    "description": "Fluffy breakfast pancakes made with ripe banana and oats, served warm with maple syrup.",
+    "category": "DESAYUNO",
+    "time": 25,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 3,
+    "ingredients": [
+      { "name": "banana", "amount": "2", "unit": "UNIDAD" },
+      { "name": "oats", "amount": "1", "unit": "TAZA" },
+      { "name": "egg", "amount": "2", "unit": "UNIDAD" },
+      { "name": "milk", "amount": "1/2", "unit": "TAZA" },
+      { "name": "baking powder", "amount": "1", "unit": "CUCHARADITA" },
+      { "name": "butter", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "maple syrup", "amount": "3", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Blend the oats until they have the texture of a coarse flour.",
+      "Mash the bananas, then whisk in the eggs and milk.",
+      "Stir in the ground oats and baking powder and rest the batter for 5 minutes.",
+      "Melt a little butter in a skillet over medium heat and cook small pancakes for about 2 minutes per side.",
+      "Serve the pancakes warm with maple syrup."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Healthy_Banana_Pancakes.jpg",
+        "author": "FitTasteTic",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "berry-yogurt-parfait",
+    "author": "tiago",
+    "title": "Berry Yogurt Parfait",
+    "description": "Layers of creamy Greek yogurt, fresh berries, toasted oats, almonds, and honey.",
+    "category": "MERIENDA",
+    "time": 10,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 2,
+    "ingredients": [
+      { "name": "greek yogurt", "amount": "2", "unit": "TAZA" },
+      { "name": "strawberry", "amount": "1", "unit": "TAZA" },
+      { "name": "blueberry", "amount": "1/2", "unit": "TAZA" },
+      { "name": "oats", "amount": "1/2", "unit": "TAZA" },
+      { "name": "almond", "amount": "1/4", "unit": "TAZA" },
+      { "name": "honey", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Toast the oats and chopped almonds in a dry skillet for 3 to 4 minutes, stirring frequently.",
+      "Slice the strawberries and combine them with the blueberries.",
+      "Layer yogurt, berries, and the toasted oat mixture in two glasses.",
+      "Drizzle with honey and serve immediately."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Berry_Parfait,_Chick-fil%E2%80%90A,_Northern_Blvd.jpg",
+        "author": "Elyaqim Mosheh Adam",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "classic-caprese-salad",
+    "author": "ines",
+    "title": "Classic Caprese Salad",
+    "description": "Ripe tomatoes, fresh mozzarella, and basil dressed simply with olive oil and balsamic vinegar.",
+    "category": "ENTRADA",
+    "time": 15,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "tomato", "amount": "4", "unit": "UNIDAD" },
+      { "name": "mozzarella cheese", "amount": "250", "unit": "GRAMO" },
+      { "name": "basil", "amount": "1", "unit": "TAZA" },
+      { "name": "olive oil", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "balsamic vinegar", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" },
+      { "name": "black pepper", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Slice the tomatoes and mozzarella into rounds of similar thickness.",
+      "Arrange alternating slices of tomato and mozzarella on a serving plate.",
+      "Tuck basil leaves between the slices.",
+      "Drizzle with olive oil and balsamic vinegar, season with salt and pepper, and serve."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Insalata_Caprese_(from_Poznan).JPG",
+        "author": "MOs810",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+      },
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Caprese-1.jpg",
+        "author": "Rainer Zenz",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+      }
+    ]
+  },
+  {
+    "slug": "roasted-pumpkin-soup",
+    "author": "santiago",
+    "title": "Roasted Pumpkin Soup",
+    "description": "Silky roasted pumpkin soup with onion, garlic, ginger, and a gentle finish of cream.",
+    "category": "ENTRADA",
+    "time": 55,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 6,
+    "ingredients": [
+      { "name": "pumpkin", "amount": "1.2", "unit": "KILOGRAMO" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "3", "unit": "DIENTE" },
+      { "name": "ginger", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "vegetable broth", "amount": "1", "unit": "LITRO" },
+      { "name": "heavy cream", "amount": "1/2", "unit": "TAZA" },
+      { "name": "olive oil", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "nutmeg", "amount": "1", "unit": "PIZCA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Cut the pumpkin into chunks, toss with half of the olive oil, and roast at 200°C for 30 minutes until tender and caramelized.",
+      "Sauté the chopped onion in the remaining oil for 5 minutes, then add the garlic and ginger for 1 minute.",
+      "Add the roasted pumpkin and vegetable broth and simmer for 10 minutes.",
+      "Blend until completely smooth, then stir in the cream and nutmeg.",
+      "Adjust the seasoning and warm gently without boiling before serving."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Autumn_Soup_(Unsplash)_cropped.jpg",
+        "author": "Cala",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "mediterranean-chickpea-salad",
+    "author": "tiago",
+    "title": "Mediterranean Chickpea Salad",
+    "description": "A bright salad of chickpeas, cucumber, tomatoes, red onion, feta, parsley, and lemon dressing.",
+    "category": "ALMUERZO",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "chickpea", "amount": "2", "unit": "LATA" },
+      { "name": "cucumber", "amount": "1", "unit": "UNIDAD" },
+      { "name": "tomato", "amount": "3", "unit": "UNIDAD" },
+      { "name": "red onion", "amount": "1/2", "unit": "UNIDAD" },
+      { "name": "feta cheese", "amount": "120", "unit": "GRAMO" },
+      { "name": "parsley", "amount": "1/2", "unit": "TAZA" },
+      { "name": "lemon juice", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "olive oil", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "oregano", "amount": "1", "unit": "CUCHARADITA" }
+    ],
+    "steps": [
+      "Drain and rinse the chickpeas, then pat them dry.",
+      "Dice the cucumber and tomatoes and thinly slice the red onion.",
+      "Whisk the lemon juice, olive oil, oregano, salt, and pepper in a large bowl.",
+      "Add the vegetables, chickpeas, parsley, and crumbled feta and toss gently.",
+      "Rest for 10 minutes before serving so the flavors combine."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Colorful_healthy_Chickpea_Salad_-_49859083608.jpg",
+        "author": "FitTasteTic",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "garlic-butter-shrimp",
+    "author": "ines",
+    "title": "Garlic Butter Shrimp",
+    "description": "Juicy shrimp quickly sautéed with garlic, butter, lemon, parsley, and a touch of chili.",
+    "category": "ENTRADA",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "shrimp", "amount": "600", "unit": "GRAMO" },
+      { "name": "garlic", "amount": "5", "unit": "DIENTE" },
+      { "name": "butter", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "olive oil", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "lemon juice", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "parsley", "amount": "1/4", "unit": "TAZA" },
+      { "name": "red pepper flake", "amount": "1", "unit": "PIZCA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Pat the shrimp dry and season lightly with salt.",
+      "Heat the olive oil and 1 tablespoon of butter in a wide skillet over medium-high heat.",
+      "Cook the shrimp for 1 to 2 minutes per side, then transfer them to a plate.",
+      "Lower the heat and cook the garlic and red pepper flakes in the remaining butter for 30 seconds.",
+      "Return the shrimp to the pan, add lemon juice and parsley, toss well, and serve immediately."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Shrimp_scampi_food.jpg",
+        "author": "Jon Sullivan",
+        "license": "Public domain"
+      }
+    ]
+  },
+  {
+    "slug": "tomato-basil-bruschetta",
+    "author": "santiago",
+    "title": "Tomato Basil Bruschetta",
+    "description": "Grilled bread rubbed with garlic and topped with ripe tomatoes, basil, olive oil, and balsamic vinegar.",
+    "category": "ENTRADA",
+    "time": 25,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 6,
+    "ingredients": [
+      { "name": "french bread", "amount": "1", "unit": "UNIDAD" },
+      { "name": "tomato", "amount": "5", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "basil", "amount": "1/2", "unit": "TAZA" },
+      { "name": "olive oil", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "balsamic vinegar", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Dice the tomatoes and combine them with chopped basil, olive oil, balsamic vinegar, and salt.",
+      "Let the tomato mixture stand for 10 minutes while preparing the bread.",
+      "Slice the bread, brush lightly with olive oil, and grill or toast until crisp.",
+      "Rub each warm slice with a cut garlic clove.",
+      "Spoon the tomato mixture over the bread just before serving."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tomato_Bruschetta.jpg",
+        "author": "Michael Spencer",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "mango-chicken-with-rice",
+    "author": "tiago",
+    "title": "Mango Chicken with Rice",
+    "description": "Tender chicken and bell pepper in a bright mango, ginger, and lime sauce, served with steamed rice.",
+    "category": "ALMUERZO",
+    "time": 40,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 4,
+    "ingredients": [
+      { "name": "chicken breast", "amount": "600", "unit": "GRAMO" },
+      { "name": "mango", "amount": "1", "unit": "UNIDAD" },
+      { "name": "jasmine rice", "amount": "1 1/2", "unit": "TAZA" },
+      { "name": "red bell pepper", "amount": "1", "unit": "UNIDAD" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "ginger", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "soy sauce", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "lime juice", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "vegetable oil", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Rinse the rice and cook it according to the package directions, then keep it covered and warm.",
+      "Blend half the mango with the soy sauce, lime juice, ginger, and 2 tablespoons of water until smooth.",
+      "Cut the chicken into bite-size pieces, season with salt and pepper, and brown it in the vegetable oil.",
+      "Add the sliced onion, bell pepper, and garlic and stir-fry until the vegetables are crisp-tender.",
+      "Pour in the mango sauce, simmer until the chicken is cooked through, fold in the remaining diced mango, and serve over rice."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mango_chicken,_tea_leaf_salad,_and_white_rice_-_San_Francisco.jpg",
+        "author": "Daderot",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "ginger-beef-stir-fry",
+    "author": "ines",
+    "title": "Ginger Beef Stir-Fry",
+    "description": "Tender strips of beef stir-fried with peppers, broccoli, scallions, and a savory ginger-soy glaze.",
+    "category": "CENA",
+    "time": 35,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 4,
+    "ingredients": [
+      { "name": "flank steak", "amount": "600", "unit": "GRAMO" },
+      { "name": "broccoli", "amount": "300", "unit": "GRAMO" },
+      { "name": "red bell pepper", "amount": "1", "unit": "UNIDAD" },
+      { "name": "scallion", "amount": "3", "unit": "UNIDAD" },
+      { "name": "ginger", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "soy sauce", "amount": "1/4", "unit": "TAZA" },
+      { "name": "sesame oil", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "cornstarch", "amount": "1", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Slice the beef thinly across the grain and toss it with half of the soy sauce and the cornstarch.",
+      "Whisk the remaining soy sauce with sesame oil, ginger, garlic, and 2 tablespoons of water.",
+      "Sear the beef in a very hot skillet in two batches, then transfer it to a plate.",
+      "Stir-fry the broccoli and bell pepper for 4 minutes, adding a splash of water to help the broccoli steam.",
+      "Return the beef, add the sauce, and toss for 1 to 2 minutes until glossy; finish with sliced scallions."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ginger_beef_stir_fry.jpg",
+        "author": "Jules Clancy",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "lentil-curry-with-basmati-rice",
+    "author": "santiago",
+    "title": "Lentil Curry with Basmati Rice",
+    "description": "Comforting red lentils simmered with tomato, warming spices, a touch of cream, and fluffy basmati rice.",
+    "category": "ALMUERZO",
+    "time": 50,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 6,
+    "ingredients": [
+      { "name": "lentil", "amount": "2", "unit": "TAZA" },
+      { "name": "basmati rice", "amount": "2", "unit": "TAZA" },
+      { "name": "tomato", "amount": "3", "unit": "UNIDAD" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "3", "unit": "DIENTE" },
+      { "name": "ginger", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "vegetable broth", "amount": "750", "unit": "MILILITRO" },
+      { "name": "heavy cream", "amount": "100", "unit": "MILILITRO" },
+      { "name": "curry powder", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "turmeric", "amount": "1", "unit": "CUCHARADITA" },
+      { "name": "vegetable oil", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Rinse the rice until the water runs mostly clear, then cook it according to the package instructions.",
+      "Sauté the diced onion in oil for 6 minutes until soft and golden.",
+      "Add the garlic, ginger, curry powder, and turmeric and cook for 1 minute.",
+      "Stir in the chopped tomatoes, lentils, and vegetable broth.",
+      "Simmer uncovered for 25 to 30 minutes, stirring occasionally, until the lentils are tender; stir in the cream, season, and serve with the rice."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hawai_Thongba_(cooked_lentil_curry)_%26_rice_-_Traditional_Meitei_cuisine_-_Gastronomic_cultural_heritage_of_Manipur_(Kangleipak)_%26_domestic_and_international_Meitei_diasporas.jpg",
+        "author": "Ishani Nath",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "lemon-salmon-with-asparagus",
+    "author": "tiago",
+    "title": "Lemon Salmon with Roasted Asparagus",
+    "description": "Oven-roasted salmon and asparagus with lemon, garlic, olive oil, and fresh dill.",
+    "category": "CENA",
+    "time": 30,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "salmon", "amount": "700", "unit": "GRAMO" },
+      { "name": "asparagus", "amount": "500", "unit": "GRAMO" },
+      { "name": "lemon", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "olive oil", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "dill", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" },
+      { "name": "black pepper", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Heat the oven to 210°C and line a large tray with parchment.",
+      "Trim the asparagus and toss it with half of the olive oil, salt, and pepper.",
+      "Place the salmon on the tray and brush it with the remaining oil, minced garlic, lemon zest, salt, and pepper.",
+      "Roast for 12 to 15 minutes, until the salmon flakes easily and the asparagus is tender-crisp.",
+      "Finish with lemon juice and chopped dill before serving."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Asparagus_with_salmon.jpg",
+        "author": "Frank Wouters",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "creamy-mushroom-risotto",
+    "author": "ines",
+    "title": "Creamy Mushroom Risotto",
+    "description": "Slow-stirred rice with deeply browned mushrooms, white wine, parmesan, butter, and thyme.",
+    "category": "CENA",
+    "time": 50,
+    "timeUnit": "MINUTOS",
+    "difficulty": "DIFICIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "rice", "amount": "1 1/2", "unit": "TAZA" },
+      { "name": "mushroom", "amount": "500", "unit": "GRAMO" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "white wine", "amount": "1/2", "unit": "TAZA" },
+      { "name": "vegetable broth", "amount": "1.2", "unit": "LITRO" },
+      { "name": "parmesan cheese", "amount": "100", "unit": "GRAMO" },
+      { "name": "butter", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "thyme", "amount": "1", "unit": "CUCHARADITA" }
+    ],
+    "steps": [
+      "Keep the vegetable broth hot in a saucepan over low heat.",
+      "Brown the sliced mushrooms in 1 tablespoon of butter, season them, and set half aside for serving.",
+      "Cook the onion in the remaining butter until translucent, then add the garlic and rice and toast for 2 minutes.",
+      "Add the wine and stir until absorbed, then add hot broth one ladle at a time, stirring until each addition is nearly absorbed.",
+      "After 18 to 20 minutes, fold in the mushrooms, parmesan, and thyme; adjust the consistency with a final splash of broth and serve."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:-2019-12-22_Mushroom_Risotto_with_onion_and_herbs_finished_with_Parmesan_and_Mushroom,_Trimingham.JPG",
+        "author": "Kolforn",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mushroom_Risotto_(4790048026).jpg",
+        "author": "Katrin Gilger",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "chicken-tacos-with-avocado-salsa",
+    "author": "santiago",
+    "title": "Chicken Tacos with Avocado Salsa",
+    "description": "Spiced chicken tucked into warm tortillas with avocado, tomato, red onion, cilantro, and lime.",
+    "category": "ALMUERZO",
+    "time": 40,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 4,
+    "ingredients": [
+      { "name": "chicken breast", "amount": "600", "unit": "GRAMO" },
+      { "name": "tortilla", "amount": "8", "unit": "UNIDAD" },
+      { "name": "avocado", "amount": "2", "unit": "UNIDAD" },
+      { "name": "tomato", "amount": "2", "unit": "UNIDAD" },
+      { "name": "red onion", "amount": "1/2", "unit": "UNIDAD" },
+      { "name": "cilantro", "amount": "1/2", "unit": "TAZA" },
+      { "name": "lime", "amount": "2", "unit": "UNIDAD" },
+      { "name": "cumin", "amount": "1", "unit": "CUCHARADITA" },
+      { "name": "smoked paprika", "amount": "1", "unit": "CUCHARADITA" }
+    ],
+    "steps": [
+      "Coat the chicken with cumin, smoked paprika, salt, pepper, and a little oil.",
+      "Cook the chicken in a hot skillet for 6 to 7 minutes per side, then rest and slice it thinly.",
+      "Dice the avocado and tomato and combine them with red onion, cilantro, lime juice, and salt.",
+      "Warm the tortillas in a dry skillet until soft and lightly toasted.",
+      "Fill each tortilla with chicken and avocado salsa and serve with lime wedges."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chicken_Tacos.jpg",
+        "author": "Jeffrey W.",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "classic-beef-lasagna",
+    "author": "tiago",
+    "title": "Classic Beef Lasagna",
+    "description": "Layers of slow-cooked beef and tomato sauce, creamy ricotta, pasta, mozzarella, and parmesan.",
+    "category": "CENA",
+    "time": 2,
+    "timeUnit": "HORAS",
+    "difficulty": "DIFICIL",
+    "servings": 8,
+    "ingredients": [
+      { "name": "lasagna noodle", "amount": "1", "unit": "PAQUETE" },
+      { "name": "ground beef", "amount": "800", "unit": "GRAMO" },
+      { "name": "tomato sauce", "amount": "800", "unit": "MILILITRO" },
+      { "name": "tomato paste", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "3", "unit": "DIENTE" },
+      { "name": "ricotta cheese", "amount": "450", "unit": "GRAMO" },
+      { "name": "mozzarella cheese", "amount": "350", "unit": "GRAMO" },
+      { "name": "parmesan cheese", "amount": "100", "unit": "GRAMO" },
+      { "name": "oregano", "amount": "1", "unit": "CUCHARADITA" }
+    ],
+    "steps": [
+      "Sauté the onion until soft, add the garlic and beef, and cook until the meat is well browned.",
+      "Stir in the tomato paste, tomato sauce, oregano, salt, and pepper and simmer gently for 35 minutes.",
+      "Cook the lasagna noodles until just flexible, then drain and lay them flat.",
+      "Spread a little meat sauce in a baking dish and layer noodles, ricotta, meat sauce, mozzarella, and parmesan; repeat three times.",
+      "Cover and bake at 190°C for 30 minutes, uncover for another 15 minutes, then rest for 15 minutes before slicing."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lasagna_Napoletana.JPG",
+        "author": "Schellenberg",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+      },
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lasagna_Serving.jpg",
+        "author": "Miansari66",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "lemon-herb-roast-chicken",
+    "author": "ines",
+    "title": "Lemon Herb Roast Chicken",
+    "description": "A whole chicken roasted with lemon, garlic, rosemary, thyme, and buttery pan juices.",
+    "category": "CENA",
+    "time": 2,
+    "timeUnit": "HORAS",
+    "difficulty": "DIFICIL",
+    "servings": 6,
+    "ingredients": [
+      { "name": "whole chicken", "amount": "1.8", "unit": "KILOGRAMO" },
+      { "name": "lemon", "amount": "2", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "6", "unit": "DIENTE" },
+      { "name": "butter", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "rosemary", "amount": "2", "unit": "CUCHARADITA" },
+      { "name": "thyme", "amount": "2", "unit": "CUCHARADITA" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "chicken broth", "amount": "1", "unit": "TAZA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Pat the chicken completely dry and season the cavity and exterior generously with salt and pepper.",
+      "Mix the softened butter with chopped rosemary, thyme, minced garlic, and lemon zest and spread it under and over the skin.",
+      "Place the halved onion and one lemon inside the cavity and set the chicken in a roasting pan.",
+      "Roast at 200°C for 20 minutes, reduce to 180°C, and continue roasting for about 70 minutes, basting twice with the pan juices.",
+      "Confirm the thickest part of the thigh reaches 74°C, then rest the chicken for 15 minutes while making a quick pan sauce with the broth."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Grilled_chicken_with_lemon_and_herbs_served_on_a_dark_platter.jpg",
+        "author": "Shixart1985",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "eggplant-parmesan",
+    "author": "santiago",
+    "title": "Eggplant Parmesan",
+    "description": "Breaded eggplant layered with tomato sauce, mozzarella, parmesan, and basil, then baked until bubbling.",
+    "category": "CENA",
+    "time": 1,
+    "timeUnit": "HORAS",
+    "difficulty": "DIFICIL",
+    "servings": 6,
+    "ingredients": [
+      { "name": "eggplant", "amount": "3", "unit": "UNIDAD" },
+      { "name": "breadcrumb", "amount": "2", "unit": "TAZA" },
+      { "name": "egg", "amount": "3", "unit": "UNIDAD" },
+      { "name": "tomato sauce", "amount": "700", "unit": "MILILITRO" },
+      { "name": "mozzarella cheese", "amount": "300", "unit": "GRAMO" },
+      { "name": "parmesan cheese", "amount": "100", "unit": "GRAMO" },
+      { "name": "basil", "amount": "1/2", "unit": "TAZA" },
+      { "name": "olive oil", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "salt", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Slice the eggplants into 1-centimeter rounds, salt both sides, and let them drain for 20 minutes before patting dry.",
+      "Dip each slice in beaten egg, coat with breadcrumbs, and arrange on oiled baking trays.",
+      "Bake at 220°C for 20 minutes, turning once, until golden and tender.",
+      "Layer tomato sauce, eggplant, mozzarella, parmesan, and basil in a baking dish, finishing with cheese.",
+      "Bake at 190°C for 25 minutes until bubbling, then rest for 10 minutes before serving."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Melanzane_alla_parmigiana_finished.jpg",
+        "author": "Joy",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "shrimp-pad-thai",
+    "author": "tiago",
+    "title": "Shrimp Pad Thai",
+    "description": "Rice noodles tossed with shrimp, egg, bean sprouts, peanuts, scallions, and a balanced lime-fish sauce glaze.",
+    "category": "CENA",
+    "time": 45,
+    "timeUnit": "MINUTOS",
+    "difficulty": "DIFICIL",
+    "servings": 4,
+    "ingredients": [
+      { "name": "rice noodle", "amount": "300", "unit": "GRAMO" },
+      { "name": "shrimp", "amount": "400", "unit": "GRAMO" },
+      { "name": "egg", "amount": "2", "unit": "UNIDAD" },
+      { "name": "bean sprout", "amount": "2", "unit": "TAZA" },
+      { "name": "scallion", "amount": "4", "unit": "UNIDAD" },
+      { "name": "peanut", "amount": "1/2", "unit": "TAZA" },
+      { "name": "fish sauce", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "lime juice", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "brown sugar", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "vegetable oil", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Soak the rice noodles in warm water until flexible but still firm, then drain well.",
+      "Whisk the fish sauce, lime juice, brown sugar, and 2 tablespoons of water until the sugar dissolves.",
+      "Sear the shrimp in a hot wok with half of the oil until just cooked and transfer them to a plate.",
+      "Add the remaining oil, scramble the eggs, then add the noodles and sauce and toss until the noodles are tender.",
+      "Return the shrimp, fold in the bean sprouts and scallions, and serve topped with crushed peanuts and lime."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Phat_Thai_kung_Chang_Khien_street_stall.jpg",
+        "author": "Takeaway",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+      }
+    ]
+  },
+  {
+    "slug": "spaghetti-bolognese",
+    "author": "ines",
+    "title": "Spaghetti Bolognese",
+    "description": "Spaghetti coated in a slow-simmered beef, tomato, carrot, celery, and red wine sauce.",
+    "category": "CENA",
+    "time": 1,
+    "timeUnit": "HORAS",
+    "difficulty": "MEDIA",
+    "servings": 6,
+    "ingredients": [
+      { "name": "spaghetti", "amount": "500", "unit": "GRAMO" },
+      { "name": "ground beef", "amount": "600", "unit": "GRAMO" },
+      { "name": "tomato sauce", "amount": "700", "unit": "MILILITRO" },
+      { "name": "tomato paste", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "carrot", "amount": "1", "unit": "UNIDAD" },
+      { "name": "celery", "amount": "2", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "red wine", "amount": "1/2", "unit": "TAZA" },
+      { "name": "parmesan cheese", "amount": "80", "unit": "GRAMO" }
+    ],
+    "steps": [
+      "Finely dice the onion, carrot, and celery and cook them in olive oil over medium heat for 8 minutes.",
+      "Add the garlic and ground beef and cook until the beef is deeply browned.",
+      "Stir in the tomato paste, add the wine, and simmer until reduced by half.",
+      "Add the tomato sauce, salt, and pepper and simmer gently for 40 minutes, stirring occasionally.",
+      "Cook the spaghetti until al dente, toss it with the sauce and a splash of pasta water, and serve with parmesan."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:2015-05-24_Bolognesesauce_anagoria.JPG",
+        "author": "Anagoria",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+      }
+    ]
+  },
+  {
+    "slug": "gnocchi-with-peas-and-parmesan",
+    "author": "santiago",
+    "title": "Gnocchi with Peas and Parmesan",
+    "description": "Pillowy gnocchi in a light butter and parmesan sauce with sweet green peas, lemon, and parsley.",
+    "category": "ALMUERZO",
+    "time": 30,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 4,
+    "ingredients": [
+      { "name": "gnocchi", "amount": "800", "unit": "GRAMO" },
+      { "name": "green pea", "amount": "2", "unit": "TAZA" },
+      { "name": "butter", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "parmesan cheese", "amount": "100", "unit": "GRAMO" },
+      { "name": "lemon", "amount": "1", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "1", "unit": "DIENTE" },
+      { "name": "parsley", "amount": "1/4", "unit": "TAZA" },
+      { "name": "black pepper", "amount": "1", "unit": "A_GUSTO" }
+    ],
+    "steps": [
+      "Bring a large pot of salted water to a boil and add the gnocchi.",
+      "Melt the butter in a wide skillet and gently cook the garlic for 30 seconds.",
+      "Add the peas and 1/2 cup of gnocchi cooking water and simmer for 3 minutes.",
+      "Transfer the floating gnocchi directly to the skillet and toss with parmesan until the sauce becomes glossy.",
+      "Finish with lemon zest, parsley, and black pepper."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Homemade_Gnocchi_with_Peas_and_Parmesan.jpg",
+        "author": "Oliver Tacke",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  },
+  {
+    "slug": "black-bean-burgers",
+    "author": "tiago",
+    "title": "Black Bean Burgers",
+    "description": "Savory black bean patties with cumin and smoked paprika, served on toasted bread with avocado and tomato.",
+    "category": "ALMUERZO",
+    "time": 45,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 4,
+    "ingredients": [
+      { "name": "black bean", "amount": "2", "unit": "LATA" },
+      { "name": "breadcrumb", "amount": "3/4", "unit": "TAZA" },
+      { "name": "egg", "amount": "1", "unit": "UNIDAD" },
+      { "name": "onion", "amount": "1/2", "unit": "UNIDAD" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "cumin", "amount": "1", "unit": "CUCHARADITA" },
+      { "name": "smoked paprika", "amount": "1", "unit": "CUCHARADITA" },
+      { "name": "sandwich bread", "amount": "8", "unit": "UNIDAD" },
+      { "name": "avocado", "amount": "1", "unit": "UNIDAD" },
+      { "name": "tomato", "amount": "1", "unit": "UNIDAD" }
+    ],
+    "steps": [
+      "Drain the beans very well and mash them, leaving some texture.",
+      "Sauté the onion and garlic until soft, then stir in the cumin and smoked paprika.",
+      "Mix the beans with the onion mixture, breadcrumbs, egg, salt, and pepper and form four firm patties.",
+      "Cook the patties in a lightly oiled skillet for 4 to 5 minutes per side until browned and heated through.",
+      "Serve on toasted bread with sliced avocado and tomato."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Black_Bean_Burger_with_the_Works_(4733183268).jpg",
+        "author": "Vegan Feast Catering",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "chicken-vegetable-couscous",
+    "author": "ines",
+    "title": "Chicken and Vegetable Couscous",
+    "description": "Fluffy couscous served with tender chicken, chickpeas, zucchini, carrot, pumpkin, and warm spices.",
+    "category": "ALMUERZO",
+    "time": 45,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 6,
+    "ingredients": [
+      { "name": "couscous", "amount": "2", "unit": "TAZA" },
+      { "name": "chicken thigh", "amount": "700", "unit": "GRAMO" },
+      { "name": "chickpea", "amount": "1", "unit": "LATA" },
+      { "name": "zucchini", "amount": "2", "unit": "UNIDAD" },
+      { "name": "carrot", "amount": "3", "unit": "UNIDAD" },
+      { "name": "pumpkin", "amount": "400", "unit": "GRAMO" },
+      { "name": "tomato", "amount": "3", "unit": "UNIDAD" },
+      { "name": "onion", "amount": "1", "unit": "UNIDAD" },
+      { "name": "vegetable broth", "amount": "3", "unit": "TAZA" },
+      { "name": "cumin", "amount": "2", "unit": "CUCHARADITA" },
+      { "name": "cinnamon", "amount": "1/2", "unit": "CUCHARADITA" }
+    ],
+    "steps": [
+      "Season the chicken with salt and pepper and brown it in olive oil, then transfer it to a plate.",
+      "Sauté the onion until soft, then add the cumin and cinnamon for 30 seconds.",
+      "Return the chicken to the pot, add the carrots, pumpkin, tomatoes, and 2 cups of broth, and simmer for 20 minutes.",
+      "Add the zucchini and chickpeas and continue cooking for 10 minutes, until all vegetables are tender.",
+      "Pour the remaining hot broth over the couscous, cover for 5 minutes, then fluff with a fork.",
+      "Serve the chicken, vegetables, and their broth over the couscous and finish with chopped parsley."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Couscousalgeriennr1.jpg",
+        "author": "Slothtysloth",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "strawberry-cheesecake",
+    "author": "santiago",
+    "title": "Strawberry Cheesecake",
+    "description": "A creamy baked cheesecake on a crisp crumb crust, finished with fresh strawberry sauce.",
+    "category": "POSTRE",
+    "time": 2,
+    "timeUnit": "HORAS",
+    "difficulty": "DIFICIL",
+    "servings": 10,
+    "ingredients": [
+      { "name": "cream cheese", "amount": "750", "unit": "GRAMO" },
+      { "name": "breadcrumb", "amount": "2", "unit": "TAZA" },
+      { "name": "butter", "amount": "100", "unit": "GRAMO" },
+      { "name": "sugar", "amount": "1 1/4", "unit": "TAZA" },
+      { "name": "egg", "amount": "4", "unit": "UNIDAD" },
+      { "name": "sour cream", "amount": "1", "unit": "TAZA" },
+      { "name": "strawberry", "amount": "500", "unit": "GRAMO" },
+      { "name": "lemon juice", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "cornstarch", "amount": "1", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Mix the breadcrumbs with melted butter and 1/4 cup of sugar, press into a springform pan, and bake at 175°C for 10 minutes.",
+      "Beat the cream cheese with 3/4 cup of sugar until smooth, then mix in the eggs one at a time and fold in the sour cream.",
+      "Pour over the crust and bake at 160°C for 55 to 65 minutes, until the edges are set and the center still trembles slightly.",
+      "Cool gradually, then refrigerate for at least 4 hours.",
+      "Simmer half of the strawberries with the remaining sugar, lemon juice, and cornstarch until glossy; cool and spoon over the cheesecake with the fresh berries."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Strawberry_cheesecake_round.jpg",
+        "author": "Josefine Linnea Jonsson",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "fudgy-chocolate-brownies",
+    "author": "tiago",
+    "title": "Fudgy Chocolate Brownies",
+    "description": "Dense chocolate brownies with a shiny top, deep cocoa flavor, and toasted walnuts.",
+    "category": "POSTRE",
+    "time": 50,
+    "timeUnit": "MINUTOS",
+    "difficulty": "MEDIA",
+    "servings": 12,
+    "ingredients": [
+      { "name": "butter", "amount": "180", "unit": "GRAMO" },
+      { "name": "baking chocolate", "amount": "180", "unit": "GRAMO" },
+      { "name": "sugar", "amount": "1 1/2", "unit": "TAZA" },
+      { "name": "egg", "amount": "3", "unit": "UNIDAD" },
+      { "name": "pastry flour", "amount": "3/4", "unit": "TAZA" },
+      { "name": "unsweetened cocoa powder", "amount": "1/4", "unit": "TAZA" },
+      { "name": "walnut", "amount": "3/4", "unit": "TAZA" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Heat the oven to 175°C and line a 20-centimeter square pan with parchment.",
+      "Melt the butter and chocolate together over low heat, then cool for 5 minutes.",
+      "Whisk the sugar and eggs until slightly thickened, then slowly whisk in the chocolate mixture.",
+      "Fold in the flour, cocoa, salt, and chopped walnuts just until no dry streaks remain.",
+      "Bake for 25 to 30 minutes, until the edges are set but the center remains moist; cool fully before slicing."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Chocolate_brownies_(13498738854).jpg",
+        "author": "James Petts",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "apple-cinnamon-crumble",
+    "author": "ines",
+    "title": "Apple Cinnamon Crumble",
+    "description": "Tender cinnamon apples under a crisp oat, brown sugar, and butter topping.",
+    "category": "POSTRE",
+    "time": 1,
+    "timeUnit": "HORAS",
+    "difficulty": "FACIL",
+    "servings": 8,
+    "ingredients": [
+      { "name": "apple", "amount": "8", "unit": "UNIDAD" },
+      { "name": "lemon juice", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "cinnamon", "amount": "2", "unit": "CUCHARADITA" },
+      { "name": "brown sugar", "amount": "3/4", "unit": "TAZA" },
+      { "name": "oats", "amount": "1", "unit": "TAZA" },
+      { "name": "pastry flour", "amount": "3/4", "unit": "TAZA" },
+      { "name": "butter", "amount": "120", "unit": "GRAMO" },
+      { "name": "salt", "amount": "1", "unit": "PIZCA" }
+    ],
+    "steps": [
+      "Peel, core, and slice the apples and toss them with lemon juice, cinnamon, and 1/4 cup of brown sugar.",
+      "Spread the apples evenly in a buttered baking dish.",
+      "Combine the oats, flour, remaining brown sugar, and salt, then rub in the cold butter until coarse crumbs form.",
+      "Scatter the topping over the apples and bake at 185°C for 40 to 45 minutes.",
+      "Rest for 10 minutes and serve while the filling is still warm."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Apple_crumble_-_home_cooking,_New_Orleans.jpg",
+        "author": "Infrogmation of New Orleans",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+      }
+    ]
+  },
+  {
+    "slug": "fresh-fruit-salad",
+    "author": "santiago",
+    "title": "Fresh Fruit Salad",
+    "description": "A colorful mix of pineapple, mango, strawberries, kiwi, grapes, and orange in a light lime-honey dressing.",
+    "category": "SNACK",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 6,
+    "ingredients": [
+      { "name": "pineapple", "amount": "1/2", "unit": "UNIDAD" },
+      { "name": "mango", "amount": "2", "unit": "UNIDAD" },
+      { "name": "strawberry", "amount": "2", "unit": "TAZA" },
+      { "name": "kiwi", "amount": "3", "unit": "UNIDAD" },
+      { "name": "grape", "amount": "2", "unit": "TAZA" },
+      { "name": "orange", "amount": "2", "unit": "UNIDAD" },
+      { "name": "lime juice", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "honey", "amount": "1", "unit": "CUCHARADA" },
+      { "name": "mint", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Cut the pineapple, mango, strawberries, kiwi, and oranges into bite-size pieces.",
+      "Halve any large grapes and combine all the fruit in a large bowl.",
+      "Whisk the lime juice and honey until smooth.",
+      "Pour the dressing over the fruit, add the mint, and toss gently.",
+      "Chill for 15 minutes or serve immediately."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fruit_Salad_Or_Fruit_Bowl.jpg",
+        "author": "Manjeshwari Poet Mysore",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "classic-hummus-with-pita",
+    "author": "tiago",
+    "title": "Classic Hummus with Pita",
+    "description": "Smooth chickpea and tahini hummus served with warm pita, olive oil, paprika, and parsley.",
+    "category": "SNACK",
+    "time": 20,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 6,
+    "ingredients": [
+      { "name": "chickpea", "amount": "2", "unit": "LATA" },
+      { "name": "tahini", "amount": "1/2", "unit": "TAZA" },
+      { "name": "lemon juice", "amount": "1/3", "unit": "TAZA" },
+      { "name": "garlic", "amount": "2", "unit": "DIENTE" },
+      { "name": "olive oil", "amount": "3", "unit": "CUCHARADA" },
+      { "name": "cumin", "amount": "1/2", "unit": "CUCHARADITA" },
+      { "name": "paprika", "amount": "1/2", "unit": "CUCHARADITA" },
+      { "name": "pita bread", "amount": "6", "unit": "UNIDAD" },
+      { "name": "parsley", "amount": "2", "unit": "CUCHARADA" }
+    ],
+    "steps": [
+      "Drain and rinse the chickpeas, reserving a few tablespoons of their liquid.",
+      "Blend the tahini and lemon juice for 1 minute until pale and creamy.",
+      "Add the chickpeas, garlic, cumin, salt, and olive oil and blend until very smooth, adding reserved liquid as needed.",
+      "Warm the pita bread in a dry skillet or low oven and cut it into wedges.",
+      "Spoon the hummus into a bowl and finish with olive oil, paprika, and chopped parsley."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Houmous.jpg",
+        "author": "Popo le Chien",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      },
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Homemade_hummus_and_pita_03.jpg",
+        "author": "Satdeep Gill",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+      }
+    ]
+  },
+  {
+    "slug": "vanilla-iced-coffee",
+    "author": "ines",
+    "title": "Vanilla Iced Coffee",
+    "description": "Chilled espresso shaken with milk, vanilla, a touch of brown sugar, and plenty of ice.",
+    "category": "BEBIDA",
+    "time": 10,
+    "timeUnit": "MINUTOS",
+    "difficulty": "FACIL",
+    "servings": 2,
+    "ingredients": [
+      { "name": "espresso", "amount": "4", "unit": "ONZA" },
+      { "name": "milk", "amount": "1 1/2", "unit": "TAZA" },
+      { "name": "brown sugar", "amount": "2", "unit": "CUCHARADA" },
+      { "name": "vanilla bean", "amount": "1/2", "unit": "UNIDAD" },
+      { "name": "ice", "amount": "2", "unit": "TAZA" }
+    ],
+    "steps": [
+      "Stir the brown sugar and scraped vanilla seeds into the hot espresso until dissolved.",
+      "Let the sweetened espresso cool for 5 minutes.",
+      "Fill two tall glasses with ice and divide the milk between them.",
+      "Pour in the espresso, stir well, and serve immediately."
+    ],
+    "images": [
+      {
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Iced_coffee.jpg",
+        "author": "Kim Dae Jeung",
+        "license": "CC0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+      }
+    ]
+  }
+]
