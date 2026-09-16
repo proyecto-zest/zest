@@ -14,7 +14,11 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
         <RecipeImage src={recipe.imageUrls[0]} alt={recipe.title} />
       </div>
 
-      <div className="flex flex-col justify-center gap-4">
+      {/* `min-w-0`: a grid item (this `div` and the image before it) defaults
+          to its content's natural width, which would let long unbroken text
+          in the title/description below push the whole page wider than the
+          viewport instead of wrapping. */}
+      <div className="min-w-0 flex flex-col justify-center gap-4">
         <h1 className="break-words font-serif text-3xl font-bold leading-tight text-foreground tablet:text-4xl">
           {recipe.title}
         </h1>

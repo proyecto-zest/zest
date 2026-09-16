@@ -41,7 +41,7 @@ function RecipeEditContent({ id }: { id: string }) {
         <>
           <div>
             <h1 className="font-serif text-4xl font-bold">Edit recipe</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Update "{recipeState.recipe.title}".</p>
+            <p className="mt-1 break-words text-sm text-muted-foreground">Update "{recipeState.recipe.title}".</p>
           </div>
           <RecipeEditForm
             recipeId={id}
