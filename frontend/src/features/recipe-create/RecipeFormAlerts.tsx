@@ -1,5 +1,4 @@
 import { Alert } from '../../components/alert'
-import { Modal } from '../../components/ui/Modal'
 import type { CreateRecipeState } from './useCreateRecipe'
 
 interface RecipeFormAlertsProps {
@@ -10,8 +9,8 @@ interface RecipeFormAlertsProps {
 }
 
 /**
- * Validation errors block publishing, so they show as a modal that demands
- * attention. Server errors stay inline — success is a toast (see RecipeCreateForm).
+ * Validation and server errors both render the same way — an inline `Alert`
+ * above the form — so which one fired isn't a different visual experience.
  */
 export function RecipeFormAlerts({
   validationErrors,
@@ -22,15 +21,12 @@ export function RecipeFormAlerts({
   return (
     <>
       {validationErrors.length > 0 && (
-        <Modal onClose={onDismissValidation} labelledBy="validation-errors-title">
-          <Alert
-            variant="error"
-            title="Please fix the following"
-            titleId="validation-errors-title"
-            message={validationErrors}
-            onDismiss={onDismissValidation}
-          />
-        </Modal>
+        <Alert
+          variant="error"
+          title="Please fix the following"
+          message={validationErrors}
+          onDismiss={onDismissValidation}
+        />
       )}
       {creation.status === 'error' && (
         <Alert variant="error" message={creation.messages} onDismiss={onDismissCreation} />

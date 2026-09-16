@@ -15,10 +15,10 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
       </div>
 
       <div className="flex flex-col justify-center gap-4">
-        <h1 className="font-serif text-3xl font-bold leading-tight text-foreground tablet:text-4xl">
+        <h1 className="break-words font-serif text-3xl font-bold leading-tight text-foreground tablet:text-4xl">
           {recipe.title}
         </h1>
-        <p className="leading-relaxed text-muted-foreground">{recipe.description}</p>
+        <p className="break-words leading-relaxed text-muted-foreground">{recipe.description}</p>
         <RecipeMetaBadges
           category={recipe.category}
           difficulty={recipe.difficulty}
