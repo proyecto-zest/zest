@@ -50,8 +50,10 @@ export function RecipeEditForm({ recipeId, initialValues, initialImageUrl, catal
   }
 
   const confirmSave = async () => {
-    // Only touch `imageKeys` when the user actually picked a new file — omitting
-    // it tells the backend to leave the recipe's current image(s) as they are.
+    // Three cases: a new file picked (upload it, send its key), the existing
+    // image removed and nothing picked to replace it (send an empty array so
+    // the backend actually drops it), or neither touched (omit `imageKeys`
+    // entirely so the backend leaves the recipe's current image as it is).
     let imageKeys: string[] | undefined
     if (cover.file) {
       setUploading(true)
@@ -64,6 +66,8 @@ export function RecipeEditForm({ recipeId, initialValues, initialImageUrl, catal
       } finally {
         setUploading(false)
       }
+    } else if (initialImageUrl && !cover.preview) {
+      imageKeys = []
     }
 
     const payload = { ...buildCreateRecipePayload(form.values), imageKeys }
