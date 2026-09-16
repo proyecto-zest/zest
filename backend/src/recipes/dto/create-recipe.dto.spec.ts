@@ -39,7 +39,10 @@ const validateRecipe = (
   validate(plainToInstance(dtoClass, { ...validRecipe, ...overrides }));
 
 const messagesFrom = (errors: ValidationError[]): string[] =>
-  errors.flatMap((error) => Object.values(error.constraints ?? {}));
+  errors.flatMap((error) => [
+    ...Object.values(error.constraints ?? {}),
+    ...messagesFrom(error.children ?? []),
+  ]);
 
 describe('CreateRecipeDto limits', () => {
   it.each([
@@ -50,6 +53,27 @@ describe('CreateRecipeDto limits', () => {
   ])('accepts the valid %s boundary', async (_field, overrides) => {
     await expect(validateRecipe(CreateRecipeDto, overrides)).resolves.toEqual(
       [],
+    );
+  });
+
+  it('accepts an ingredient amount at the 12-character boundary', async () => {
+    const ingredients = [
+      { ...validRecipe.ingredients[0], amount: 'a'.repeat(12) },
+    ];
+
+    await expect(
+      validateRecipe(CreateRecipeDto, { ingredients }),
+    ).resolves.toEqual([]);
+  });
+
+  it('rejects an ingredient amount longer than 12 characters', async () => {
+    const ingredients = [
+      { ...validRecipe.ingredients[0], amount: 'a'.repeat(13) },
+    ];
+    const errors = await validateRecipe(CreateRecipeDto, { ingredients });
+
+    expect(messagesFrom(errors)).toContain(
+      'amount must be shorter than or equal to 12 characters',
     );
   });
 

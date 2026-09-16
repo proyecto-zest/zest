@@ -59,6 +59,7 @@ export class CreateRecipeIngredientDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(12)
   amount!: string;
 
   @IsEnum(IngredientUnit)

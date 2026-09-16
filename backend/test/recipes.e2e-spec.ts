@@ -265,6 +265,22 @@ describeWithDatabase('Recipes (e2e)', () => {
     },
   );
 
+  it('returns 400 when an ingredient amount exceeds 12 characters', async () => {
+    const recipe = validRecipe();
+    recipe.ingredients[0].amount = 'a'.repeat(13);
+
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(recipe)
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'ingredients.0.amount must be shorter than or equal to 12 characters',
+    );
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
   it('creates a recipe without images when imageKeys is omitted', async () => {
     const response = await request(app.getHttpServer() as Server)
       .post('/recipes')
