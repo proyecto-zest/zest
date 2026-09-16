@@ -11,6 +11,7 @@ export interface RecipeCardData {
   category: string
   difficulty: string
   time: number
+  timeUnit: string
   servings: number
 }
 
