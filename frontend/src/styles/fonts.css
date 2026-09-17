@@ -1,0 +1,13 @@
+/**
+ * Self-hosted design system fonts.
+ *
+ * The design reference loads these through `next/font`, which does not exist in
+ * Vite. Fontsource ships the same families as npm packages, so nothing is
+ * fetched from a third-party CDN at runtime.
+ */
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource/geist-sans/400.css';
+@import '@fontsource/geist-sans/500.css';
+@import '@fontsource/geist-sans/600.css';
+@import '@fontsource/geist-sans/700.css';
+@import '@fontsource-variable/geist-mono';

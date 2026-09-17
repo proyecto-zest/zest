@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecipeCategory {
+  DESAYUNO
+  ALMUERZO
+  MERIENDA
+  CENA
+  ENTRADA
+  POSTRE
+  SNACK
+  BEBIDA
+}
+
+enum RecipeTimeUnit {
+  MINUTOS
+  HORAS
+}
+
+enum RecipeDifficulty {
+  FACIL
+  MEDIA
+  DIFICIL
+}
+
+enum IngredientUnit {
+  SIN_UNIDAD
+  UNIDAD
+  GRAMO
+  KILOGRAMO
+  MILILITRO
+  LITRO
+  CUCHARADITA
+  CUCHARADA
+  TAZA
+  ONZA
+  LIBRA
+  PIZCA
+  DIENTE
+  LATA
+  PAQUETE
+  A_GUSTO
+}
+
+model Recipe {
+  id String @id @default(uuid()) @db.Uuid
+
+  // TODO: pasar a @relation con User y a obligatorio — ver ticket del modelo User
+  authorId    String?            @map("author_id") @db.Uuid
+  title       String             @db.VarChar
+  description String             @db.Text
+  category    RecipeCategory
+  time        Int
+  timeUnit    RecipeTimeUnit     @map("time_unit")
+  difficulty  RecipeDifficulty
+  servings    Int
+  createdAt   DateTime           @default(now()) @map("created_at")
+  ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  images      RecipeImage[]
+
+  @@map("recipes")
+}
+
+model Ingredient {
+  id      String             @id @default(uuid()) @db.Uuid
+  name    String             @unique @db.VarChar
+  recipes RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model RecipeIngredient {
+  recipeId     String         @map("recipe_id") @db.Uuid
+  ingredientId String         @map("ingredient_id") @db.Uuid
+  amount       String         @db.VarChar
+  unit         IngredientUnit
+  recipe       Recipe         @relation(fields: [recipeId], references: [id])
+  ingredient   Ingredient     @relation(fields: [ingredientId], references: [id])
+
+  @@id([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model RecipeStep {
+  id         String @id @default(uuid()) @db.Uuid
+  recipeId   String @map("recipe_id") @db.Uuid
+  stepNumber Int    @map("step_number")
+  text       String @db.Text
+  recipe     Recipe @relation(fields: [recipeId], references: [id])
+
+  @@map("recipe_steps")
+}
+
+model RecipeImage {
+  id       String @id @default(uuid()) @db.Uuid
+  recipeId String @map("recipe_id") @db.Uuid
+  s3Key    String @map("s3_key") @db.VarChar
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+
+  @@index([recipeId])
+  @@map("recipe_images")
+}

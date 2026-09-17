@@ -1,0 +1,673 @@
+import { INestApplication, Logger } from '@nestjs/common';
+import {
+  IngredientUnit,
+  PrismaClient,
+  RecipeCategory,
+  RecipeDifficulty,
+  RecipeTimeUnit,
+} from '@prisma/client';
+import { Test } from '@nestjs/testing';
+import { randomUUID } from 'node:crypto';
+import { Server } from 'node:http';
+import request from 'supertest';
+
+import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
+import { CreatedRecipeResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
+import { StorageService } from '../src/storage/storage.service';
+import { resetTestDatabase } from './test-database';
+
+const describeWithDatabase =
+  process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
+
+describeWithDatabase('Recipes (e2e)', () => {
+  const prisma = new PrismaClient();
+  let app: INestApplication;
+  let tomatoId: string;
+  let oilId: string;
+  const objectExists = jest.fn();
+  const deleteObject = jest.fn();
+  const getSignedReadUrl = jest.fn((key: string) =>
+    Promise.resolve(`https://signed.test/${key}`),
+  );
+  const getSignedUploadUrl = jest.fn().mockResolvedValue('https://upload.test');
+
+  const createCatalog = async (): Promise<void> => {
+    const [tomato, oil] = await Promise.all([
+      prisma.ingredient.create({ data: { name: 'tomato' } }),
+      prisma.ingredient.create({ data: { name: 'olive oil' } }),
+    ]);
+    tomatoId = tomato.id;
+    oilId = oil.id;
+  };
+
+  const validRecipe = () => ({
+    title: 'Ensalada de tomate',
+    description: 'Una ensalada simple y fresca.',
+    category: RecipeCategory.ENTRADA,
+    time: 10,
+    timeUnit: RecipeTimeUnit.MINUTOS,
+    difficulty: RecipeDifficulty.FACIL,
+    servings: 2,
+    imageKeys: ['recipes/uploaded.webp', 'recipes/uploaded-secondary.webp'],
+    ingredients: [
+      { ingredientId: tomatoId, amount: '2', unit: IngredientUnit.UNIDAD },
+      { ingredientId: oilId, amount: '1', unit: IngredientUnit.CUCHARADA },
+    ],
+    steps: ['Cortar el tomate.', 'Mezclar todos los ingredientes.'],
+  });
+
+  const validUpdate = () => ({
+    ...validRecipe(),
+    title: 'Receta actualizada',
+    description: 'Descripción actualizada.',
+    category: RecipeCategory.CENA,
+    time: 45,
+    timeUnit: RecipeTimeUnit.MINUTOS,
+    difficulty: RecipeDifficulty.MEDIA,
+    servings: 4,
+    imageKeys: undefined,
+    steps: ['Primer paso nuevo.', 'Segundo paso nuevo.'],
+  });
+
+  const createExistingRecipe = () =>
+    prisma.recipe.create({
+      data: {
+        title: 'Receta existente',
+        description: 'Descripción original.',
+        category: RecipeCategory.ALMUERZO,
+        time: 20,
+        timeUnit: RecipeTimeUnit.MINUTOS,
+        difficulty: RecipeDifficulty.FACIL,
+        servings: 2,
+        ingredients: {
+          create: [
+            {
+              ingredientId: tomatoId,
+              amount: '1',
+              unit: IngredientUnit.UNIDAD,
+            },
+            {
+              ingredientId: oilId,
+              amount: '1',
+              unit: IngredientUnit.CUCHARADA,
+            },
+          ],
+        },
+        steps: {
+          create: [
+            { stepNumber: 1, text: 'Paso original uno.' },
+            { stepNumber: 2, text: 'Paso original dos.' },
+          ],
+        },
+        images: { create: { s3Key: 'recipes/current.webp' } },
+      },
+    });
+
+  beforeAll(async () => {
+    await prisma.$connect();
+    await resetTestDatabase(prisma);
+
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(StorageService)
+      .useValue({
+        objectExists,
+        deleteObject,
+        getSignedReadUrl,
+        getSignedUploadUrl,
+      })
+      .compile();
+
+    app = moduleFixture.createNestApplication();
+    configureApp(app);
+    await app.init();
+  });
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    objectExists.mockResolvedValue(true);
+    deleteObject.mockResolvedValue(undefined);
+    await resetTestDatabase(prisma);
+    await createCatalog();
+  });
+
+  afterAll(async () => {
+    await app.close();
+    await prisma.$disconnect();
+  });
+
+  it('creates a recipe with ingredients, steps and uploaded image keys', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(validRecipe())
+      .expect(201);
+    const responseBody = response.body as CreatedRecipeResponseDto;
+
+    expect(responseBody).toMatchObject({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      imageUrls: [
+        'https://signed.test/recipes/uploaded.webp',
+        'https://signed.test/recipes/uploaded-secondary.webp',
+      ],
+      title: 'Ensalada de tomate',
+      steps: [
+        { stepNumber: 1, text: 'Cortar el tomate.' },
+        { stepNumber: 2, text: 'Mezclar todos los ingredientes.' },
+      ],
+    });
+    expect(responseBody.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ingredientId: tomatoId,
+          amount: '2',
+          unit: IngredientUnit.UNIDAD,
+          ingredient: { id: tomatoId, name: 'tomato' },
+        }),
+        expect.objectContaining({
+          ingredientId: oilId,
+          amount: '1',
+          unit: IngredientUnit.CUCHARADA,
+          ingredient: { id: oilId, name: 'olive oil' },
+        }),
+      ]),
+    );
+    expect(responseBody.ingredients).toHaveLength(2);
+    expect(responseBody).not.toHaveProperty('s3Key');
+
+    const persistedRecipe = await prisma.recipe.findUnique({
+      where: { id: responseBody.id },
+      include: { ingredients: true, steps: true, images: true },
+    });
+
+    expect(persistedRecipe).toMatchObject({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      steps: [{ stepNumber: 1 }, { stepNumber: 2 }],
+      images: [
+        { s3Key: 'recipes/uploaded.webp' },
+        { s3Key: 'recipes/uploaded-secondary.webp' },
+      ],
+    });
+    expect(persistedRecipe?.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ingredientId: tomatoId }),
+        expect.objectContaining({ ingredientId: oilId }),
+      ]),
+    );
+    expect(objectExists).toHaveBeenCalledWith('recipes/uploaded.webp');
+    expect(objectExists).toHaveBeenCalledWith(
+      'recipes/uploaded-secondary.webp',
+    );
+  });
+
+  it('returns 400 and creates nothing when an ingredient does not exist', async () => {
+    const recipe = validRecipe();
+    recipe.ingredients[1].ingredientId = randomUUID();
+
+    await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(recipe)
+      .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('returns 400 when required fields are missing', async () => {
+    await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send({ title: 'Receta incompleta' })
+      .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it.each([
+    [
+      'title',
+      { title: 'a'.repeat(101) },
+      'title must be shorter than or equal to 100 characters',
+    ],
+    [
+      'description',
+      { description: 'a'.repeat(501) },
+      'description must be shorter than or equal to 500 characters',
+    ],
+    [
+      'step',
+      { steps: ['a'.repeat(501)] },
+      'each value in steps must be shorter than or equal to 500 characters',
+    ],
+    ['servings', { servings: 101 }, 'servings must not be greater than 100'],
+    [
+      'minutes',
+      { time: 60, timeUnit: RecipeTimeUnit.MINUTOS },
+      'time must not be greater than 59 when timeUnit is MINUTOS',
+    ],
+    [
+      'hours',
+      { time: 24, timeUnit: RecipeTimeUnit.HORAS },
+      'time must not be greater than 23 when timeUnit is HORAS',
+    ],
+  ])(
+    'returns 400 with a clear message when %s exceeds its limit',
+    async (_field, overrides, expectedMessage) => {
+      const response = await request(app.getHttpServer() as Server)
+        .post('/recipes')
+        .send({ ...validRecipe(), ...overrides })
+        .expect(400);
+      const body = response.body as { message: string[] };
+
+      expect(body.message).toContain(expectedMessage);
+      await expect(prisma.recipe.count()).resolves.toBe(0);
+    },
+  );
+
+  it('returns 400 when an ingredient amount exceeds 12 characters', async () => {
+    const recipe = validRecipe();
+    recipe.ingredients[0].amount = 'a'.repeat(13);
+
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(recipe)
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'ingredients.0.amount must be shorter than or equal to 12 characters',
+    );
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('creates a recipe without images when imageKeys is omitted', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send({ ...validRecipe(), imageKeys: undefined })
+      .expect(201);
+
+    expect(response.body).toMatchObject({ imageUrls: [] });
+    await expect(prisma.recipe.count()).resolves.toBe(1);
+    await expect(prisma.recipeImage.count()).resolves.toBe(0);
+    expect(objectExists).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when one image key does not exist in S3', async () => {
+    objectExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(validRecipe())
+      .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('generates an upload URL and a backend-controlled image key', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes/image-upload-url')
+      .send({ contentType: 'image/png' })
+      .expect(201);
+    const body = response.body as { uploadUrl: string; imageKey: string };
+
+    expect(body).toMatchObject({ uploadUrl: 'https://upload.test' });
+    expect(body.imageKey).toMatch(/^recipes\/[0-9a-f-]{36}\.png$/);
+    expect(getSignedUploadUrl).toHaveBeenCalledWith(body.imageKey, 'image/png');
+  });
+
+  it('rejects unsupported upload content types', async () => {
+    await request(app.getHttpServer() as Server)
+      .post('/recipes/image-upload-url')
+      .send({ contentType: 'application/pdf' })
+      .expect(400);
+
+    expect(getSignedUploadUrl).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when the recipe has no steps', async () => {
+    await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send({ ...validRecipe(), steps: [] })
+      .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('returns 400 when the recipe has no ingredients', async () => {
+    await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send({ ...validRecipe(), ingredients: [] })
+      .expect(400);
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('returns 400 for invalid difficulty, time or ingredient units', async () => {
+    const invalidRecipes = [
+      { ...validRecipe(), difficulty: 'MUY_FACIL' },
+      { ...validRecipe(), timeUnit: 'DIAS' },
+      {
+        ...validRecipe(),
+        ingredients: [{ ingredientId: tomatoId, amount: '2', unit: 'PUÑADO' }],
+      },
+    ];
+
+    for (const recipe of invalidRecipes) {
+      await request(app.getHttpServer() as Server)
+        .post('/recipes')
+        .send(recipe)
+        .expect(400);
+    }
+
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it('replaces every recipe field and returns the updated recipe', async () => {
+    const recipe = await createExistingRecipe();
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(validUpdate())
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      id: recipe.id,
+      title: 'Receta actualizada',
+      description: 'Descripción actualizada.',
+      category: RecipeCategory.CENA,
+      time: 45,
+      timeUnit: RecipeTimeUnit.MINUTOS,
+      difficulty: RecipeDifficulty.MEDIA,
+      servings: 4,
+    });
+  });
+
+  it('adds a new ingredient to recipe_ingredients', async () => {
+    const recipe = await createExistingRecipe();
+    const garlic = await prisma.ingredient.create({ data: { name: 'Ajo' } });
+    const update = validUpdate();
+    update.ingredients.push({
+      ingredientId: garlic.id,
+      amount: '2',
+      unit: IngredientUnit.UNIDAD,
+    });
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(update)
+      .expect(200);
+
+    await expect(
+      prisma.recipeIngredient.findUnique({
+        where: {
+          recipeId_ingredientId: {
+            recipeId: recipe.id,
+            ingredientId: garlic.id,
+          },
+        },
+      }),
+    ).resolves.toMatchObject({ amount: '2', unit: IngredientUnit.UNIDAD });
+  });
+
+  it('removes an omitted ingredient without leaving an orphan row', async () => {
+    const recipe = await createExistingRecipe();
+    const update = validUpdate();
+    update.ingredients = [update.ingredients[0]];
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(update)
+      .expect(200);
+
+    await expect(
+      prisma.recipeIngredient.findMany({ where: { recipeId: recipe.id } }),
+    ).resolves.toMatchObject([{ ingredientId: tomatoId }]);
+  });
+
+  it('updates an existing ingredient amount without duplicating it', async () => {
+    const recipe = await createExistingRecipe();
+    const update = validUpdate();
+    update.ingredients[0].amount = '5';
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(update)
+      .expect(200);
+
+    const tomatoRows = await prisma.recipeIngredient.findMany({
+      where: { recipeId: recipe.id, ingredientId: tomatoId },
+    });
+    expect(tomatoRows).toHaveLength(1);
+    expect(tomatoRows[0].amount).toBe('5');
+  });
+
+  it('replaces steps with exactly the submitted texts in order', async () => {
+    const recipe = await createExistingRecipe();
+    const update = {
+      ...validUpdate(),
+      steps: ['Nuevo primero.', 'Nuevo segundo.', 'Nuevo tercero.'],
+    };
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(update)
+      .expect(200);
+    const responseBody = response.body as {
+      steps: Array<{ stepNumber: number; text: string }>;
+    };
+
+    expect(responseBody.steps).toMatchObject([
+      { stepNumber: 1, text: 'Nuevo primero.' },
+      { stepNumber: 2, text: 'Nuevo segundo.' },
+      { stepNumber: 3, text: 'Nuevo tercero.' },
+    ]);
+    await expect(
+      prisma.recipeStep.findMany({
+        where: { recipeId: recipe.id },
+        orderBy: { stepNumber: 'asc' },
+      }),
+    ).resolves.toMatchObject([
+      { stepNumber: 1, text: 'Nuevo primero.' },
+      { stepNumber: 2, text: 'Nuevo segundo.' },
+      { stepNumber: 3, text: 'Nuevo tercero.' },
+    ]);
+  });
+
+  it('returns 404 when replacing a recipe that does not exist', async () => {
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${randomUUID()}`)
+      .send(validUpdate())
+      .expect(404);
+  });
+
+  it('returns 400 for a missing ingredient and rolls back every change', async () => {
+    const recipe = await createExistingRecipe();
+    const update = {
+      ...validUpdate(),
+      title: 'Este título no debe persistirse',
+      ingredients: [
+        {
+          ingredientId: randomUUID(),
+          amount: '3',
+          unit: IngredientUnit.UNIDAD,
+        },
+      ],
+      steps: ['Este paso tampoco debe persistirse.'],
+    };
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(update)
+      .expect(400);
+
+    const persistedRecipe = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipe.id },
+      include: {
+        ingredients: { orderBy: { ingredientId: 'asc' } },
+        steps: { orderBy: { stepNumber: 'asc' } },
+      },
+    });
+    expect(persistedRecipe.title).toBe('Receta existente');
+    expect(persistedRecipe.ingredients).toHaveLength(2);
+    expect(persistedRecipe.steps).toMatchObject([
+      { stepNumber: 1, text: 'Paso original uno.' },
+      { stepNumber: 2, text: 'Paso original dos.' },
+    ]);
+  });
+
+  it('returns 400 when required update fields are missing or invalid', async () => {
+    const recipe = await createExistingRecipe();
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({ title: 'Actualización incompleta' })
+      .expect(400);
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({ ...validUpdate(), servings: 0 })
+      .expect(400);
+
+    await expect(
+      prisma.recipe.findUniqueOrThrow({ where: { id: recipe.id } }),
+    ).resolves.toMatchObject({ title: 'Receta existente', servings: 2 });
+  });
+
+  it('inherits the conditional time limit when updating a recipe', async () => {
+    const recipe = await createExistingRecipe();
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({
+        ...validUpdate(),
+        time: 24,
+        timeUnit: RecipeTimeUnit.HORAS,
+      })
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'time must not be greater than 23 when timeUnit is HORAS',
+    );
+    await expect(
+      prisma.recipe.findUniqueOrThrow({ where: { id: recipe.id } }),
+    ).resolves.toMatchObject({ title: 'Receta existente', time: 20 });
+  });
+
+  it('replaces image references and deletes previous S3 objects', async () => {
+    const recipe = await createExistingRecipe();
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({
+        ...validUpdate(),
+        imageKeys: ['recipes/new.webp', 'recipes/new-secondary.webp'],
+      })
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      id: recipe.id,
+      imageUrls: [
+        'https://signed.test/recipes/new.webp',
+        'https://signed.test/recipes/new-secondary.webp',
+      ],
+    });
+    await expect(
+      prisma.recipeImage.findMany({ where: { recipeId: recipe.id } }),
+    ).resolves.toMatchObject([
+      { s3Key: 'recipes/new.webp' },
+      { s3Key: 'recipes/new-secondary.webp' },
+    ]);
+    expect(deleteObject).toHaveBeenCalledWith('recipes/current.webp');
+  });
+
+  it('keeps the current image when an update has no new key', async () => {
+    const recipe = await createExistingRecipe();
+
+    await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send(validUpdate())
+      .expect(200);
+
+    await expect(
+      prisma.recipeImage.findMany({ where: { recipeId: recipe.id } }),
+    ).resolves.toMatchObject([{ s3Key: 'recipes/current.webp' }]);
+    expect(deleteObject).not.toHaveBeenCalled();
+  });
+
+  it('deletes the recipe, its relations and its S3 object', async () => {
+    const recipe = await prisma.recipe.create({
+      data: {
+        title: 'Receta para borrar',
+        description: 'Descripción.',
+        category: RecipeCategory.ALMUERZO,
+        time: 20,
+        timeUnit: RecipeTimeUnit.MINUTOS,
+        difficulty: RecipeDifficulty.FACIL,
+        servings: 2,
+        ingredients: {
+          create: {
+            ingredientId: tomatoId,
+            amount: '1',
+            unit: IngredientUnit.UNIDAD,
+          },
+        },
+        steps: { create: { stepNumber: 1, text: 'Preparar.' } },
+        images: { create: { s3Key: 'recipes/delete.webp' } },
+      },
+    });
+
+    await request(app.getHttpServer() as Server)
+      .delete(`/recipes/${recipe.id}`)
+      .expect(204);
+
+    await expect(
+      prisma.recipe.findUnique({ where: { id: recipe.id } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.recipeIngredient.count({ where: { recipeId: recipe.id } }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.recipeStep.count({ where: { recipeId: recipe.id } }),
+    ).resolves.toBe(0);
+    await expect(
+      prisma.recipeImage.count({ where: { recipeId: recipe.id } }),
+    ).resolves.toBe(0);
+    expect(deleteObject).toHaveBeenCalledWith('recipes/delete.webp');
+  });
+
+  it('deletes the recipe even when deleting its S3 object fails', async () => {
+    const loggerError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    deleteObject.mockRejectedValueOnce(new Error('S3 unavailable'));
+    const recipe = await prisma.recipe.create({
+      data: {
+        title: 'Receta para borrar',
+        description: 'Descripción.',
+        category: RecipeCategory.ALMUERZO,
+        time: 20,
+        timeUnit: RecipeTimeUnit.MINUTOS,
+        difficulty: RecipeDifficulty.FACIL,
+        servings: 2,
+        images: { create: { s3Key: 'recipes/delete-failure.webp' } },
+      },
+    });
+
+    await request(app.getHttpServer() as Server)
+      .delete(`/recipes/${recipe.id}`)
+      .expect(204);
+
+    await expect(
+      prisma.recipe.findUnique({ where: { id: recipe.id } }),
+    ).resolves.toBeNull();
+    expect(loggerError).toHaveBeenCalled();
+  });
+
+  it('returns 404 when deleting a recipe that does not exist', async () => {
+    await request(app.getHttpServer() as Server)
+      .delete(`/recipes/${randomUUID()}`)
+      .expect(404);
+  });
+});

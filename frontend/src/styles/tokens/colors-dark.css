@@ -1,0 +1,25 @@
+/**
+ * Color tokens — dark theme overrides.
+ *
+ * Only the roles change; the Citrus ramp stays put. Values come from the `.dark`
+ * block in the design reference. No dark mode toggle ships yet — these exist so
+ * whoever builds it does not have to invent a palette.
+ */
+.dark {
+  --color-background: 31 29 26; /* #1f1d1a */
+  --color-foreground: var(--citrus-cream);
+  --color-card: 44 41 38; /* #2c2926 */
+  --color-card-foreground: var(--citrus-cream);
+  --color-muted: 56 52 47; /* #38342f */
+  --color-muted-foreground: 179 173 163; /* #b3ada3 */
+  --color-secondary: 56 52 47; /* #38342f */
+  --color-secondary-foreground: var(--citrus-cream);
+
+  --color-border: 61 57 51; /* #3d3933 */
+  --color-input: 61 57 51; /* #3d3933 */
+
+  --color-error-surface: 58 26 29; /* #3a1a1d */
+  --color-error-border: 109 43 50; /* #6d2b32 */
+  --color-success-surface: 31 45 22; /* #1f2d16 */
+  --color-success-border: 63 92 42; /* #3f5c2a */
+}

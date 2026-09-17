@@ -1,0 +1,17 @@
+-- Populate the normalized ingredient catalog when migrations are applied to a
+-- new database. The standalone Prisma seed remains the repeatable entry point
+-- for development environments.
+WITH ingredient_groups AS (
+    SELECT $ingredients$
+{"verduras_y_hortalizas":["Tomate","Cebolla","Cebolla morada","Cebolla de verdeo","Ajo","Zanahoria","Papa","Batata","Zapallo","Zapallito","Calabaza","Zucchini","Berenjena","Pimiento rojo","Pimiento verde","Pimiento amarillo","Pepino","Lechuga","Rúcula","Espinaca","Acelga","Repollo","Repollo colorado","Coliflor","Brócoli","Apio","Puerro","Remolacha","Rabanito","Choclo","Chaucha","Arveja","Habas","Hongos","Champiñones","Portobello","Espárragos","Alcaucil","Palta","Jengibre","Ají picante"],"frutas":["Manzana","Pera","Banana","Naranja","Mandarina","Limón","Lima","Pomelo","Uva","Frutilla","Frambuesa","Arándano","Mora","Durazno","Ciruela","Damasco","Kiwi","Ananá","Mango","Sandía","Melón","Cereza","Higo","Granada","Coco","Membrillo","Dátil"],"carnes":["Carne picada","Bife de chorizo","Bife de lomo","Asado","Matambre","Vacío","Nalga","Peceto","Osobuco","Costillas de cerdo","Panceta","Jamón crudo","Jamón cocido","Chorizo","Salchicha","Morcilla","Cordero"],"aves":["Pollo entero","Pechuga de pollo","Muslo de pollo","Pavo","Pato"],"pescados_y_mariscos":["Merluza","Salmón","Atún","Trucha","Bacalao","Langostinos","Camarones","Calamar","Pulpo","Mejillones","Almejas","Anchoas","Sardinas"],"lacteos_y_huevos":["Leche","Leche descremada","Crema de leche","Manteca","Queso rallado","Queso crema","Queso mozzarella","Queso parmesano","Queso azul","Ricota","Yogur natural","Huevo"],"legumbres":["Lentejas","Garbanzos","Porotos negros","Porotos blancos","Porotos colorados","Soja"],"cereales_y_granos":["Arroz","Arroz integral","Avena","Quinoa","Cebada","Trigo burgol","Polenta","Trigo sarraceno"],"harinas_y_panificacion":["Harina 0000","Harina 000","Harina integral","Harina leudante","Levadura seca","Levadura fresca","Polvo de hornear","Bicarbonato de sodio","Pan rallado","Fécula de maíz","Pan lactal","Pan francés"],"pastas":["Fideos","Ñoquis","Ravioles","Fideos de arroz"],"especias_y_hierbas":["Sal","Pimienta negra","Pimienta blanca","Pimentón","Pimentón ahumado","Comino","Orégano","Albahaca","Perejil","Cilantro","Romero","Tomillo","Laurel","Canela","Nuez moscada","Clavo de olor","Curry","Cúrcuma","Ají molido","Estragón","Menta","Eneldo","Salvia"],"condimentos_y_salsas":["Aceite de oliva","Aceite de girasol","Vinagre de vino","Vinagre balsámico","Vinagre de manzana","Salsa de soja","Mostaza","Ketchup","Mayonesa","Salsa de tomate","Extracto de tomate","Caldo de verduras","Caldo de pollo","Caldo de carne","Salsa Worcestershire","Tabasco"],"endulzantes":["Azúcar","Azúcar negra","Azúcar impalpable","Miel","Edulcorante","Dulce de leche","Cacao amargo","Chocolate cobertura"],"frutos_secos_y_semillas":["Nueces","Almendras","Maní","Avellanas","Pistachos","Castañas de cajú","Semillas de chía","Semillas de girasol","Semillas de sésamo","Semillas de lino","Pasas de uva"],"bebidas_para_cocinar":["Vino blanco","Vino tinto","Cerveza"],"otros":["Agua","Hielo","Gelatina sin sabor","Aceitunas verdes","Aceitunas negras","Alcaparras","Pepinillos"]}
+    $ingredients$::jsonb AS data
+),
+ingredient_names AS (
+    SELECT jsonb_array_elements_text(group_values) AS name
+    FROM ingredient_groups
+    CROSS JOIN LATERAL jsonb_each(data) AS groups(category, group_values)
+)
+INSERT INTO "ingredients" ("id", "name")
+SELECT gen_random_uuid(), name
+FROM ingredient_names
+ON CONFLICT ("name") DO NOTHING;

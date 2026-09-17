@@ -1,0 +1,58 @@
+/**
+ * Color tokens — light theme.
+ *
+ * Values are space-separated RGB channels, not hex, so Tailwind can compose
+ * opacity modifiers (`bg-primary/10`, `ring-ring/30`). The hex equivalent is in
+ * the comment beside each one.
+ *
+ * The Citrus ramp holds the raw brand values and is referenced only by the
+ * semantic roles below. Components consume roles (`bg-primary`, `text-muted`),
+ * never the ramp, so a rebrand touches this file alone.
+ *
+ * Source: support/design/uploads/zest-wireframe-design/app/globals.css
+ */
+:root {
+  /* Citrus ramp — do not use directly in components */
+  --citrus-grapefruit: 232 65 90; /* #e8415a */
+  --citrus-coral: 242 115 90; /* #f2735a */
+  --citrus-lemon: 245 200 66; /* #f5c842 */
+  --citrus-lime: 125 194 66; /* #7dc242 */
+  --citrus-cream: 250 247 242; /* #faf7f2 */
+  --citrus-sand: 245 239 229; /* #f5efe5 */
+  --citrus-oat: 241 235 224; /* #f1ebe0 */
+  --citrus-clay: 231 224 211; /* #e7e0d3 */
+  --citrus-stone: 122 117 108; /* #7a756c */
+  --citrus-ink: 44 44 44; /* #2c2c2c */
+  --citrus-white: 255 255 255;
+
+  /* Surfaces */
+  --color-background: var(--citrus-cream);
+  --color-foreground: var(--citrus-ink);
+  --color-card: var(--citrus-white);
+  --color-card-foreground: var(--citrus-ink);
+  --color-muted: var(--citrus-oat);
+  --color-muted-foreground: var(--citrus-stone);
+  --color-secondary: var(--citrus-sand);
+  --color-secondary-foreground: var(--citrus-ink);
+
+  /* Brand */
+  --color-primary: var(--citrus-grapefruit);
+  --color-primary-foreground: var(--citrus-white);
+  --color-accent: var(--citrus-lemon);
+  --color-accent-foreground: var(--citrus-ink);
+
+  /* Lines and focus */
+  --color-border: var(--citrus-clay);
+  --color-input: var(--citrus-clay);
+  --color-ring: var(--citrus-coral);
+
+  /* Feedback — see docs/design-system.md, pending design sign-off */
+  --color-error: 193 18 31; /* #c1121f */
+  --color-error-foreground: var(--citrus-white);
+  --color-error-surface: 253 236 238; /* #fdecee */
+  --color-error-border: 243 184 191; /* #f3b8bf */
+  --color-success: var(--citrus-lime);
+  --color-success-foreground: var(--citrus-white);
+  --color-success-surface: 241 248 233; /* #f1f8e9 */
+  --color-success-border: 197 225 165; /* #c5e1a5 */
+}

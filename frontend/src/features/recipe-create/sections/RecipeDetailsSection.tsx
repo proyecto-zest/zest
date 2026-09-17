@@ -1,0 +1,69 @@
+import { useState } from 'react'
+import { Card } from '../../../components/Card'
+import { NumberField } from '../../../components/ui/NumberField'
+import { SelectField } from '../../../components/ui/SelectField'
+import { TextAreaField } from '../../../components/ui/TextAreaField'
+import { TextField } from '../../../components/ui/TextField'
+import { toOptions } from '../../../lib/enumLabels'
+import { DESCRIPTION_MAX_LENGTH, TITLE_MAX_LENGTH, servingsRangeError } from '../fieldLimits'
+import type { RecipeFormValues, RecipeMetadata } from '../types'
+import { TimeAndDifficultyRow } from './TimeAndDifficultyRow'
+
+type ScalarField = 'title' | 'description' | 'category' | 'time' | 'timeUnit' | 'difficulty' | 'servings'
+
+interface RecipeDetailsSectionProps {
+  values: RecipeFormValues
+  metadata: RecipeMetadata
+  setField: (field: ScalarField, value: string) => void
+}
+
+/** Title, description, category, time, difficulty and servings. */
+export function RecipeDetailsSection({ values, metadata, setField }: RecipeDetailsSectionProps) {
+  const [servingsError, setServingsError] = useState<string | undefined>(undefined)
+
+  const handleServingsChange = (raw: string) => {
+    const error = servingsRangeError(raw)
+    setServingsError(error)
+    if (error) return
+    setField('servings', raw)
+  }
+
+  return (
+    <Card>
+      <div className="flex flex-col gap-4">
+        <TextField
+          label="Recipe title"
+          value={values.title}
+          onChange={(v) => setField('title', v)}
+          placeholder="e.g. Lemon Garlic Pasta"
+          maxLength={TITLE_MAX_LENGTH}
+          required
+        />
+        <TextAreaField
+          label="Description"
+          value={values.description}
+          onChange={(v) => setField('description', v)}
+          placeholder="A short, mouth-watering summary…"
+          maxLength={DESCRIPTION_MAX_LENGTH}
+          required
+        />
+        <SelectField
+          label="Category"
+          value={values.category}
+          onChange={(v) => setField('category', v)}
+          options={toOptions(metadata.categories)}
+          required
+        />
+        <TimeAndDifficultyRow values={values} metadata={metadata} setField={setField} />
+        <NumberField
+          label="Servings"
+          value={values.servings}
+          onChange={handleServingsChange}
+          placeholder="4"
+          error={servingsError}
+          required
+        />
+      </div>
+    </Card>
+  )
+}
