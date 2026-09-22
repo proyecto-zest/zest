@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RecipesModule } from './recipes/recipes.module';
     HealthModule,
     IngredientsModule,
     RecipesModule,
+    UsersModule,
   ],
   providers: [
     JwtAuthGuard,
