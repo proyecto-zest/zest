@@ -91,17 +91,21 @@ Hay dos helpers en `test/`, para dos necesidades distintas:
 
 - **`test/protected-route-test-helper.ts`** — el camino rápido para cualquier
   ticket que solo necesita "una request de un usuario autenticado", sin
-  probar el guard de JWT en sí mismo. `withAuthenticatedUser(builder)`
-  sobreescribe `JwtAuthGuard` en el `TestingModuleBuilder` para que toda
-  request quede autenticada como un usuario fijo (`request.user`), sin firmar
-  ningún token ni llamar a Auth0. `withRejectedAuthentication(builder)` hace
-  lo opuesto: cualquier request devuelve 401, para probar ese caso sin
-  necesitar un token inválido de verdad.
+  probar el guard de JWT en sí mismo. `withAuthenticatedUser(app)`
+  sobreescribe `JwtAuthGuard` en la `INestApplication` ya creada (se llama
+  entre `createNestApplication()` y `app.init()`) para que toda request quede
+  autenticada como un usuario fijo (`request.user`), sin firmar ningún token
+  ni llamar a Auth0. `withRejectedAuthentication(app)` hace lo opuesto:
+  cualquier request devuelve 401, para probar ese caso sin necesitar un token
+  inválido de verdad.
 
   ```ts
-  const moduleFixture = await withAuthenticatedUser(
-    Test.createTestingModule({ imports: [AppModule] }),
-  ).compile();
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+  const app = moduleFixture.createNestApplication();
+  withAuthenticatedUser(app);
+  await app.init();
   ```
 
 - **`test/auth-test-helper.ts`** — para probar el guard/la validación de JWT

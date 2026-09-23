@@ -143,5 +143,29 @@ describe('UsersService', () => {
         service.syncFromAuth0Token(authenticatedUser),
       ).rejects.toThrow(ConflictException);
     });
+
+    it('returns the winning row instead of 409 when the P2002 is a same-auth0Sub race, not a real email conflict', async () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        { code: 'P2002', clientVersion: '6.0.0' },
+      );
+      const raceWinner = {
+        ...createdUser,
+        id: 'winner-id',
+      };
+      const findUnique = jest
+        .fn()
+        .mockResolvedValueOnce(null) // existingBySub check
+        .mockResolvedValueOnce(null) // existingByEmail check
+        .mockResolvedValueOnce(raceWinner); // re-check by auth0Sub in the catch
+      const create = jest.fn().mockRejectedValue(prismaError);
+      const service = new UsersService({
+        user: { findUnique, create },
+      } as unknown as PrismaService);
+
+      await expect(
+        service.syncFromAuth0Token(authenticatedUser),
+      ).resolves.toEqual(raceWinner);
+    });
   });
 });
