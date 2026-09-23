@@ -1,7 +1,8 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Req } from '@nestjs/common';
 
 import { AuthenticatedUser } from '../auth/authenticated-user.type';
 import { CurrentUserResponseDto } from './dto/current-user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -18,5 +19,10 @@ export class UsersController {
     @Req() request: { user: AuthenticatedUser },
   ): Promise<CurrentUserResponseDto> {
     return this.usersService.syncFromAuth0Token(request.user);
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponseDto> {
+    return this.usersService.findOne(id);
   }
 }
