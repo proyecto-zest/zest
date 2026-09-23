@@ -21,6 +21,8 @@ describe('configureApp', () => {
     expect(get).toHaveBeenCalledWith(ConfigService);
     expect(enableCors).toHaveBeenCalledWith({
       origin: 'http://localhost:5173',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     });
     expect(useGlobalPipes).toHaveBeenCalledTimes(1);
   });

@@ -15,6 +15,8 @@ import { AuthModule } from '../src/auth/auth.module';
 import { AuthenticatedUser } from '../src/auth/authenticated-user.type';
 import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { Public } from '../src/auth/public.decorator';
+import { PrismaModule } from '../src/prisma/prisma.module';
+import { PrismaService } from '../src/prisma/prisma.service';
 import {
   authTestConfigModuleOptions,
   createTestToken,
@@ -41,6 +43,7 @@ describe('Auth0 JWT guard (e2e)', () => {
     const moduleFixture = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot(authTestConfigModuleOptions()),
+        PrismaModule,
         AuthModule,
       ],
       controllers: [AuthTestController],
@@ -51,7 +54,14 @@ describe('Auth0 JWT guard (e2e)', () => {
           useExisting: JwtAuthGuard,
         },
       ],
-    }).compile();
+    })
+      // AuthModule pulls in UsersModule (for CurrentUserGuard's UsersService
+      // dependency), but this spec only exercises JwtAuthGuard/JwtStrategy —
+      // it never touches the database, so a real PrismaService connection
+      // is stubbed out rather than actually connecting.
+      .overrideProvider(PrismaService)
+      .useValue({})
+      .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
