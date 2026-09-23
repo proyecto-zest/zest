@@ -19,6 +19,28 @@ export class UsersService {
     return user;
   }
 
+  async updateName(id: string, name: string): Promise<CurrentUserResponseDto> {
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { name },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        avatarUrl: true,
+      },
+    });
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      emailVerified: updated.emailVerified,
+      avatarUrl: updated.avatarUrl,
+    };
+  }
+
   /**
    * Creates or syncs the local `User` from a validated Auth0 token. Auth0 is
    * only the seed for `name`/`avatarUrl`: they're set on the very first call
