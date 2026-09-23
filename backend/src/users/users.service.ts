@@ -129,6 +129,28 @@ export class UsersService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
+        // The unique violation could be on auth0Sub, not email: two
+        // concurrent GET /users/me calls for the same new user (React
+        // StrictMode double-invoking a useEffect in dev, for example) both
+        // pass the findUnique check above, then race on create — the loser
+        // lands here even though there's no real conflict, just a duplicate
+        // signup for the *same* identity. Re-check by auth0Sub before
+        // concluding it's a genuine cross-account email collision.
+        const raceWinner = await this.prisma.user.findUnique({
+          where: { auth0Sub },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            emailVerified: true,
+            avatarUrl: true,
+          },
+        });
+
+        if (raceWinner) {
+          return raceWinner;
+        }
+
         throw new ConflictException(
           `An account with email "${email}" already exists under a different login method`,
         );
