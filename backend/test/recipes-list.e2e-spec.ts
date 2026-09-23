@@ -11,6 +11,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import {
   DEFAULT_RECIPE_AUTHOR_ID,
@@ -67,6 +68,8 @@ describeWithDatabase('GET /recipes (e2e)', () => {
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .overrideProvider(StorageService)
       .useValue({ getSignedReadUrl })
       .compile();

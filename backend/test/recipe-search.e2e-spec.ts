@@ -11,6 +11,7 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
@@ -120,7 +121,10 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
