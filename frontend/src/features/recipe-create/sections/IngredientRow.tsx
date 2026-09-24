@@ -2,6 +2,7 @@ import { NumberField } from '../../../components/ui/NumberField'
 import { SelectField } from '../../../components/ui/SelectField'
 import { RemoveRowButton } from '../../../components/ui/RemoveRowButton'
 import { toOptions } from '../../../lib/enumLabels'
+import { INGREDIENT_AMOUNT_MAX_LENGTH } from '../fieldLimits'
 import type { Ingredient, IngredientRowValue } from '../types'
 
 interface IngredientRowProps {
@@ -36,6 +37,7 @@ export function IngredientRow({ row, catalog, units, canRemove, onChange, onRemo
             placeholder="Amount"
             aria-label="Amount"
             allowDecimal
+            maxLength={INGREDIENT_AMOUNT_MAX_LENGTH}
           />
         </div>
         <div className="min-w-0 flex-1">

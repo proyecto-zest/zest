@@ -18,7 +18,7 @@ export function DeleteRecipeConfirmModal({ title, pending, onConfirm, onCancel }
           <h2 id="delete-recipe-title" className="font-serif text-xl font-bold text-foreground">
             Delete recipe?
           </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 break-words text-sm text-muted-foreground">
             This will permanently remove &ldquo;{title}&rdquo;. This can&rsquo;t be undone.
           </p>
         </div>

@@ -6,6 +6,8 @@ export function configureApp(app: INestApplication): void {
 
   app.enableCors({
     origin: configService.getOrThrow<string>('CORS_ORIGIN'),
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   app.useGlobalPipes(
     new ValidationPipe({

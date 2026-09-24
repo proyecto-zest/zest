@@ -12,11 +12,13 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { CreatedRecipeResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -74,6 +76,7 @@ describeWithDatabase('Recipes (e2e)', () => {
   const createExistingRecipe = () =>
     prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta existente',
         description: 'Descripción original.',
         category: RecipeCategory.ALMUERZO,
@@ -112,6 +115,8 @@ describeWithDatabase('Recipes (e2e)', () => {
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .overrideProvider(StorageService)
       .useValue({
         objectExists,
@@ -131,6 +136,7 @@ describeWithDatabase('Recipes (e2e)', () => {
     objectExists.mockResolvedValue(true);
     deleteObject.mockResolvedValue(undefined);
     await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
     await createCatalog();
   });
 
@@ -221,6 +227,63 @@ describeWithDatabase('Recipes (e2e)', () => {
       .send({ title: 'Receta incompleta' })
       .expect(400);
 
+    await expect(prisma.recipe.count()).resolves.toBe(0);
+  });
+
+  it.each([
+    [
+      'title',
+      { title: 'a'.repeat(101) },
+      'title must be shorter than or equal to 100 characters',
+    ],
+    [
+      'description',
+      { description: 'a'.repeat(501) },
+      'description must be shorter than or equal to 500 characters',
+    ],
+    [
+      'step',
+      { steps: ['a'.repeat(501)] },
+      'each value in steps must be shorter than or equal to 500 characters',
+    ],
+    ['servings', { servings: 101 }, 'servings must not be greater than 100'],
+    [
+      'minutes',
+      { time: 60, timeUnit: RecipeTimeUnit.MINUTOS },
+      'time must not be greater than 59 when timeUnit is MINUTOS',
+    ],
+    [
+      'hours',
+      { time: 24, timeUnit: RecipeTimeUnit.HORAS },
+      'time must not be greater than 23 when timeUnit is HORAS',
+    ],
+  ])(
+    'returns 400 with a clear message when %s exceeds its limit',
+    async (_field, overrides, expectedMessage) => {
+      const response = await request(app.getHttpServer() as Server)
+        .post('/recipes')
+        .send({ ...validRecipe(), ...overrides })
+        .expect(400);
+      const body = response.body as { message: string[] };
+
+      expect(body.message).toContain(expectedMessage);
+      await expect(prisma.recipe.count()).resolves.toBe(0);
+    },
+  );
+
+  it('returns 400 when an ingredient amount exceeds 12 characters', async () => {
+    const recipe = validRecipe();
+    recipe.ingredients[0].amount = 'a'.repeat(13);
+
+    const response = await request(app.getHttpServer() as Server)
+      .post('/recipes')
+      .send(recipe)
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'ingredients.0.amount must be shorter than or equal to 12 characters',
+    );
     await expect(prisma.recipe.count()).resolves.toBe(0);
   });
 
@@ -477,6 +540,27 @@ describeWithDatabase('Recipes (e2e)', () => {
     ).resolves.toMatchObject({ title: 'Receta existente', servings: 2 });
   });
 
+  it('inherits the conditional time limit when updating a recipe', async () => {
+    const recipe = await createExistingRecipe();
+
+    const response = await request(app.getHttpServer() as Server)
+      .put(`/recipes/${recipe.id}`)
+      .send({
+        ...validUpdate(),
+        time: 24,
+        timeUnit: RecipeTimeUnit.HORAS,
+      })
+      .expect(400);
+    const body = response.body as { message: string[] };
+
+    expect(body.message).toContain(
+      'time must not be greater than 23 when timeUnit is HORAS',
+    );
+    await expect(
+      prisma.recipe.findUniqueOrThrow({ where: { id: recipe.id } }),
+    ).resolves.toMatchObject({ title: 'Receta existente', time: 20 });
+  });
+
   it('replaces image references and deletes previous S3 objects', async () => {
     const recipe = await createExistingRecipe();
 
@@ -521,6 +605,7 @@ describeWithDatabase('Recipes (e2e)', () => {
   it('deletes the recipe, its relations and its S3 object', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
@@ -566,6 +651,7 @@ describeWithDatabase('Recipes (e2e)', () => {
     deleteObject.mockRejectedValueOnce(new Error('S3 unavailable'));
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,

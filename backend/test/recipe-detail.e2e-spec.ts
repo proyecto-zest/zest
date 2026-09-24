@@ -12,10 +12,13 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { RecipeDetailResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { StorageService } from '../src/storage/storage.service';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -35,6 +38,8 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .overrideProvider(StorageService)
       .useValue({ getSignedReadUrl })
       .compile();
@@ -44,7 +49,10 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     await app.init();
   });
 
-  beforeEach(() => resetTestDatabase(prisma));
+  beforeEach(async () => {
+    await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
+  });
 
   afterAll(async () => {
     await app.close();
@@ -54,6 +62,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('returns the complete data for an existing recipe', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta de detalle',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,
@@ -90,7 +99,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
 
     expect(body).toMatchObject({
       id: recipe.id,
-      authorId: null,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       title: 'Receta de detalle',
       description: 'Descripción completa.',
       category: RecipeCategory.ALMUERZO,
@@ -134,6 +143,7 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
   it('returns no image URLs when the recipe has no images', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta sin imagen',
         description: 'Descripción completa.',
         category: RecipeCategory.ALMUERZO,

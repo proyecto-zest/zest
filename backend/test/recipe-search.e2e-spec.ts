@@ -11,9 +11,12 @@ import { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.dto';
+import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -45,6 +48,7 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
   ): Promise<string> => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title,
         description: `Descripción de ${title}`,
         category,
@@ -67,7 +71,12 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
   const createSearchData = async (): Promise<void> => {
     const [tomato, cheese, basil] = await Promise.all([
-      prisma.ingredient.create({ data: { name: ingredientNames.tomato } }),
+      prisma.ingredient.create({
+        data: {
+          id: 'c02dfc85-b49c-5084-be73-00889918b2da',
+          name: ingredientNames.tomato,
+        },
+      }),
       prisma.ingredient.create({ data: { name: ingredientNames.cheese } }),
       prisma.ingredient.create({ data: { name: ingredientNames.basil } }),
     ]);
@@ -112,7 +121,10 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
@@ -121,6 +133,7 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
 
   beforeEach(async () => {
     await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
     await createSearchData();
   });
 

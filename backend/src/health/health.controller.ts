@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 
+import { Public } from '../auth/public.decorator';
 import { HealthService, HealthStatus } from './health.service';
 
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}

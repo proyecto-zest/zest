@@ -10,6 +10,7 @@ interface TextFieldProps {
   required?: boolean
   disabled?: boolean
   error?: string
+  maxLength?: number
   'aria-label'?: string
 }
 
@@ -22,6 +23,7 @@ export function TextField({
   required,
   disabled,
   error,
+  maxLength,
   'aria-label': ariaLabel,
 }: TextFieldProps) {
   const id = useId()
@@ -37,6 +39,7 @@ export function TextField({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        maxLength={maxLength}
         aria-label={label ? undefined : ariaLabel}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}

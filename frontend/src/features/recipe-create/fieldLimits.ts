@@ -1,0 +1,35 @@
+/** Character and range limits for the recipe form. Not yet enforced by the backend DTO. */
+export const TITLE_MAX_LENGTH = 100
+export const DESCRIPTION_MAX_LENGTH = 500
+export const STEP_MAX_LENGTH = 500
+
+/** `time`'s upper bound depends on the selected `timeUnit`. */
+export const MINUTES_MAX = 59
+export const HOURS_MAX = 23
+
+/** No home recipe realistically feeds more than this many people. */
+export const SERVINGS_MAX = 100
+
+/**
+ * `amount` is free text (`String` column — "2", "1.5", "1/2 cup"...), so it
+ * has no numeric range check. This just stops someone from pasting or typing
+ * an absurdly long value that breaks the detail page's layout.
+ */
+export const INGREDIENT_AMOUNT_MAX_LENGTH = 12
+
+/** Shared by the live input guard and submit-time validation, so the two can't drift apart. */
+export function timeRangeError(time: string, timeUnit: string): string | undefined {
+  const value = Number(time)
+  if (timeUnit === 'MINUTOS' && value > MINUTES_MAX) {
+    return `Minutes can't be ${MINUTES_MAX + 1} or more — switch the unit to Hours for longer times.`
+  }
+  if (timeUnit === 'HORAS' && value > HOURS_MAX) {
+    return `Hours can't be more than ${HOURS_MAX}.`
+  }
+  return undefined
+}
+
+export function servingsRangeError(servings: string): string | undefined {
+  if (Number(servings) > SERVINGS_MAX) return `Servings can't be more than ${SERVINGS_MAX}.`
+  return undefined
+}
