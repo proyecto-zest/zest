@@ -1,5 +1,6 @@
 import { Pencil } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useCurrentUser } from '../../auth/useCurrentUser'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
 import { DeleteRecipeButton } from '../../components/recipe-card/DeleteRecipeButton'
@@ -21,6 +22,7 @@ export function RecipeDetailPage() {
 
 function RecipeDetailContent({ id }: { id: string }) {
   const { state, retry } = useRecipeDetail(id)
+  const { user } = useCurrentUser()
   const navigate = useNavigate()
 
   /**
@@ -55,24 +57,26 @@ function RecipeDetailContent({ id }: { id: string }) {
             <IngredientsList ingredients={state.recipe.ingredients} />
             <StepsList steps={state.recipe.steps} />
           </div>
-          <div className="flex justify-center gap-3 pt-4">
-            {/* `replace`: swaps this history entry for `/edit` instead of
+          {user && state.recipe.author && user.id === state.recipe.author.id && (
+            <div className="flex justify-center gap-3 pt-4">
+              {/* `replace`: swaps this history entry for `/edit` instead of
                 stacking on it, so Back from `/edit` (Cancel or Save, both use
                 `replace` too) lands on the feed — not on a repeated `/detail`
                 entry that bounces Back in place. */}
-            <Button
-              variant="secondary"
-              onClick={() => navigate(`/recipes/${state.recipe.id}/edit`, { replace: true })}
-            >
-              <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <DeleteRecipeButton
-              recipeId={state.recipe.id}
-              recipeTitle={state.recipe.title}
-              onDeleted={handleDeleted}
-            />
-          </div>
+              <Button
+                variant="secondary"
+                onClick={() => navigate(`/recipes/${state.recipe.id}/edit`, { replace: true })}
+              >
+                <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <DeleteRecipeButton
+                recipeId={state.recipe.id}
+                recipeTitle={state.recipe.title}
+                onDeleted={handleDeleted}
+              />
+            </div>
+          )}
         </article>
       )}
     </div>
