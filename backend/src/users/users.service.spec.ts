@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { AuthenticatedUser } from '../auth/authenticated-user.type';
@@ -7,6 +7,53 @@ import { UsersService } from './users.service';
 
 describe('UsersService', () => {
   const userId = '11111111-1111-4111-8111-111111111111';
+
+  it('returns id, name and avatarUrl for an existing user', async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      id: userId,
+      name: 'Carla Cocinera',
+      avatarUrl: 'https://images.test/carla.webp',
+    });
+    const service = new UsersService({
+      user: { findUnique },
+    } as unknown as PrismaService);
+
+    await expect(service.findOne(userId)).resolves.toEqual({
+      id: userId,
+      name: 'Carla Cocinera',
+      avatarUrl: 'https://images.test/carla.webp',
+    });
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: userId },
+      select: { id: true, name: true, avatarUrl: true },
+    });
+  });
+
+  it('returns a null avatarUrl as-is when the user has none', async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      id: userId,
+      name: 'Carla Cocinera',
+      avatarUrl: null,
+    });
+    const service = new UsersService({
+      user: { findUnique },
+    } as unknown as PrismaService);
+
+    await expect(service.findOne(userId)).resolves.toEqual({
+      id: userId,
+      name: 'Carla Cocinera',
+      avatarUrl: null,
+    });
+  });
+
+  it('throws NotFoundException when the user does not exist', async () => {
+    const findUnique = jest.fn().mockResolvedValue(null);
+    const service = new UsersService({
+      user: { findUnique },
+    } as unknown as PrismaService);
+
+    await expect(service.findOne(userId)).rejects.toThrow(NotFoundException);
+  });
 
   describe('findByAuth0Sub', () => {
     it('returns id, name and avatarUrl for an existing sub', async () => {
@@ -142,6 +189,30 @@ describe('UsersService', () => {
       await expect(
         service.syncFromAuth0Token(authenticatedUser),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('returns the winning row instead of 409 when the P2002 is a same-auth0Sub race, not a real email conflict', async () => {
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        { code: 'P2002', clientVersion: '6.0.0' },
+      );
+      const raceWinner = {
+        ...createdUser,
+        id: 'winner-id',
+      };
+      const findUnique = jest
+        .fn()
+        .mockResolvedValueOnce(null) // existingBySub check
+        .mockResolvedValueOnce(null) // existingByEmail check
+        .mockResolvedValueOnce(raceWinner); // re-check by auth0Sub in the catch
+      const create = jest.fn().mockRejectedValue(prismaError);
+      const service = new UsersService({
+        user: { findUnique, create },
+      } as unknown as PrismaService);
+
+      await expect(
+        service.syncFromAuth0Token(authenticatedUser),
+      ).resolves.toEqual(raceWinner);
     });
   });
 
