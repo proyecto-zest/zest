@@ -22,6 +22,13 @@ interface Auth0ProviderWithNavigateProps {
  * `loginWithRedirect` — see `ProtectedRoute`) instead of always the home page.
  * `useRefreshTokens: true` keeps sessions alive via silent refresh; it needs
  * Refresh Token Rotation + Allow Offline Access enabled on the Auth0 side.
+ * `cacheLocation="localstorage"` (rather than the in-memory default) is what
+ * survives a page reload — with `"memory"` a plain F5 wipes the token and
+ * every route bounces to login even though the Auth0 session is still valid.
+ * `support/skills/auth.md` recommends the in-memory default instead
+ * (localStorage is readable by any injected script, an XSS surface); this
+ * trades that for reload persistence per explicit reviewer request on this
+ * PR — revisit if that guidance changes.
  */
 export function Auth0ProviderWithNavigate({ children }: Auth0ProviderWithNavigateProps) {
   const navigate = useNavigate()
@@ -36,7 +43,7 @@ export function Auth0ProviderWithNavigate({ children }: Auth0ProviderWithNavigat
       clientId={clientId}
       authorizationParams={{ redirect_uri: window.location.origin, audience }}
       useRefreshTokens
-      cacheLocation="memory"
+      cacheLocation="localstorage"
       onRedirectCallback={onRedirectCallback}
     >
       {children}
