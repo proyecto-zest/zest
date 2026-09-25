@@ -1,3 +1,4 @@
+import { getAccessToken } from '../auth/tokenProvider'
 import { buildQuery, type QueryParams } from './buildQuery'
 
 const baseUrl = import.meta.env.VITE_API_URL
@@ -35,11 +36,28 @@ async function readMessages(response: Response): Promise<string[]> {
   return [`Request failed (${response.status})`]
 }
 
+/**
+ * Every request goes through the token bridge, not just ones a component
+ * marks as protected — the backend's own guards decide what needs auth. If
+ * Auth0 hasn't mounted yet or the session can't be renewed, the request
+ * proceeds without a token: the bridge already redirected to login in the
+ * renewal-failure case, and an unauthenticated visitor hitting a public route
+ * (recipes are readable logged-out, for instance) shouldn't be blocked here.
+ */
+async function authHeader(): Promise<Record<string, string>> {
+  try {
+    const token = await getAccessToken()
+    return { Authorization: `Bearer ${token}` }
+  } catch {
+    return {}
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const query = options.query ? buildQuery(options.query) : ''
   const response = await fetch(`${baseUrl}${path}${query}`, {
     method: options.method ?? 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     signal: options.signal,
   })
