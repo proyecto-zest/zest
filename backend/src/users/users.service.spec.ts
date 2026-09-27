@@ -215,4 +215,40 @@ describe('UsersService', () => {
       ).resolves.toEqual(raceWinner);
     });
   });
+
+  describe('updateName', () => {
+    it('updates only name and returns the current-user shape', async () => {
+      const update = jest.fn().mockResolvedValue({
+        id: userId,
+        name: 'Nuevo Nombre',
+        email: 'cook@zest.test',
+        emailVerified: true,
+        avatarUrl: 'https://images.test/cook.webp',
+      });
+      const service = new UsersService({
+        user: { update },
+      } as unknown as PrismaService);
+
+      await expect(service.updateName(userId, 'Nuevo Nombre')).resolves.toEqual(
+        {
+          id: userId,
+          name: 'Nuevo Nombre',
+          email: 'cook@zest.test',
+          emailVerified: true,
+          avatarUrl: 'https://images.test/cook.webp',
+        },
+      );
+      expect(update).toHaveBeenCalledWith({
+        where: { id: userId },
+        data: { name: 'Nuevo Nombre' },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          avatarUrl: true,
+        },
+      });
+    });
+  });
 });
