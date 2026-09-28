@@ -49,15 +49,16 @@ enum IngredientUnit {
 }
 
 model User {
-  id            String   @id @default(uuid()) @db.Uuid
-  auth0Sub      String   @unique @map("auth0_sub") @db.VarChar
-  name          String   @db.VarChar
-  email         String   @unique @db.VarChar
-  emailVerified Boolean  @default(false) @map("email_verified")
-  avatarUrl     String?  @map("avatar_url") @db.VarChar
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  id            String       @id @default(uuid()) @db.Uuid
+  auth0Sub      String       @unique @map("auth0_sub") @db.VarChar
+  name          String       @db.VarChar
+  email         String       @unique @db.VarChar
+  emailVerified Boolean      @default(false) @map("email_verified")
+  avatarUrl     String?      @map("avatar_url") @db.VarChar
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
   recipes       Recipe[]
+  collections   Collection[]
 
   @@map("users")
 }
@@ -78,6 +79,7 @@ model Recipe {
   steps       RecipeStep[]
   images      RecipeImage[]
   author      User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  collections CollectionRecipe[]
 
   @@map("recipes")
 }
@@ -120,4 +122,40 @@ model RecipeImage {
 
   @@index([recipeId])
   @@map("recipe_images")
+}
+
+model Collection {
+  id            String             @id @default(uuid()) @db.Uuid
+  ownerId       String             @map("owner_id") @db.Uuid
+  // `name` is not unique per owner: db.md doesn't specify this constraint,
+  // and ZEST-88/89 left it as an open question for the team to decide.
+  name          String             @db.VarChar
+  // Open question (ZEST-88): should these be nullable with a default instead
+  // of required? Left NOT NULL with no default for now — the "New collection"
+  // modal already forces picking a cover and an accent color, so in practice
+  // neither should ever be missing — but flagging per the ticket in case the
+  // team wants a fallback (e.g. a default cover) for a future API/import path
+  // that doesn't go through that modal.
+  coverImageUrl String             @map("cover_image_url") @db.VarChar
+  accentColor   String             @map("accent_color") @db.VarChar
+  owner         User               @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  recipes       CollectionRecipe[]
+
+  @@index([ownerId])
+  @@map("collections")
+}
+
+model CollectionRecipe {
+  collectionId String     @map("collection_id") @db.Uuid
+  recipeId     String     @map("recipe_id") @db.Uuid
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  // Open question (ZEST-88): the ticket proposes onDelete: Cascade here too
+  // (deleting a recipe would silently drop it from every collection). Kept
+  // as Restrict instead — deleting a recipe that's still in a collection
+  // fails loudly rather than quietly rewriting someone's collection — until
+  // the team confirms which behavior they actually want.
+  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+
+  @@id([collectionId, recipeId])
+  @@map("collection_recipes")
 }
