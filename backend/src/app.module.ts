@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { CollectionsModule } from './collections/collections.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './users/users.module';
     IngredientsModule,
     RecipesModule,
     UsersModule,
+    CollectionsModule,
   ],
   providers: [
     JwtAuthGuard,
