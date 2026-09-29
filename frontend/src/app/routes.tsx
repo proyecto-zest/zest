@@ -3,6 +3,7 @@ import { ProtectedRoute } from '../auth/ProtectedRoute'
 import { RedirectIfAuthenticated } from '../auth/RedirectIfAuthenticated'
 import { LoginPage } from '../features/auth/LoginPage'
 import { SignupPage } from '../features/auth/SignupPage'
+import { CollectionsPage } from '../features/collections/CollectionsPage'
 import { FeedPage } from '../features/feed/FeedPage'
 import { RecipeCreatePage } from '../features/recipe-create/RecipeCreatePage'
 import { RecipeDetailPage } from '../features/recipe-detail/RecipeDetailPage'
@@ -44,6 +45,14 @@ export const routes: RouteObject[] = [
     element: (
       <ProtectedRoute>
         <RecipeCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/collections',
+    element: (
+      <ProtectedRoute>
+        <CollectionsPage />
       </ProtectedRoute>
     ),
   },
