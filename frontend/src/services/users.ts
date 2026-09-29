@@ -1,6 +1,10 @@
 import type { CurrentUserData } from '../types/user'
 import { httpClient } from './httpClient'
 
-/** Resolves the authenticated Auth0 identity to its local Zest user. */
-export const getCurrentUser = (options?: { signal?: AbortSignal }) =>
+/** Creates/synchronizes the local profile from the validated Auth0 claims. */
+export const syncCurrentUser = (options?: { signal?: AbortSignal }) =>
   httpClient.get<CurrentUserData>('/users/me', options)
+
+/** The only editable profile field is the display name. */
+export const updateCurrentUserName = (name: string) =>
+  httpClient.patch<CurrentUserData>('/users/me', { name })

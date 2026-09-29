@@ -1,7 +1,19 @@
-import { Controller, Get, Param, ParseUUIDPipe, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 
 import { AuthenticatedUser } from '../auth/authenticated-user.type';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { CurrentUserGuard } from '../auth/current-user.guard';
 import { CurrentUserResponseDto } from './dto/current-user.dto';
+import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
@@ -19,6 +31,18 @@ export class UsersController {
     @Req() request: { user: AuthenticatedUser },
   ): Promise<CurrentUserResponseDto> {
     return this.usersService.syncFromAuth0Token(request.user);
+  }
+
+  @Patch('me')
+  @UseGuards(CurrentUserGuard)
+  updateMe(
+    @CurrentUser() currentUser: UserResponseDto,
+    @Body() updateCurrentUserDto: UpdateCurrentUserDto,
+  ): Promise<CurrentUserResponseDto> {
+    return this.usersService.updateName(
+      currentUser.id,
+      updateCurrentUserDto.name,
+    );
   }
 
   @Get(':id')
