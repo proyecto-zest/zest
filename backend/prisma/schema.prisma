@@ -127,15 +127,7 @@ model RecipeImage {
 model Collection {
   id            String             @id @default(uuid()) @db.Uuid
   ownerId       String             @map("owner_id") @db.Uuid
-  // `name` is not unique per owner: db.md doesn't specify this constraint,
-  // and ZEST-88/89 left it as an open question for the team to decide.
   name          String             @db.VarChar
-  // Open question (ZEST-88): should these be nullable with a default instead
-  // of required? Left NOT NULL with no default for now — the "New collection"
-  // modal already forces picking a cover and an accent color, so in practice
-  // neither should ever be missing — but flagging per the ticket in case the
-  // team wants a fallback (e.g. a default cover) for a future API/import path
-  // that doesn't go through that modal.
   coverImageUrl String             @map("cover_image_url") @db.VarChar
   accentColor   String             @map("accent_color") @db.VarChar
   owner         User               @relation(fields: [ownerId], references: [id], onDelete: Restrict)
@@ -149,12 +141,9 @@ model CollectionRecipe {
   collectionId String     @map("collection_id") @db.Uuid
   recipeId     String     @map("recipe_id") @db.Uuid
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  // Open question (ZEST-88): the ticket proposes onDelete: Cascade here too
-  // (deleting a recipe would silently drop it from every collection). Kept
-  // as Restrict instead — deleting a recipe that's still in a collection
-  // fails loudly rather than quietly rewriting someone's collection — until
-  // the team confirms which behavior they actually want.
-  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  // Deleting a recipe that's still in a collection fails instead of silently
+  // dropping it from other users' collections.
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Restrict)
 
   @@id([collectionId, recipeId])
   @@map("collection_recipes")
