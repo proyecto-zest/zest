@@ -143,7 +143,7 @@ model CollectionRecipe {
   collectionId String     @map("collection_id") @db.Uuid
   recipeId     String     @map("recipe_id") @db.Uuid
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@id([collectionId, recipeId])
   @@map("collection_recipes")

@@ -214,6 +214,46 @@ describeWithDatabase('collections (e2e)', () => {
       await app.close();
     });
 
+    it('lets a recipe still saved in a collection be deleted', async () => {
+      const owner = await createLocalUser();
+      const recipe = await prisma.recipe.create({
+        data: {
+          authorId: owner.id,
+          title: 'Test Recipe',
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+        },
+      });
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collection.id, recipeId: recipe.id },
+      });
+
+      await expect(
+        prisma.recipe.delete({ where: { id: recipe.id } }),
+      ).resolves.toMatchObject({ id: recipe.id });
+
+      expect(
+        await prisma.collectionRecipe.findUnique({
+          where: {
+            collectionId_recipeId: {
+              collectionId: collection.id,
+              recipeId: recipe.id,
+            },
+          },
+        }),
+      ).toBeNull();
+      expect(
+        await prisma.collection.findUnique({ where: { id: collection.id } }),
+      ).not.toBeNull();
+    });
+
     it('returns 404 when the collection does not exist', async () => {
       await createLocalUser();
       const app = await buildApp();
