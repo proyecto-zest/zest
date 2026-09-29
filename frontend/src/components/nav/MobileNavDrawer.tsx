@@ -59,7 +59,11 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
   }
 
   return (
-    <div role="presentation" onClick={onClose} className="fixed inset-0 z-50 bg-foreground/45 tablet:hidden">
+    <div
+      role="presentation"
+      onClick={onClose}
+      className="fixed inset-0 z-50 bg-foreground/45 tablet:hidden"
+    >
       <div
         ref={panelRef}
         onClick={(e) => e.stopPropagation()}
@@ -72,7 +76,12 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
           dragging ? '' : 'transition-transform duration-200'
         }`}
       >
-        <button type="button" aria-label="Close menu" onClick={onClose} className="self-end text-muted-foreground">
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={onClose}
+          className="self-end text-muted-foreground"
+        >
           <X aria-hidden="true" className="h-5 w-5" />
         </button>
 
@@ -93,7 +102,7 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
         </nav>
 
         <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
-          <NavAvatar />
+          <NavAvatar placement="above" onNavigate={onClose} />
         </div>
       </div>
     </div>

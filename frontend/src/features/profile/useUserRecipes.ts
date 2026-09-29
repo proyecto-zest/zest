@@ -56,5 +56,10 @@ export function useUserRecipes(userId: string, page: number) {
     })
   }
 
-  return { state, retry: () => setAttempt((value) => value + 1), removeRecipe }
+  const retry = () => {
+    setResult(null)
+    setAttempt((value) => value + 1)
+  }
+
+  return { state, retry, removeRecipe }
 }
