@@ -45,4 +45,12 @@ export class ListRecipesQueryDto {
   @IsOptional()
   @IsEnum(RecipeDifficulty)
   difficulty?: RecipeDifficulty;
+
+  @IsOptional()
+  @IsUUID()
+  authorId?: string;
+
+  @IsOptional()
+  @IsString()
+  author?: string;
 }

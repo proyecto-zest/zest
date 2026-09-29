@@ -16,6 +16,13 @@ import {
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { RecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
+import { UserResponseDto } from '../users/dto/user-response.dto';
+
+const currentUser: UserResponseDto = {
+  id: 'user-id',
+  name: 'Zest Cook',
+  avatarUrl: null,
+};
 
 describe('RecipesController', () => {
   it('delegates recipe detail retrieval to the service', async () => {
@@ -87,10 +94,10 @@ describe('RecipesController', () => {
     } as unknown as RecipesService;
     const controller = new RecipesController(recipesService);
 
-    await expect(controller.create(createRecipeDto)).resolves.toBe(
+    await expect(controller.create(currentUser, createRecipeDto)).resolves.toBe(
       createdRecipe,
     );
-    expect(create).toHaveBeenCalledWith(createRecipeDto);
+    expect(create).toHaveBeenCalledWith(currentUser.id, createRecipeDto);
   });
 
   it('delegates upload URL generation to the service', async () => {
@@ -121,8 +128,10 @@ describe('RecipesController', () => {
       update,
     } as unknown as RecipesService);
 
-    await expect(controller.update(recipeId, dto)).resolves.toBe(recipe);
-    expect(update).toHaveBeenCalledWith(recipeId, dto);
+    await expect(controller.update(currentUser, recipeId, dto)).resolves.toBe(
+      recipe,
+    );
+    expect(update).toHaveBeenCalledWith(currentUser.id, recipeId, dto);
   });
 
   it('delegates recipe deletion to the service', async () => {
@@ -132,7 +141,9 @@ describe('RecipesController', () => {
       remove,
     } as unknown as RecipesService);
 
-    await expect(controller.remove(recipeId)).resolves.toBeUndefined();
-    expect(remove).toHaveBeenCalledWith(recipeId);
+    await expect(
+      controller.remove(currentUser, recipeId),
+    ).resolves.toBeUndefined();
+    expect(remove).toHaveBeenCalledWith(currentUser.id, recipeId);
   });
 });
