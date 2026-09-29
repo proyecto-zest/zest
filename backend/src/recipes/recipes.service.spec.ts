@@ -47,9 +47,19 @@ describe('RecipesService', () => {
     steps: ['Cortar el tomate.', 'Mezclar los ingredientes.'],
   };
 
-  const recipeRecord = (imageKeys: string[] = [imageKey]) => ({
+  const recipeAuthor = {
+    id: DEFAULT_RECIPE_AUTHOR_ID,
+    name: 'Zest Cook',
+    avatarUrl: null,
+  };
+
+  const recipeRecord = (
+    imageKeys: string[] = [imageKey],
+    author: typeof recipeAuthor | null = recipeAuthor,
+  ) => ({
     id: recipeId,
     authorId: DEFAULT_RECIPE_AUTHOR_ID,
+    author,
     title: createRecipeDto.title,
     description: createRecipeDto.description,
     category: createRecipeDto.category,
@@ -202,14 +212,24 @@ describe('RecipesService', () => {
       signedUrl('recipes/secondary.webp'),
     ]);
     expect(recipe).not.toHaveProperty('images');
+    expect(recipe.author).toEqual(recipeAuthor);
     expect(recipeFindUnique).toHaveBeenCalledWith({
       where: { id: recipeId },
       include: {
+        author: { select: { id: true, name: true, avatarUrl: true } },
         ingredients: { include: { ingredient: true } },
         steps: { orderBy: { stepNumber: 'asc' } },
         images: { select: { s3Key: true } },
       },
     });
+  });
+
+  it('returns author as null when the recipe has no author record', async () => {
+    recipeFindUnique.mockResolvedValue(recipeRecord([imageKey], null));
+
+    const recipe = await service.findOne(recipeId);
+
+    expect(recipe.author).toBeNull();
   });
 
   it('does not invent a default image when a recipe has no images', async () => {
@@ -240,6 +260,7 @@ describe('RecipesService', () => {
         time: createRecipeDto.time,
         timeUnit: createRecipeDto.timeUnit,
         servings: createRecipeDto.servings,
+        author: recipeAuthor,
         images: [{ s3Key: imageKey }],
       },
     ]);
@@ -254,11 +275,33 @@ describe('RecipesService', () => {
           time: createRecipeDto.time,
           timeUnit: createRecipeDto.timeUnit,
           servings: createRecipeDto.servings,
+          author: recipeAuthor,
           imageUrls: [signedUrl(imageKey)],
         },
       ],
       pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
     });
+  });
+
+  it('returns author as null in a recipe card when the recipe has no author record', async () => {
+    recipeCount.mockResolvedValue(1);
+    recipeFindMany.mockResolvedValue([
+      {
+        id: recipeId,
+        title: createRecipeDto.title,
+        category: createRecipeDto.category,
+        difficulty: createRecipeDto.difficulty,
+        time: createRecipeDto.time,
+        timeUnit: createRecipeDto.timeUnit,
+        servings: createRecipeDto.servings,
+        author: null,
+        images: [],
+      },
+    ]);
+
+    const { recipes } = await service.findAll({ page: 1, limit: 20 });
+
+    expect(recipes[0].author).toBeNull();
   });
 
   it('caps the requested limit and calculates pagination', async () => {
@@ -354,6 +397,7 @@ describe('RecipesService', () => {
       signedUrl(imageKey),
       signedUrl(secondaryImageKey),
     ]);
+    expect(createdRecipe.author).toEqual(recipeAuthor);
     const createArguments = recipeCreate.mock
       .calls[0][0] as RecipeCreateArguments;
     expect(createArguments.data).toMatchObject({
