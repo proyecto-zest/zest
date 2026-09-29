@@ -9,10 +9,11 @@ import { useUserRecipes } from './useUserRecipes'
 
 interface ProfileRecipesProps {
   userId: string
+  currentUserId?: string
 }
 
 /** The current user's paginated recipes, including an actionable empty state. */
-export function ProfileRecipes({ userId }: ProfileRecipesProps) {
+export function ProfileRecipes({ userId, currentUserId }: ProfileRecipesProps) {
   const [page, setPage] = useState(1)
   const { state, retry, removeRecipe } = useUserRecipes(userId, page)
 
@@ -53,7 +54,11 @@ export function ProfileRecipes({ userId }: ProfileRecipesProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <RecipeGrid recipes={state.data.recipes} onDeleted={handleDeleted} />
+      <RecipeGrid
+        recipes={state.data.recipes}
+        currentUserId={currentUserId}
+        onDeleted={handleDeleted}
+      />
       <Pagination
         page={page}
         totalPages={state.data.pagination.totalPages}
