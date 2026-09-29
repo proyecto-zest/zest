@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { Plus, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
-import { Modal } from '../../components/ui/Modal'
 import { CollectionCard } from './CollectionCard'
+import { CreateCollectionModal } from './CreateCollectionModal'
 import { useCollections } from './useCollections'
 
 export function CollectionsPage() {
-  const { state, retry, removeCollection } = useCollections()
+  const { state, retry, removeCollection, addCollection } = useCollections()
   const [createOpen, setCreateOpen] = useState(false)
 
   return (
@@ -68,24 +68,7 @@ export function CollectionsPage() {
       )}
 
       {createOpen && (
-        <Modal labelledBy="new-collection-title" onClose={() => setCreateOpen(false)}>
-          <div className="rounded-2xl bg-card p-6 shadow-lg">
-            <div className="flex items-center justify-between gap-4">
-              <h2 id="new-collection-title" className="font-serif text-2xl font-bold">
-                New collection
-              </h2>
-              <button type="button" aria-label="Close" onClick={() => setCreateOpen(false)}>
-                <X aria-hidden="true" className="h-5 w-5" />
-              </button>
-            </div>
-            {/* The creation form is added in ZEST-93, on top of this grid ticket. */}
-            <div className="mt-8 flex justify-end">
-              <Button variant="secondary" onClick={() => setCreateOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <CreateCollectionModal onClose={() => setCreateOpen(false)} onCreated={addCollection} />
       )}
     </div>
   )
