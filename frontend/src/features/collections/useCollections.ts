@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { listCollections, type CollectionSummary } from '../../services/collections'
+import {
+  listCollections,
+  type CollectionSummary,
+  type CreatedCollection,
+} from '../../services/collections'
 
 export type CollectionsState =
   | { status: 'loading' }
@@ -26,5 +30,15 @@ export function useCollections() {
     return () => controller.abort()
   }, [attempt])
 
-  return { state, retry: () => setAttempt((value) => value + 1) }
+  const addCollection = (created: CreatedCollection) => {
+    setState((current) => ({
+      status: 'ok',
+      collections: [
+        ...(current.status === 'ok' ? current.collections : []),
+        { ...created, recipeCount: 0 },
+      ],
+    }))
+  }
+
+  return { state, retry: () => setAttempt((value) => value + 1), addCollection }
 }
