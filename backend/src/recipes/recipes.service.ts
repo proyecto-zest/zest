@@ -32,7 +32,12 @@ import {
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { MAX_RECIPES_LIMIT } from './recipes.constants';
 
+const recipeAuthorSelect = {
+  select: { id: true, name: true, avatarUrl: true },
+} satisfies { select: Prisma.UserSelect };
+
 const createdRecipeInclude = {
+  author: recipeAuthorSelect,
   ingredients: {
     include: { ingredient: true },
   },
@@ -52,12 +57,14 @@ const recipeCardSelect = {
   time: true,
   timeUnit: true,
   servings: true,
+  author: recipeAuthorSelect,
   images: {
     select: { s3Key: true },
   },
 } satisfies Prisma.RecipeSelect;
 
 const recipeDetailInclude = {
+  author: recipeAuthorSelect,
   ingredients: {
     include: { ingredient: true },
   },
@@ -436,6 +443,7 @@ export class RecipesService {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
+      author: recipe.author,
       title: recipe.title,
       description: recipe.description,
       category: recipe.category,
@@ -473,6 +481,7 @@ export class RecipesService {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
+      author: recipe.author,
       title: recipe.title,
       description: recipe.description,
       category: recipe.category,

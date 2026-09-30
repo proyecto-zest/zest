@@ -130,9 +130,15 @@ describeWithDatabase('GET /recipes (e2e)', () => {
         'time',
         'timeUnit',
         'servings',
+        'author',
       ].sort(),
     );
     expect(body.recipes[0].timeUnit).toBe(RecipeTimeUnit.MINUTOS);
+    expect(body.recipes[0].author).toEqual({
+      id: DEFAULT_RECIPE_AUTHOR_ID,
+      name: 'Default Zest User',
+      avatarUrl: null,
+    });
     expect([...body.recipes[0].imageUrls].sort()).toEqual(
       [
         'https://signed.test/recipes/1.webp',

@@ -100,6 +100,11 @@ describeWithDatabase('GET /recipes/:id (e2e)', () => {
     expect(body).toMatchObject({
       id: recipe.id,
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      author: {
+        id: DEFAULT_RECIPE_AUTHOR_ID,
+        name: 'Default Zest User',
+        avatarUrl: null,
+      },
       title: 'Receta de detalle',
       description: 'Descripción completa.',
       category: RecipeCategory.ALMUERZO,

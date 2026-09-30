@@ -5,6 +5,8 @@ import {
   RecipeTimeUnit,
 } from '@prisma/client';
 
+import { UserResponseDto } from '../../users/dto/user-response.dto';
+
 export class RecipeIngredientCatalogResponseDto {
   id!: string;
   name!: string;
@@ -28,6 +30,7 @@ export class RecipeStepResponseDto {
 export class RecipeBaseResponseDto {
   id!: string;
   authorId!: string;
+  author!: UserResponseDto | null;
   title!: string;
   description!: string;
   category!: RecipeCategory;
@@ -59,6 +62,7 @@ export class RecipeCardResponseDto {
   time!: number;
   timeUnit!: RecipeTimeUnit;
   servings!: number;
+  author!: UserResponseDto | null;
 }
 
 export class RecipePaginationResponseDto {
