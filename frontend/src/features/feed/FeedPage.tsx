@@ -1,7 +1,12 @@
 import { Loader2 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { useCurrentUser } from '../../auth/useCurrentUser'
 import { Alert } from '../../components/alert'
-import { RecipeSearchFilters, RecipeSearchFiltersSkeleton, hasActiveFilters } from '../../components/recipe-search-filters'
+import {
+  RecipeSearchFilters,
+  RecipeSearchFiltersSkeleton,
+  hasActiveFilters,
+} from '../../components/recipe-search-filters'
 import { Button } from '../../components/ui/Button'
 import { useRecipeFormOptions } from '../recipe-create/useRecipeFormOptions'
 import { Pagination } from './Pagination'
@@ -15,6 +20,7 @@ import { useRecipeSearchFiltersInUrl } from './useRecipeSearchFiltersInUrl'
  * the same page instead of resetting to 1.
  */
 export function FeedPage() {
+  const { user } = useCurrentUser()
   const [filters, setFilters] = useRecipeSearchFiltersInUrl()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Number(searchParams.get('page') ?? '1')
@@ -47,7 +53,8 @@ export function FeedPage() {
   }
 
   /** The total and the page controls stay on screen while a new page loads — only the cards below are swapped for skeletons. */
-  const pagination = state.status === 'ok' || state.status === 'switchingPage' ? state.data.pagination : null
+  const pagination =
+    state.status === 'ok' || state.status === 'switchingPage' ? state.data.pagination : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,7 +62,9 @@ export function FeedPage() {
         <h1 className="font-serif text-2xl font-bold text-foreground">Discover</h1>
         {pagination && (
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {state.status === 'switchingPage' && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
+            {state.status === 'switchingPage' && (
+              <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
+            )}
             {pagination.total} recipes
           </span>
         )}
@@ -89,7 +98,7 @@ export function FeedPage() {
           </div>
           {state.staleData && state.staleData.recipes.length > 0 && (
             <div className="opacity-60">
-              <RecipeGrid recipes={state.staleData.recipes} />
+              <RecipeGrid recipes={state.staleData.recipes} currentUserId={user?.id} />
             </div>
           )}
         </div>
@@ -98,12 +107,18 @@ export function FeedPage() {
       {state.status === 'switchingPage' && (
         <div className="flex flex-col gap-6">
           <RecipeGridSkeleton count={state.skeletonCount} />
-          <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
+          <Pagination
+            page={page}
+            totalPages={state.data.pagination.totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
 
       {state.status === 'ok' && state.data.recipes.length === 0 && filtered && (
-        <p className="my-8 text-center text-sm text-muted-foreground">No recipes match these filters.</p>
+        <p className="my-8 text-center text-sm text-muted-foreground">
+          No recipes match these filters.
+        </p>
       )}
 
       {state.status === 'ok' && state.data.recipes.length === 0 && !filtered && (
@@ -112,8 +127,16 @@ export function FeedPage() {
 
       {state.status === 'ok' && state.data.recipes.length > 0 && (
         <div className="flex flex-col gap-6">
-          <RecipeGrid recipes={state.data.recipes} onDeleted={handleDeleted} />
-          <Pagination page={page} totalPages={state.data.pagination.totalPages} onPageChange={goToPage} />
+          <RecipeGrid
+            recipes={state.data.recipes}
+            currentUserId={user?.id}
+            onDeleted={handleDeleted}
+          />
+          <Pagination
+            page={page}
+            totalPages={state.data.pagination.totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
     </div>

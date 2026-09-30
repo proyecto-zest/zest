@@ -15,6 +15,10 @@ export function RecipeCardSkeleton() {
         </div>
         <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
         <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
+        <div className="mt-auto flex items-center gap-2 pt-1">
+          <div className="h-6 w-6 animate-pulse rounded-full bg-muted" />
+          <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Clock, Gauge } from 'lucide-react'
 import { RecipeImage } from '../RecipeImage'
+import { RecipeAuthor } from '../recipe-author'
 import { enumLabel } from '../../lib/enumLabels'
 import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import type { RecipeCardData } from '../../types/recipe'
@@ -11,6 +12,7 @@ import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVaria
 
 interface RecipeCardProps {
   recipe: RecipeCardData
+  currentUserId?: string
   /** Called after this recipe is deleted from the card's own delete button. */
   onDeleted?: (id: string) => void
 }
@@ -21,7 +23,9 @@ interface RecipeCardProps {
  * `difficulty` is a colored badge over the image (green/yellow/red for
  * easy/medium/hard) so the two aren't visually interchangeable at a glance.
  */
-export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
+export function RecipeCard({ recipe, currentUserId, onDeleted }: RecipeCardProps) {
+  const isOwner = Boolean(currentUserId && recipe.author && currentUserId === recipe.author.id)
+
   return (
     <Link
       to={`/recipes/${recipe.id}`}
@@ -41,12 +45,19 @@ export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
           <Gauge aria-hidden="true" className="h-3 w-3" />
           {enumLabel(recipe.difficulty)}
         </span>
-        <div className="absolute bottom-3 right-3 flex items-center gap-2">
-          <EditRecipeButton recipeId={recipe.id} />
-          {onDeleted && (
-            <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} onDeleted={onDeleted} iconOnly />
-          )}
-        </div>
+        {isOwner && (
+          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+            <EditRecipeButton recipeId={recipe.id} />
+            {onDeleted && (
+              <DeleteRecipeButton
+                recipeId={recipe.id}
+                recipeTitle={recipe.title}
+                onDeleted={onDeleted}
+                iconOnly
+              />
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
@@ -55,6 +66,8 @@ export function RecipeCard({ recipe, onDeleted }: RecipeCardProps) {
         <h3 className="line-clamp-2 break-words font-serif text-lg font-bold leading-snug text-foreground">
           {recipe.title}
         </h3>
+
+        <RecipeAuthor author={recipe.author} />
       </div>
     </Link>
   )

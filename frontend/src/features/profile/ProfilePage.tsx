@@ -39,7 +39,7 @@ export function ProfilePage() {
   }
 
   const activeContent = {
-    recipes: <ProfileRecipes userId={user.id} />,
+    recipes: <ProfileRecipes userId={user.id} currentUserId={user.id} />,
     collections: <CollectionsPlaceholder />,
     settings: <ProfileSettings user={user} auth0Sub={auth0Sub} onUserUpdated={replaceUser} />,
   } satisfies Record<ProfileTab, ReactNode>

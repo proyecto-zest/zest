@@ -1,5 +1,6 @@
 import { RecipeImage } from '../../components/RecipeImage'
 import { RecipeMetaBadges } from '../../components/RecipeMetaBadges'
+import { RecipeAuthor } from '../../components/recipe-author'
 import type { RecipeDetailData } from '../../types/recipe'
 
 interface RecipeDetailHeaderProps {
@@ -23,6 +24,7 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
           {recipe.title}
         </h1>
         <p className="break-words leading-relaxed text-muted-foreground">{recipe.description}</p>
+        <RecipeAuthor author={recipe.author} variant="detail" />
         <RecipeMetaBadges
           category={recipe.category}
           difficulty={recipe.difficulty}
