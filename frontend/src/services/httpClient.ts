@@ -21,7 +21,7 @@ export class HttpError extends Error {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
   signal?: AbortSignal
   query?: QueryParams
@@ -78,6 +78,8 @@ export const httpClient = {
     request<T>(path, { ...options, method: 'POST', body }),
   put: <T>(path: string, body: unknown, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
     request<T>(path, { ...options, method: 'PUT', body }),
+  patch: <T>(path: string, body: unknown, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
+    request<T>(path, { ...options, method: 'PATCH', body }),
   delete: <T = void>(path: string, options?: Omit<RequestOptions, 'method' | 'body' | 'query'>) =>
     request<T>(path, { ...options, method: 'DELETE' }),
 }

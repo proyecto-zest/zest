@@ -7,6 +7,7 @@ import { FeedPage } from '../features/feed/FeedPage'
 import { RecipeCreatePage } from '../features/recipe-create/RecipeCreatePage'
 import { RecipeDetailPage } from '../features/recipe-detail/RecipeDetailPage'
 import { RecipeEditPage } from '../features/recipe-edit/RecipeEditPage'
+import { ProfilePage } from '../features/profile/ProfilePage'
 
 /**
  * The backend requires a token on every recipe endpoint, so nothing here can
@@ -61,6 +62,14 @@ export const routes: RouteObject[] = [
       <RedirectIfAuthenticated>
         <SignupPage />
       </RedirectIfAuthenticated>
+    ),
+  },
+  {
+    path: '/profile',
+    element: (
+      <ProtectedRoute>
+        <ProfilePage />
+      </ProtectedRoute>
     ),
   },
 ]

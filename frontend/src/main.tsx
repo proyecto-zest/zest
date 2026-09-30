@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { App } from './app/App'
 import { Auth0ProviderWithNavigate } from './auth/Auth0ProviderWithNavigate'
+import { AuthTokenBridge } from './auth/AuthTokenBridge'
 import './styles/index.css'
 
 const rootElement = document.getElementById('root')
@@ -16,6 +17,7 @@ createRoot(rootElement).render(
     {/* Router outside the provider: `Auth0ProviderWithNavigate` calls `useNavigate` in its own redirect callback. */}
     <BrowserRouter>
       <Auth0ProviderWithNavigate>
+        <AuthTokenBridge />
         <App />
       </Auth0ProviderWithNavigate>
     </BrowserRouter>
