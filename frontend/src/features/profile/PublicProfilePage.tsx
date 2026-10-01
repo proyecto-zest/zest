@@ -8,12 +8,14 @@ import { ProfileView } from './ProfileView'
 import { UserNotFound } from './UserNotFound'
 import { usePublicUser } from './usePublicUser'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
+
 /** Read-only profile at `/profile/:id`, with self-profile redirection. */
 export function PublicProfilePage() {
   const { id } = useParams()
   const { user: currentUser, loading, error } = useCurrentUser()
 
-  if (!id) return <UserNotFound />
+  if (!id || !UUID_PATTERN.test(id)) return <UserNotFound />
   if (loading) return <ProfilePageSkeleton />
   if (error || !currentUser) {
     return (

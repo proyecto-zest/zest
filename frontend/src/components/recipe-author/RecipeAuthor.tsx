@@ -13,7 +13,7 @@ export function RecipeAuthor({ author, variant = 'card' }: RecipeAuthorProps) {
   const classes =
     variant === 'detail'
       ? 'flex min-w-0 items-center gap-3'
-      : 'relative z-20 mt-auto flex min-w-0 items-center gap-2 pt-1 text-sm text-muted-foreground'
+      : 'relative z-20 mt-auto inline-flex w-fit max-w-full min-w-0 self-start items-center gap-2 pt-1 text-sm text-muted-foreground'
   const content = (
     <>
       <AuthorAvatar author={author} size={variant === 'detail' ? 'lg' : 'sm'} />

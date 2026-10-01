@@ -23,7 +23,7 @@ export function usePublicUser(id: string) {
       .then((user) => setResult({ status: 'ok', id, user }))
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
-        if (error instanceof HttpError && error.status === 404) {
+        if (error instanceof HttpError && (error.status === 400 || error.status === 404)) {
           setResult({ status: 'notFound', id })
           return
         }
