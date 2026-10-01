@@ -47,13 +47,18 @@ export function useCollections() {
   }
 
   const addCollection = (created: CreatedCollection) => {
-    setState((current) => ({
-      status: 'ok',
-      collections: [
-        ...(current.status === 'ok' ? current.collections : []),
-        { ...created, recipeCount: 0 },
-      ],
-    }))
+    // A successful creation does not mean we have loaded the complete list.
+    // Keep any list error visible until a fresh GET actually succeeds.
+    if (state.status !== 'ok') {
+      setAttempt((value) => value + 1)
+      return
+    }
+
+    setState((current) =>
+      current.status === 'ok'
+        ? { status: 'ok', collections: [...current.collections, { ...created, recipeCount: 0 }] }
+        : current,
+    )
   }
 
   return { state, retry, removeCollection, addCollection }
