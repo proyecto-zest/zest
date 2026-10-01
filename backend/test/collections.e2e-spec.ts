@@ -9,6 +9,7 @@ import { AuthModule } from '../src/auth/auth.module';
 import { CollectionsModule } from '../src/collections/collections.module';
 import { configureApp } from '../src/configure-app';
 import { PrismaModule } from '../src/prisma/prisma.module';
+import { StorageService } from '../src/storage/storage.service';
 import { authTestConfigModuleOptions } from './auth-test-helper';
 import {
   DEFAULT_TEST_AUTHENTICATED_USER,
@@ -27,6 +28,9 @@ describeWithDatabase('collections (e2e)', () => {
     coverImageUrl: 'https://images.test/cover.webp',
     accentColor: '#e8415a',
   };
+  const getSignedReadUrl = jest.fn((key: string) =>
+    Promise.resolve(`https://signed.test/${key}`),
+  );
 
   async function buildApp(): Promise<INestApplication> {
     const moduleFixture = await Test.createTestingModule({
@@ -36,7 +40,10 @@ describeWithDatabase('collections (e2e)', () => {
         AuthModule,
         CollectionsModule,
       ],
-    }).compile();
+    })
+      .overrideProvider(StorageService)
+      .useValue({ getSignedReadUrl })
+      .compile();
 
     const app = moduleFixture.createNestApplication();
     configureApp(app);
@@ -62,6 +69,10 @@ describeWithDatabase('collections (e2e)', () => {
   });
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+    getSignedReadUrl.mockImplementation((key: string) =>
+      Promise.resolve(`https://signed.test/${key}`),
+    );
     await resetTestDatabase(prisma);
   });
 
@@ -301,6 +312,279 @@ describeWithDatabase('collections (e2e)', () => {
 
       await request(app.getHttpServer() as Server)
         .delete(`/collections/${collection.id}`)
+        .expect(401);
+
+      await app.close();
+    });
+  });
+
+  describe('GET /collections', () => {
+    it("returns only the current user's collections with a recipe count", async () => {
+      const owner = await createLocalUser();
+      const otherOwner = await createLocalUser('auth0|zest-other-owner');
+      const recipe = await prisma.recipe.create({
+        data: {
+          authorId: owner.id,
+          title: 'Test Recipe',
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+        },
+      });
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collection.id, recipeId: recipe.id },
+      });
+      await prisma.collection.create({
+        data: {
+          ownerId: otherOwner.id,
+          name: 'Someone else',
+          coverImageUrl: validPayload.coverImageUrl,
+          accentColor: validPayload.accentColor,
+        },
+      });
+
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get('/collections')
+        .expect(200);
+
+      expect(response.body).toEqual([
+        {
+          id: collection.id,
+          name: validPayload.name,
+          coverImageUrl: validPayload.coverImageUrl,
+          accentColor: validPayload.accentColor,
+          recipeCount: 1,
+        },
+      ]);
+
+      await app.close();
+    });
+
+    it('flags each collection with whether it already contains recipeId', async () => {
+      const owner = await createLocalUser();
+      const recipe = await prisma.recipe.create({
+        data: {
+          authorId: owner.id,
+          title: 'Test Recipe',
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+        },
+      });
+      const collectionWithRecipe = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collectionWithRecipe.id, recipeId: recipe.id },
+      });
+      const collectionWithoutRecipe = await prisma.collection.create({
+        data: {
+          ownerId: owner.id,
+          name: 'Other collection',
+          coverImageUrl: validPayload.coverImageUrl,
+          accentColor: validPayload.accentColor,
+        },
+      });
+
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get(`/collections?recipeId=${recipe.id}`)
+        .expect(200);
+      const byId = new Map(
+        (response.body as Array<{ id: string; containsRecipe: boolean }>).map(
+          (collection) => [collection.id, collection.containsRecipe],
+        ),
+      );
+
+      expect(byId.get(collectionWithRecipe.id)).toBe(true);
+      expect(byId.get(collectionWithoutRecipe.id)).toBe(false);
+
+      await app.close();
+    });
+
+    it('returns 400 when recipeId is not a UUID', async () => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .get('/collections?recipeId=not-a-uuid')
+        .expect(400);
+
+      await app.close();
+    });
+
+    it('returns 401 without a token', async () => {
+      const app = await buildApp();
+      withRejectedAuthentication(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .get('/collections')
+        .expect(401);
+
+      await app.close();
+    });
+  });
+
+  describe('GET /collections/:id', () => {
+    it('returns the collection with its recipe cards', async () => {
+      const owner = await createLocalUser();
+      const ingredient = await prisma.ingredient.create({
+        data: { name: 'Tomate ZEST-91' },
+      });
+      const recipe = await prisma.recipe.create({
+        data: {
+          authorId: owner.id,
+          title: 'Test Recipe',
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+          ingredients: {
+            create: {
+              ingredientId: ingredient.id,
+              amount: '1',
+              unit: 'UNIDAD',
+            },
+          },
+          images: { create: [{ s3Key: 'recipes/cover.webp' }] },
+        },
+      });
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collection.id, recipeId: recipe.id },
+      });
+
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get(`/collections/${collection.id}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        id: collection.id,
+        name: validPayload.name,
+        coverImageUrl: validPayload.coverImageUrl,
+        accentColor: validPayload.accentColor,
+        recipes: [
+          {
+            id: recipe.id,
+            title: 'Test Recipe',
+            imageUrl: 'https://signed.test/recipes/cover.webp',
+            time: 20,
+            timeUnit: 'MINUTOS',
+            author: { id: owner.id, name: 'Zest Cook', avatarUrl: null },
+          },
+        ],
+      });
+
+      await app.close();
+    });
+
+    it('returns imageUrl as null when a recipe has no images', async () => {
+      const owner = await createLocalUser();
+      const recipe = await prisma.recipe.create({
+        data: {
+          authorId: owner.id,
+          title: 'Sin imagen',
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+        },
+      });
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collection.id, recipeId: recipe.id },
+      });
+
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get(`/collections/${collection.id}`)
+        .expect(200);
+
+      expect(
+        (response.body as { recipes: Array<{ imageUrl: string | null }> })
+          .recipes[0].imageUrl,
+      ).toBeNull();
+
+      await app.close();
+    });
+
+    it('returns 404 when the collection does not exist', async () => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .get('/collections/33333333-3333-4333-8333-333333333333')
+        .expect(404);
+
+      await app.close();
+    });
+
+    it("returns 403 when viewing another user's collection", async () => {
+      await createLocalUser();
+      const otherOwner = await createLocalUser('auth0|zest-other-owner');
+      const collection = await prisma.collection.create({
+        data: { ownerId: otherOwner.id, ...validPayload },
+      });
+
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .get(`/collections/${collection.id}`)
+        .expect(403);
+
+      await app.close();
+    });
+
+    it('returns 401 without a token', async () => {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+
+      const app = await buildApp();
+      withRejectedAuthentication(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .get(`/collections/${collection.id}`)
         .expect(401);
 
       await app.close();

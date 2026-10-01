@@ -1,8 +1,13 @@
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { CollectionsController } from './collections.controller';
 import { CollectionsService } from './collections.service';
-import { CollectionResponseDto } from './dto/collection-response.dto';
+import {
+  CollectionDetailResponseDto,
+  CollectionListItemResponseDto,
+  CollectionResponseDto,
+} from './dto/collection-response.dto';
 import { CreateCollectionDto } from './dto/create-collection.dto';
+import { ListCollectionsQueryDto } from './dto/list-collections-query.dto';
 
 describe('CollectionsController', () => {
   const currentUser: UserResponseDto = {
@@ -41,5 +46,33 @@ describe('CollectionsController', () => {
     await controller.remove(currentUser, 'collection-id');
 
     expect(remove).toHaveBeenCalledWith('user-id', 'collection-id');
+  });
+
+  it('delegates collection listing to the service with the current user id and recipeId', async () => {
+    const query: ListCollectionsQueryDto = { recipeId: 'recipe-id' };
+    const result: CollectionListItemResponseDto[] = [];
+    const findAll = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      findAll,
+    } as unknown as CollectionsService);
+
+    await expect(controller.findAll(currentUser, query)).resolves.toBe(result);
+    expect(findAll).toHaveBeenCalledWith('user-id', 'recipe-id');
+  });
+
+  it('delegates collection detail retrieval to the service', async () => {
+    const result = {
+      id: 'collection-id',
+      recipes: [],
+    } as unknown as CollectionDetailResponseDto;
+    const findOne = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      findOne,
+    } as unknown as CollectionsService);
+
+    await expect(
+      controller.findOne(currentUser, 'collection-id'),
+    ).resolves.toBe(result);
+    expect(findOne).toHaveBeenCalledWith('user-id', 'collection-id');
   });
 });
