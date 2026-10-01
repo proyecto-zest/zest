@@ -26,5 +26,10 @@ export function useCollections() {
     return () => controller.abort()
   }, [attempt])
 
-  return { state, retry: () => setAttempt((value) => value + 1) }
+  const retry = () => {
+    setState({ status: 'loading' })
+    setAttempt((value) => value + 1)
+  }
+
+  return { state, retry }
 }

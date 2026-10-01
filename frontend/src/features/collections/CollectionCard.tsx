@@ -1,4 +1,4 @@
-import { Heart, X } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CollectionSummary } from '../../services/collections'
 
@@ -36,16 +36,6 @@ export function CollectionCard({ collection }: CollectionCardProps) {
           {collection.recipeCount} {collection.recipeCount === 1 ? 'recipe' : 'recipes'}
         </p>
       </div>
-      {/* The delete action belongs to a later ticket; keep the control visible but inert for now. */}
-      <button
-        type="button"
-        aria-label={`Delete collection ${collection.name}`}
-        title="Delete collection"
-        disabled
-        className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-foreground/55 text-background backdrop-blur"
-      >
-        <X aria-hidden="true" className="h-4 w-4" />
-      </button>
     </div>
   )
 }
