@@ -13,6 +13,7 @@ interface SingleSelectDropdownProps {
   value: string
   onChange: (value: string) => void
   'aria-label': string
+  triggerClassName?: string
 }
 
 /**
@@ -27,7 +28,14 @@ interface SingleSelectDropdownProps {
  * highlight communicated via `aria-activedescendant`, so there's no focus to
  * move into the list or return once it closes.
  */
-export function SingleSelectDropdown({ placeholder, options, value, onChange, 'aria-label': ariaLabel }: SingleSelectDropdownProps) {
+export function SingleSelectDropdown({
+  placeholder,
+  options,
+  value,
+  onChange,
+  'aria-label': ariaLabel,
+  triggerClassName,
+}: SingleSelectDropdownProps) {
   const [open, setOpen] = useState(false)
   const [flash, setFlash] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -35,7 +43,10 @@ export function SingleSelectDropdown({ placeholder, options, value, onChange, 'a
   const listboxId = useId()
   const optionId = (index: number) => `${listboxId}-option-${index}`
 
-  const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value))
+  const selectedIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === value),
+  )
 
   const openMenu = () => {
     setActiveIndex(selectedIndex)
@@ -95,7 +106,7 @@ export function SingleSelectDropdown({ placeholder, options, value, onChange, 'a
         aria-activedescendant={open ? optionId(activeIndex) : undefined}
         aria-label={ariaLabel}
         onAnimationEnd={() => setFlash(false)}
-        className={`flex w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${flash ? 'animate-select-flash' : ''}`}
+        className={`${triggerClassName ?? 'flex w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50'} ${flash ? 'animate-select-flash' : ''}`}
       >
         {selected?.label ?? placeholder}
         <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />

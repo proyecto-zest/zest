@@ -59,7 +59,9 @@ export function RecipeSearchFilters({
   const showIngredient = visible?.ingredient ?? true
   const showCategory = visible?.category ?? true
   const showDifficulty = visible?.difficulty ?? true
-  const [searchField, setSearchField] = useState<SearchField>(() => value.author ? 'author' : 'name')
+  const [searchField, setSearchField] = useState<SearchField>(() =>
+    value.author ? 'author' : 'name',
+  )
   const availableFields: SearchField[] = [
     ...(showName ? ['name' as const] : []),
     ...(showAuthor ? ['author' as const] : []),
@@ -109,8 +111,8 @@ export function RecipeSearchFilters({
         )}
       </div>
 
-      {(value.name.trim() || value.author.trim()) && (
-        <div className="flex flex-wrap gap-2">
+      {hasActiveFilters(value) && (
+        <div className="flex flex-wrap items-center gap-2">
           {value.name.trim() && (
             <button
               type="button"
@@ -133,26 +135,22 @@ export function RecipeSearchFilters({
               <X aria-hidden="true" className="h-3 w-3" />
             </button>
           )}
+          {showIngredient && (
+            <SelectedIngredientChips
+              ingredients={ingredients}
+              value={value.ingredientIds}
+              onChange={(ingredientIds) => onChange({ ...value, ingredientIds })}
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => onChange(emptyRecipeSearchFilters)}
+            className="inline-flex items-center gap-1 self-start rounded-lg bg-card px-2 py-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10"
+          >
+            Clear filters
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
         </div>
-      )}
-
-      {hasActiveFilters(value) && (
-        <button
-          type="button"
-          onClick={() => onChange(emptyRecipeSearchFilters)}
-          className="inline-flex items-center gap-1 self-start rounded-lg bg-card px-2 py-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10"
-        >
-          Clear filters
-          <X aria-hidden="true" className="h-3.5 w-3.5" />
-        </button>
-      )}
-
-      {showIngredient && (
-        <SelectedIngredientChips
-          ingredients={ingredients}
-          value={value.ingredientIds}
-          onChange={(ingredientIds) => onChange({ ...value, ingredientIds })}
-        />
       )}
     </div>
   )

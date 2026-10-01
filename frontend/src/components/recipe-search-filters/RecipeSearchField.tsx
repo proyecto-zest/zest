@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
+import { SingleSelectDropdown } from './SingleSelectDropdown'
 
 export type SearchField = 'name' | 'author'
 
@@ -53,15 +54,17 @@ export function RecipeSearchField({
     <div className="flex h-11 w-full min-w-0 items-center rounded-full border border-input bg-background px-3 focus-within:ring-2 focus-within:ring-ring/50 tablet:min-w-64 tablet:flex-1">
       <Search aria-hidden="true" className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
       {availableFields.length > 1 ? (
-        <select
+        <SingleSelectDropdown
           aria-label="Search by"
+          placeholder={label}
           value={field}
-          onChange={(event) => switchField(event.target.value as SearchField)}
-          className="max-w-24 shrink-0 cursor-pointer bg-transparent text-sm font-semibold text-foreground outline-none"
-        >
-          {availableFields.includes('name') && <option value="name">Recipe</option>}
-          {availableFields.includes('author') && <option value="author">Author</option>}
-        </select>
+          onChange={(nextField) => switchField(nextField as SearchField)}
+          options={availableFields.map((value) => ({
+            value,
+            label: value === 'author' ? 'Author' : 'Recipe',
+          }))}
+          triggerClassName="flex shrink-0 items-center gap-2 rounded-full bg-transparent py-2 text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+        />
       ) : (
         <span className="shrink-0 text-sm font-semibold text-foreground">{label}</span>
       )}
