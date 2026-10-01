@@ -27,10 +27,14 @@ export function RecipeCard({ recipe, currentUserId, onDeleted }: RecipeCardProps
   const isOwner = Boolean(currentUserId && recipe.author && currentUserId === recipe.author.id)
 
   return (
-    <Link
-      to={`/recipes/${recipe.id}`}
-      className={`group ${recipeCardShellClasses} hover:shadow-lg hover:shadow-foreground/5`}
+    <div
+      className={`group relative ${recipeCardShellClasses} hover:shadow-lg hover:shadow-foreground/5`}
     >
+      <Link
+        to={`/recipes/${recipe.id}`}
+        aria-label={`View recipe ${recipe.title}`}
+        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <RecipeImage src={recipe.imageUrls[0]} alt={recipe.title} />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
@@ -46,7 +50,7 @@ export function RecipeCard({ recipe, currentUserId, onDeleted }: RecipeCardProps
           {enumLabel(recipe.difficulty)}
         </span>
         {isOwner && (
-          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2">
             <EditRecipeButton recipeId={recipe.id} />
             {onDeleted && (
               <DeleteRecipeButton
@@ -69,6 +73,6 @@ export function RecipeCard({ recipe, currentUserId, onDeleted }: RecipeCardProps
 
         <RecipeAuthor author={recipe.author} />
       </div>
-    </Link>
+    </div>
   )
 }

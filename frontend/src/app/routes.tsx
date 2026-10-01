@@ -8,6 +8,7 @@ import { RecipeCreatePage } from '../features/recipe-create/RecipeCreatePage'
 import { RecipeDetailPage } from '../features/recipe-detail/RecipeDetailPage'
 import { RecipeEditPage } from '../features/recipe-edit/RecipeEditPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
+import { PublicProfilePage } from '../features/profile/PublicProfilePage'
 
 /**
  * The backend requires a token on every recipe endpoint, so nothing here can
@@ -69,6 +70,14 @@ export const routes: RouteObject[] = [
     element: (
       <ProtectedRoute>
         <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/profile/:id',
+    element: (
+      <ProtectedRoute>
+        <PublicProfilePage />
       </ProtectedRoute>
     ),
   },
