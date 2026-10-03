@@ -3,11 +3,11 @@ import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { useCurrentUser } from '../../auth/useCurrentUser'
 import { CollectionsPlaceholder } from './CollectionsPlaceholder'
-import { ProfileHeader } from './ProfileHeader'
 import { ProfilePageSkeleton } from './ProfilePageSkeleton'
 import { ProfileRecipes } from './ProfileRecipes'
 import { ProfileSettings } from './ProfileSettings'
 import { ProfileTabs, type ProfileTab } from './ProfileTabs'
+import { ProfileView } from './ProfileView'
 
 /** The authenticated user's profile at `/profile`. */
 export function ProfilePage() {
@@ -45,13 +45,9 @@ export function ProfilePage() {
   } satisfies Record<ProfileTab, ReactNode>
 
   return (
-    <div className="flex flex-col gap-8">
-      <ProfileHeader user={user} />
-
-      <section className="flex flex-col gap-5">
-        <ProfileTabs activeTab={activeTab} onChange={setActiveTab} />
-        {activeContent[activeTab]}
-      </section>
-    </div>
+    <ProfileView user={user}>
+      <ProfileTabs activeTab={activeTab} onChange={setActiveTab} />
+      {activeContent[activeTab]}
+    </ProfileView>
   )
 }

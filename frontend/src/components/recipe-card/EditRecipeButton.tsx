@@ -6,10 +6,8 @@ interface EditRecipeButtonProps {
 }
 
 /**
- * Edit entry point for a `RecipeCard`. A plain `<Link>` would nest inside the
- * card's own `<Link>` (invalid HTML, unpredictable navigation), so this is a
- * button that navigates programmatically and stops the click from also
- * triggering the card's own navigation to the detail page.
+ * Edit entry point for a `RecipeCard`. The card's detail link is a separate
+ * overlay, so this button can be focused and activated independently.
  */
 export function EditRecipeButton({ recipeId }: EditRecipeButtonProps) {
   const navigate = useNavigate()
