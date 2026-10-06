@@ -19,15 +19,10 @@ services:
     build:
       context: .
       target: runtime
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
-      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-your-tenant.us.auth0.com}
-      AUTH0_AUDIENCE: ${AUTH0_AUDIENCE:-https://api.zest.example}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-zest-images-dev}
-      AWS_S3_REGION: ${AWS_S3_REGION:-us-east-1}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-your-access-key-id}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-your-secret-access-key}
+      DIRECT_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
     ports:
       - '3000:3000'
     depends_on:
@@ -44,6 +39,7 @@ services:
     command: npm run prisma:migrate:deploy
     environment:
       DATABASE_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
+      DIRECT_URL: postgresql://zest:zest@postgres:5432/zest?schema=public
     depends_on:
       postgres:
         condition: service_healthy
