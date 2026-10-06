@@ -11,3 +11,6 @@ export interface CollectionSummary {
 
 export const listCollections = (options?: { signal?: AbortSignal }) =>
   httpClient.get<CollectionSummary[]>('/collections', options)
+
+/** Deletes only the collection and its membership rows, leaving recipes intact. */
+export const deleteCollection = (id: string) => httpClient.delete<void>(`/collections/${id}`)

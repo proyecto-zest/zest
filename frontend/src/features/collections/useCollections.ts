@@ -31,5 +31,16 @@ export function useCollections() {
     setAttempt((value) => value + 1)
   }
 
-  return { state, retry }
+  const removeCollection = (id: string) => {
+    setState((current) =>
+      current.status === 'ok'
+        ? {
+            ...current,
+            collections: current.collections.filter((collection) => collection.id !== id),
+          }
+        : current,
+    )
+  }
+
+  return { state, retry, removeCollection }
 }
