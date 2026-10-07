@@ -14,6 +14,11 @@ const FOCUSABLE_SELECTOR =
 /** Centered overlay dialog. Closes on backdrop click or Escape, traps focus inside while open. */
 export function Modal({ onClose, labelledBy, children }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -24,7 +29,7 @@ export function Modal({ onClose, labelledBy, children }: ModalProps) {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (e.key !== 'Tab' || !dialog) return
@@ -48,7 +53,7 @@ export function Modal({ onClose, labelledBy, children }: ModalProps) {
       document.removeEventListener('keydown', onKeyDown)
       previouslyFocused?.focus()
     }
-  }, [onClose])
+  }, [])
 
   return createPortal(
     <div
