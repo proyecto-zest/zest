@@ -7,7 +7,7 @@ import { CollectionCard } from './CollectionCard'
 import { useCollections } from './useCollections'
 
 export function CollectionsPage() {
-  const { state, retry } = useCollections()
+  const { state, retry, removeCollection } = useCollections()
   const [createOpen, setCreateOpen] = useState(false)
 
   return (
@@ -58,7 +58,11 @@ export function CollectionsPage() {
 
           {state.status === 'ok' &&
             state.collections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} />
+              <CollectionCard
+                key={collection.id}
+                collection={collection}
+                onDeleted={removeCollection}
+              />
             ))}
         </div>
       )}
