@@ -6,4 +6,7 @@ export interface NavLinkItem {
 }
 
 /** Single source of tabs for both TopNav and the mobile drawer. Add entries here to grow the nav. */
-export const navLinks: NavLinkItem[] = [{ to: '/', label: 'Feed', end: true }]
+export const navLinks: NavLinkItem[] = [
+  { to: '/', label: 'Feed', end: true },
+  { to: '/collections', label: 'Collections', end: false },
+]
