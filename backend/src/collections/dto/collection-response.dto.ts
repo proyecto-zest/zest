@@ -5,7 +5,7 @@ import { UserResponseDto } from '../../users/dto/user-response.dto';
 export class CollectionResponseDto {
   id!: string;
   name!: string;
-  coverImageUrl!: string;
+  coverImageUrl!: string | null;
   accentColor!: string;
 }
 
