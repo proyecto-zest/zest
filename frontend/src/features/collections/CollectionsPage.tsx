@@ -21,10 +21,6 @@ export function CollectionsPage() {
             Organize your favorite recipes into themed groups.
           </p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus aria-hidden="true" className="h-4 w-4" />
-          New collection
-        </Button>
       </div>
 
       {state.status === 'error' && (

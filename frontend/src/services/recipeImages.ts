@@ -17,7 +17,9 @@ const requestPresignedUpload = (contentType: string) =>
 
 /** Why a file can't be uploaded, or `null` when it's fine. */
 export function validateRecipeImage(file: File): string | null {
-  if (!RECIPE_IMAGE_CONTENT_TYPES.includes(file.type as (typeof RECIPE_IMAGE_CONTENT_TYPES)[number])) {
+  if (
+    !RECIPE_IMAGE_CONTENT_TYPES.includes(file.type as (typeof RECIPE_IMAGE_CONTENT_TYPES)[number])
+  ) {
     return 'Images must be JPEG, PNG or WebP.'
   }
   if (file.size > MAX_RECIPE_IMAGE_BYTES) {
@@ -47,22 +49,28 @@ async function putToS3(uploadUrl: string, file: File): Promise<void> {
 }
 
 /**
- * Uploads one recipe image and resolves to the S3 key the backend expects —
+ * Uploads one image and resolves to the S3 key the backend expects —
  * the binary never touches our API. A presigned URL that already expired comes
  * back as a 403, which is worth exactly one retry with a freshly minted URL.
  */
-export async function uploadRecipeImage(file: File): Promise<string> {
+export async function uploadImage(
+  file: File,
+  requestUpload: (contentType: string) => Promise<PresignedUpload>,
+): Promise<string> {
   const invalid = validateRecipeImage(file)
   if (invalid) throw new Error(invalid)
 
-  const first = await requestPresignedUpload(file.type)
+  const first = await requestUpload(file.type)
   try {
     await putToS3(first.uploadUrl, file)
     return first.imageKey
   } catch (error) {
     if ((error as { status?: number }).status !== 403) throw error
-    const retry = await requestPresignedUpload(file.type)
+    const retry = await requestUpload(file.type)
     await putToS3(retry.uploadUrl, file)
     return retry.imageKey
   }
 }
+
+/** Recipe-specific endpoint; collections reuse the same validation and S3 upload flow. */
+export const uploadRecipeImage = (file: File) => uploadImage(file, requestPresignedUpload)

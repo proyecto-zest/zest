@@ -16,7 +16,7 @@ export const listCollections = (options?: { signal?: AbortSignal }) =>
 export const deleteCollection = (id: string) => httpClient.delete<void>(`/collections/${id}`)
 export interface CreateCollectionPayload {
   name: string
-  coverImageUrl: string
+  coverImageKey?: string
   accentColor: string
 }
 
