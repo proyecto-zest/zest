@@ -10,7 +10,10 @@ interface CollectionCardProps {
 
 export function CollectionCard({ collection, onDeleted }: CollectionCardProps) {
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg">
+    <div
+      className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg"
+      style={{ backgroundColor: collection.accentColor }}
+    >
       {collection.coverImageUrl && (
         <img
           src={collection.coverImageUrl}
