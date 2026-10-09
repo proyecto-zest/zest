@@ -20,6 +20,12 @@ export interface CollectionDetail extends Omit<CollectionSummary, 'recipeCount'>
 export const getCollection = (id: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<CollectionDetail>(`/collections/${encodeURIComponent(id)}`, options)
 
+/** ZEST-90: only the membership row is added; the recipe may belong to another user. */
+export const addRecipeToCollection = (collectionId: string, recipeId: string) =>
+  httpClient.post<void>(`/collections/${encodeURIComponent(collectionId)}/recipes`, {
+    recipe_id: recipeId,
+  })
+
 /** Deletes only the collection and its membership rows, leaving recipes intact. */
 export const deleteCollection = (id: string) => httpClient.delete<void>(`/collections/${id}`)
 export interface CreateCollectionPayload {
