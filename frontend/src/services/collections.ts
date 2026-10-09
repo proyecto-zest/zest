@@ -1,4 +1,5 @@
 import { httpClient } from './httpClient'
+import type { CollectionRecipeCardData } from '../types/recipe'
 
 /** Expected list DTO for GET /collections; the list endpoint is still pending in the backend. */
 export interface CollectionSummary {
@@ -11,6 +12,13 @@ export interface CollectionSummary {
 
 export const listCollections = (options?: { signal?: AbortSignal }) =>
   httpClient.get<CollectionSummary[]>('/collections', options)
+
+export interface CollectionDetail extends Omit<CollectionSummary, 'recipeCount'> {
+  recipes: CollectionRecipeCardData[]
+}
+
+export const getCollection = (id: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<CollectionDetail>(`/collections/${encodeURIComponent(id)}`, options)
 
 /** Deletes only the collection and its membership rows, leaving recipes intact. */
 export const deleteCollection = (id: string) => httpClient.delete<void>(`/collections/${id}`)
