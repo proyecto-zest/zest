@@ -90,6 +90,7 @@ export function SingleSelectDropdown({
       selectOption(options[activeIndex].value)
     } else if (e.key === 'Escape' && open) {
       e.preventDefault()
+      e.stopPropagation()
       setOpen(false)
     }
   }
