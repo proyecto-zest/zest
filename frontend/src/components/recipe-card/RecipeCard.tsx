@@ -9,6 +9,7 @@ import { DeleteRecipeButton } from './DeleteRecipeButton'
 import { difficultyBadgeClasses, difficultyBadgeFallback } from './difficultyBadgeVariants'
 import { EditRecipeButton } from './EditRecipeButton'
 import { recipeCardChipClasses, recipeCardShellClasses } from './recipeCardVariants'
+import { SaveRecipeButton } from '../../features/collections/SaveRecipeButton'
 
 interface RecipeCardProps {
   recipe: RecipeCardData | CollectionRecipeCardData
@@ -27,7 +28,6 @@ interface RecipeCardProps {
  */
 export function RecipeCard({ recipe, currentUserId, onDeleted, onSave }: RecipeCardProps) {
   const isOwner = Boolean(currentUserId && recipe.author && currentUserId === recipe.author.id)
-  const isCollectionCard = !('imageUrls' in recipe)
   const imageUrl = 'imageUrls' in recipe ? recipe.imageUrls[0] : recipe.imageUrl
 
   return (
@@ -47,7 +47,7 @@ export function RecipeCard({ recipe, currentUserId, onDeleted, onSave }: RecipeC
         </span>
         {'difficulty' in recipe && (
           <span
-            className={`absolute ${onSave ? 'right-14' : 'right-3'} top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+            className={`absolute right-14 top-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
               difficultyBadgeClasses[recipe.difficulty] ?? difficultyBadgeFallback
             }`}
           >
@@ -55,7 +55,8 @@ export function RecipeCard({ recipe, currentUserId, onDeleted, onSave }: RecipeC
             {enumLabel(recipe.difficulty)}
           </span>
         )}
-        {(isCollectionCard || onSave) && (
+        {!onSave && <SaveRecipeButton recipe={recipe} iconOnly />}
+        {onSave && (
           <button
             type="button"
             aria-label="Save to collection"

@@ -2,6 +2,7 @@ import { RecipeImage } from '../../components/RecipeImage'
 import { RecipeMetaBadges } from '../../components/RecipeMetaBadges'
 import { RecipeAuthor } from '../../components/recipe-author'
 import type { RecipeDetailData } from '../../types/recipe'
+import { SaveRecipeButton } from '../collections/SaveRecipeButton'
 
 interface RecipeDetailHeaderProps {
   recipe: RecipeDetailData
@@ -33,6 +34,7 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
           servings={recipe.servings}
           size="lg"
         />
+        <SaveRecipeButton recipe={recipe} />
       </div>
     </div>
   )

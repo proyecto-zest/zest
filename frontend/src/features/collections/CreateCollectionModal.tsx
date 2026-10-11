@@ -5,19 +5,30 @@ import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { TextField } from '../../components/ui/TextField'
 import { uploadCollectionCover } from '../../services/collectionImages'
-import { createCollection, type CreatedCollection } from '../../services/collections'
+import {
+  addRecipeToCollection,
+  createCollection,
+  type CreatedCollection,
+} from '../../services/collections'
 import { CoverImageDropzone } from '../recipe-create/sections/CoverImageDropzone'
 import { useCoverImage } from '../recipe-create/useCoverImage'
 
 interface CreateCollectionModalProps {
   onClose: () => void
   onCreated: (collection: CreatedCollection) => void
+  recipeId?: string
 }
 
 const accentColors = ['#e8415a', '#f2735a', '#f5c842', '#7dc242'] as const
 
 /** Shared creation dialog: the caller decides what to do with the new collection. */
-export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionModalProps) {
+export function CreateCollectionModal({
+  onClose,
+  onCreated,
+  recipeId,
+}: CreateCollectionModalProps) {
+  // If membership fails after creation, retry using this collection instead of duplicating it.
+  const [createdCollection, setCreatedCollection] = useState<CreatedCollection | null>(null)
   const [name, setName] = useState('')
   const cover = useCoverImage()
   const [accentColor, setAccentColor] = useState<string>(accentColors[0])
@@ -44,7 +55,7 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
     setApiError('')
     try {
       let coverImageKey: string | undefined
-      if (cover.file) {
+      if (cover.file && !createdCollection) {
         setUploading(true)
         cover.setError(null)
         try {
@@ -61,11 +72,24 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
         }
       }
 
-      const created = await createCollection({
-        name: trimmedName,
-        accentColor,
-        ...(coverImageKey ? { coverImageKey } : {}),
-      })
+      const created =
+        createdCollection ??
+        (await createCollection({
+          name: trimmedName,
+          accentColor,
+          ...(coverImageKey ? { coverImageKey } : {}),
+        }))
+      setCreatedCollection(created)
+      if (recipeId) {
+        try {
+          await addRecipeToCollection(created.id, recipeId)
+        } catch {
+          setApiError(
+            'The collection was created, but the recipe could not be saved. Try again to save it without creating another collection.',
+          )
+          return
+        }
+      }
       onCreated(created)
       onClose()
     } catch (error) {
@@ -107,11 +131,11 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
               setName(value)
               setNameError('')
             }}
-            disabled={submitting}
+            disabled={submitting || createdCollection !== null}
             error={nameError}
           />
 
-          <fieldset disabled={submitting}>
+          <fieldset disabled={submitting || createdCollection !== null}>
             <legend className="mb-2 text-sm font-semibold text-foreground">
               Cover photo (optional)
             </legend>
@@ -138,7 +162,7 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
                   aria-label={`Select accent color ${color}`}
                   aria-pressed={accentColor === color}
                   onClick={() => setAccentColor(color)}
-                  disabled={submitting}
+                  disabled={submitting || createdCollection !== null}
                   className="h-8 w-8 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   style={{
                     backgroundColor: color,
@@ -156,7 +180,13 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
             Cancel
           </Button>
           <Button variant="primary" type="submit" disabled={submitting}>
-            {uploading ? 'Uploading photo…' : submitting ? 'Creating…' : 'Create collection'}
+            {uploading
+              ? 'Uploading photo…'
+              : submitting
+                ? 'Creating…'
+                : createdCollection
+                  ? 'Retry saving recipe'
+                  : 'Create collection'}
           </Button>
         </div>
       </form>
