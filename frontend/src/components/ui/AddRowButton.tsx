@@ -11,7 +11,7 @@ export function AddRowButton({ label, onClick }: AddRowButtonProps) {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="md"
       onClick={onClick}
       className="mt-3.5 border border-dashed border-border"
     >
