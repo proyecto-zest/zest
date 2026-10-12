@@ -5,12 +5,15 @@ import { DeleteCollectionButton } from './DeleteCollectionButton'
 
 interface CollectionCardProps {
   collection: CollectionSummary
-  onDeleted: (id: string) => void
+  onDeleted?: (id: string) => void
 }
 
 export function CollectionCard({ collection, onDeleted }: CollectionCardProps) {
   return (
-    <div className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg">
+    <div
+      className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg"
+      style={{ backgroundColor: collection.accentColor }}
+    >
       {collection.coverImageUrl && (
         <img
           src={collection.coverImageUrl}
@@ -38,7 +41,7 @@ export function CollectionCard({ collection, onDeleted }: CollectionCardProps) {
           {collection.recipeCount} {collection.recipeCount === 1 ? 'recipe' : 'recipes'}
         </p>
       </div>
-      <DeleteCollectionButton collection={collection} onDeleted={onDeleted} />
+      {onDeleted && <DeleteCollectionButton collection={collection} onDeleted={onDeleted} />}
     </div>
   )
 }
