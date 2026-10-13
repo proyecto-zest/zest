@@ -1,5 +1,7 @@
 import * as Joi from 'joi';
 
+import { isValidCorsOrigin, parseCorsOrigins } from '../cors-origins';
+
 export type EnvironmentVariables = {
   NODE_ENV: 'development' | 'test' | 'production';
   PORT: number;
@@ -19,7 +21,13 @@ export const envValidationSchema = Joi.object<EnvironmentVariables>({
     .default('development'),
   PORT: Joi.number().port().default(3000),
   CORS_ORIGIN: Joi.string()
-    .uri({ scheme: ['http', 'https'] })
+    .custom((value: string, helpers) => {
+      const origins = parseCorsOrigins(value);
+
+      return origins.length > 0 && origins.every(isValidCorsOrigin)
+        ? value
+        : helpers.error('any.invalid');
+    })
     .required(),
   DATABASE_URL: Joi.string()
     .uri({ scheme: ['postgresql', 'postgres'] })

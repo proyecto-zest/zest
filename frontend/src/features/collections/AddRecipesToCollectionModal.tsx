@@ -121,7 +121,11 @@ export function AddRecipesToCollectionModal({
           )}
           {state.status === 'ok' && state.data.recipes.length === 0 && (
             <p className="my-5 break-words text-center text-sm text-muted-foreground">
-              No recipes match &quot;{query}&quot;.
+              {query.trim()
+                ? `No recipes match "${query.trim()}".`
+                : difficulty
+                  ? 'No recipes match this difficulty.'
+                  : 'No recipes available.'}
             </p>
           )}
           {state.status === 'ok' &&
