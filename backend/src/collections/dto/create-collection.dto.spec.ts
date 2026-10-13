@@ -7,13 +7,22 @@ import { CreateCollectionDto } from './create-collection.dto';
 
 const validCollection = {
   name: 'Weeknight Dinners',
-  coverImageUrl: 'https://images.test/cover.webp',
+  coverImageKey: 'collections/44444444-4444-4444-8444-444444444444.webp',
   accentColor: '#e8415a',
 };
 
 describe('CreateCollectionDto', () => {
   it('accepts a valid payload', async () => {
     const dto = plainToInstance(CreateCollectionDto, validCollection);
+
+    expect(await validate(dto)).toHaveLength(0);
+  });
+
+  it('accepts a payload without a cover', async () => {
+    const dto = plainToInstance(CreateCollectionDto, {
+      name: validCollection.name,
+      accentColor: validCollection.accentColor,
+    });
 
     expect(await validate(dto)).toHaveLength(0);
   });
@@ -27,10 +36,16 @@ describe('CreateCollectionDto', () => {
     expect(await validate(dto)).not.toHaveLength(0);
   });
 
-  it('rejects an empty coverImageUrl', async () => {
+  it.each([
+    'recipes/44444444-4444-4444-8444-444444444444.webp',
+    'collections/../recipes/other.webp',
+    'collections/44444444-4444-4444-8444-444444444444.gif',
+    'https://images.test/cover.webp',
+    '',
+  ])('rejects the cover key %p', async (coverImageKey) => {
     const dto = plainToInstance(CreateCollectionDto, {
       ...validCollection,
-      coverImageUrl: '',
+      coverImageKey,
     });
 
     expect(await validate(dto)).not.toHaveLength(0);

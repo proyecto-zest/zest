@@ -14,8 +14,10 @@ import {
 
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CurrentUserGuard } from '../auth/current-user.guard';
+import { RecipeImageUploadRequestDto } from '../recipes/dto/recipe-image-upload.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { CollectionsService } from './collections.service';
+import { CollectionCoverUploadResponseDto } from './dto/collection-cover-upload.dto';
 import {
   CollectionDetailResponseDto,
   CollectionListItemResponseDto,
@@ -43,6 +45,13 @@ export class CollectionsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<CollectionDetailResponseDto> {
     return this.collectionsService.findOne(currentUser.id, id);
+  }
+
+  @Post('cover-upload-url')
+  createCoverUploadUrl(
+    @Body() requestDto: RecipeImageUploadRequestDto,
+  ): Promise<CollectionCoverUploadResponseDto> {
+    return this.collectionsService.createCoverUploadUrl(requestDto);
   }
 
   @Post()

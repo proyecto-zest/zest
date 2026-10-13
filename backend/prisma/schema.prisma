@@ -130,7 +130,7 @@ model Collection {
   // `name` is not unique per owner: db.md doesn't specify this constraint,
   // and ZEST-89 left it as an open question for the team to decide.
   name          String             @db.VarChar
-  coverImageUrl String             @map("cover_image_url") @db.VarChar
+  coverImageKey String?            @map("cover_image_key") @db.VarChar
   accentColor   String             @map("accent_color") @db.VarChar
   owner         User               @relation(fields: [ownerId], references: [id], onDelete: Restrict)
   recipes       CollectionRecipe[]

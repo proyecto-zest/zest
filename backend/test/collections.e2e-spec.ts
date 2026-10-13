@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { Test } from '@nestjs/testing';
@@ -25,12 +25,16 @@ describeWithDatabase('collections (e2e)', () => {
   const prisma = new PrismaClient();
   const validPayload = {
     name: 'Weeknight Dinners',
-    coverImageUrl: 'https://images.test/cover.webp',
+    coverImageKey: 'collections/44444444-4444-4444-8444-444444444444.webp',
     accentColor: '#e8415a',
   };
+  const signedCover = `https://signed.test/${validPayload.coverImageKey}`;
   const getSignedReadUrl = jest.fn((key: string) =>
     Promise.resolve(`https://signed.test/${key}`),
   );
+  const getSignedUploadUrl = jest.fn().mockResolvedValue('https://upload.test');
+  const objectExists = jest.fn().mockResolvedValue(true);
+  const deleteObject = jest.fn().mockResolvedValue(undefined);
 
   async function buildApp(): Promise<INestApplication> {
     const moduleFixture = await Test.createTestingModule({
@@ -42,7 +46,12 @@ describeWithDatabase('collections (e2e)', () => {
       ],
     })
       .overrideProvider(StorageService)
-      .useValue({ getSignedReadUrl })
+      .useValue({
+        getSignedReadUrl,
+        getSignedUploadUrl,
+        objectExists,
+        deleteObject,
+      })
       .compile();
 
     const app = moduleFixture.createNestApplication();
@@ -73,6 +82,9 @@ describeWithDatabase('collections (e2e)', () => {
     getSignedReadUrl.mockImplementation((key: string) =>
       Promise.resolve(`https://signed.test/${key}`),
     );
+    getSignedUploadUrl.mockResolvedValue('https://upload.test');
+    objectExists.mockResolvedValue(true);
+    deleteObject.mockResolvedValue(undefined);
     await resetTestDatabase(prisma);
   });
 
@@ -92,7 +104,11 @@ describeWithDatabase('collections (e2e)', () => {
         .send(validPayload)
         .expect(201);
 
-      expect(response.body).toMatchObject(validPayload);
+      expect(response.body).toMatchObject({
+        name: validPayload.name,
+        accentColor: validPayload.accentColor,
+        coverImageUrl: signedCover,
+      });
       expect(response.body).toHaveProperty('id');
 
       const stored = await prisma.collection.findUnique({
@@ -129,6 +145,67 @@ describeWithDatabase('collections (e2e)', () => {
       await app.close();
     });
 
+    it('creates a collection without a cover', async () => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .post('/collections')
+        .send({
+          name: validPayload.name,
+          accentColor: validPayload.accentColor,
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({ coverImageUrl: null });
+      const stored = await prisma.collection.findUniqueOrThrow({
+        where: { id: (response.body as { id: string }).id },
+      });
+      expect(stored.coverImageKey).toBeNull();
+      expect(objectExists).not.toHaveBeenCalled();
+
+      await app.close();
+    });
+
+    it('returns 400 when the cover does not exist in S3', async () => {
+      await createLocalUser();
+      objectExists.mockResolvedValue(false);
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .post('/collections')
+        .send(validPayload)
+        .expect(400);
+
+      expect(await prisma.collection.count()).toBe(0);
+
+      await app.close();
+    });
+
+    it.each([
+      'recipes/44444444-4444-4444-8444-444444444444.webp',
+      'collections/44444444-4444-4444-8444-444444444444.gif',
+      'https://images.test/cover.webp',
+    ])('returns 400 for the invalid cover key %p', async (coverImageKey) => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .post('/collections')
+        .send({ ...validPayload, coverImageKey })
+        .expect(400);
+
+      expect(objectExists).not.toHaveBeenCalled();
+
+      await app.close();
+    });
+
     it('rejects a body with unexpected fields', async () => {
       await createLocalUser();
       const app = await buildApp();
@@ -152,7 +229,7 @@ describeWithDatabase('collections (e2e)', () => {
       await request(app.getHttpServer() as Server)
         .post('/collections')
         .send({
-          coverImageUrl: validPayload.coverImageUrl,
+          coverImageKey: validPayload.coverImageKey,
           accentColor: validPayload.accentColor,
         })
         .expect(400);
@@ -175,7 +252,103 @@ describeWithDatabase('collections (e2e)', () => {
     });
   });
 
+  describe('POST /collections/cover-upload-url', () => {
+    it('returns a signed upload URL and a collections/ key', async () => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .post('/collections/cover-upload-url')
+        .send({ contentType: 'image/png' })
+        .expect(201);
+      const body = response.body as {
+        uploadUrl: string;
+        coverImageKey: string;
+      };
+
+      expect(body.uploadUrl).toBe('https://upload.test');
+      expect(body.coverImageKey).toMatch(/^collections\/[0-9a-f-]{36}\.png$/);
+
+      await app.close();
+    });
+
+    it('returns 400 for an unsupported content type', async () => {
+      await createLocalUser();
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .post('/collections/cover-upload-url')
+        .send({ contentType: 'image/gif' })
+        .expect(400);
+
+      expect(getSignedUploadUrl).not.toHaveBeenCalled();
+
+      await app.close();
+    });
+
+    it('returns 401 without a token', async () => {
+      const app = await buildApp();
+      withRejectedAuthentication(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .post('/collections/cover-upload-url')
+        .send({ contentType: 'image/png' })
+        .expect(401);
+
+      await app.close();
+    });
+  });
+
   describe('DELETE /collections/:id', () => {
+    it('deletes the cover from S3 along with the collection', async () => {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .delete(`/collections/${collection.id}`)
+        .expect(204);
+
+      expect(deleteObject).toHaveBeenCalledWith(validPayload.coverImageKey);
+
+      await app.close();
+    });
+
+    it('still returns 204 when deleting the cover from S3 fails', async () => {
+      const loggerError = jest
+        .spyOn(Logger.prototype, 'error')
+        .mockImplementation(() => undefined);
+      deleteObject.mockRejectedValue(new Error('S3 unavailable'));
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .delete(`/collections/${collection.id}`)
+        .expect(204);
+
+      expect(
+        await prisma.collection.findUnique({ where: { id: collection.id } }),
+      ).toBeNull();
+      expect(loggerError).toHaveBeenCalled();
+
+      loggerError.mockRestore();
+      await app.close();
+    });
+
     it('deletes the collection and its collection_recipes rows, keeping the recipe', async () => {
       const owner = await createLocalUser();
       const recipe = await prisma.recipe.create({
@@ -344,7 +517,7 @@ describeWithDatabase('collections (e2e)', () => {
         data: {
           ownerId: otherOwner.id,
           name: 'Someone else',
-          coverImageUrl: validPayload.coverImageUrl,
+          coverImageKey: validPayload.coverImageKey,
           accentColor: validPayload.accentColor,
         },
       });
@@ -361,11 +534,33 @@ describeWithDatabase('collections (e2e)', () => {
         {
           id: collection.id,
           name: validPayload.name,
-          coverImageUrl: validPayload.coverImageUrl,
+          coverImageUrl: signedCover,
           accentColor: validPayload.accentColor,
           recipeCount: 1,
         },
       ]);
+
+      await app.close();
+    });
+
+    it('returns a null coverImageUrl for a collection without a cover', async () => {
+      const owner = await createLocalUser();
+      await prisma.collection.create({
+        data: {
+          ownerId: owner.id,
+          name: validPayload.name,
+          accentColor: validPayload.accentColor,
+        },
+      });
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get('/collections')
+        .expect(200);
+
+      expect(response.body).toMatchObject([{ coverImageUrl: null }]);
 
       await app.close();
     });
@@ -394,7 +589,7 @@ describeWithDatabase('collections (e2e)', () => {
         data: {
           ownerId: owner.id,
           name: 'Other collection',
-          coverImageUrl: validPayload.coverImageUrl,
+          coverImageKey: validPayload.coverImageKey,
           accentColor: validPayload.accentColor,
         },
       });
@@ -445,6 +640,28 @@ describeWithDatabase('collections (e2e)', () => {
   });
 
   describe('GET /collections/:id', () => {
+    it('returns a null coverImageUrl for a collection without a cover', async () => {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: {
+          ownerId: owner.id,
+          name: validPayload.name,
+          accentColor: validPayload.accentColor,
+        },
+      });
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      const response = await request(app.getHttpServer() as Server)
+        .get(`/collections/${collection.id}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({ coverImageUrl: null });
+
+      await app.close();
+    });
+
     it('returns the collection with its recipe cards', async () => {
       const owner = await createLocalUser();
       const ingredient = await prisma.ingredient.create({
@@ -488,7 +705,7 @@ describeWithDatabase('collections (e2e)', () => {
       expect(response.body).toMatchObject({
         id: collection.id,
         name: validPayload.name,
-        coverImageUrl: validPayload.coverImageUrl,
+        coverImageUrl: signedCover,
         accentColor: validPayload.accentColor,
         recipes: [
           {

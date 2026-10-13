@@ -19,12 +19,14 @@ describe('CollectionsController', () => {
   it('delegates collection creation to the service with the current user id', async () => {
     const createCollectionDto: CreateCollectionDto = {
       name: 'Weeknight Dinners',
-      coverImageUrl: 'https://images.test/cover.webp',
+      coverImageKey: 'collections/44444444-4444-4444-8444-444444444444.webp',
       accentColor: '#e8415a',
     };
     const created: CollectionResponseDto = {
       id: 'collection-id',
-      ...createCollectionDto,
+      name: createCollectionDto.name,
+      coverImageUrl: 'https://signed.test/cover.webp',
+      accentColor: createCollectionDto.accentColor,
     };
     const create = jest.fn().mockResolvedValue(created);
     const controller = new CollectionsController({
@@ -35,6 +37,23 @@ describe('CollectionsController', () => {
       controller.create(currentUser, createCollectionDto),
     ).resolves.toBe(created);
     expect(create).toHaveBeenCalledWith('user-id', createCollectionDto);
+  });
+
+  it('delegates cover upload URL generation to the service', async () => {
+    const requestDto = { contentType: 'image/webp' as const };
+    const result = {
+      uploadUrl: 'https://upload.test',
+      coverImageKey: 'collections/generated.webp',
+    };
+    const createCoverUploadUrl = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      createCoverUploadUrl,
+    } as unknown as CollectionsService);
+
+    await expect(controller.createCoverUploadUrl(requestDto)).resolves.toBe(
+      result,
+    );
+    expect(createCoverUploadUrl).toHaveBeenCalledWith(requestDto);
   });
 
   it('delegates collection deletion to the service with the current user id', async () => {
