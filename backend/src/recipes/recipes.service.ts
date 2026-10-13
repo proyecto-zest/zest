@@ -147,6 +147,20 @@ export class RecipesService {
       });
     }
 
+    // Free-text ingredient search (e.g. the "Add to collection" modal). Like
+    // `author`, an empty string must not filter.
+    if (query.ingredientName !== undefined && query.ingredientName !== '') {
+      filters.push({
+        ingredients: {
+          some: {
+            ingredient: {
+              name: { contains: query.ingredientName, mode: 'insensitive' },
+            },
+          },
+        },
+      });
+    }
+
     const where: Prisma.RecipeWhereInput =
       filters.length > 0 ? { AND: filters } : {};
     const [total, recipes] = await Promise.all([
