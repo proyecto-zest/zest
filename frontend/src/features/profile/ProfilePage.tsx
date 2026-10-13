@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Alert } from '../../components/alert'
 import { useCurrentUser } from '../../auth/useCurrentUser'
-import { CollectionsPlaceholder } from './CollectionsPlaceholder'
+import { ProfileCollections } from './ProfileCollections'
 import { ProfilePageSkeleton } from './ProfilePageSkeleton'
 import { ProfileRecipes } from './ProfileRecipes'
 import { ProfileSettings } from './ProfileSettings'
@@ -40,7 +40,7 @@ export function ProfilePage() {
 
   const activeContent = {
     recipes: <ProfileRecipes userId={user.id} currentUserId={user.id} />,
-    collections: <CollectionsPlaceholder />,
+    collections: <ProfileCollections key={user.id} />,
     settings: <ProfileSettings user={user} auth0Sub={auth0Sub} onUserUpdated={replaceUser} />,
   } satisfies Record<ProfileTab, ReactNode>
 
