@@ -50,9 +50,13 @@ export function SaveToCollectionModal({ recipe, onClose, onChanged }: SaveToColl
     return (
       <CreateCollectionModal
         recipeId={recipe.id}
-        onClose={() => setCreating(false)}
-        onCreated={() => {
+        onClose={() => {
+          setCreating(false)
+          // Creation may have succeeded even if adding the recipe failed.
+          // Re-read membership on every return, including Cancel, X and Escape.
           retry()
+        }}
+        onCreated={() => {
           onChanged?.()
         }}
       />
