@@ -491,6 +491,262 @@ describeWithDatabase('collections (e2e)', () => {
     });
   });
 
+  describe('POST and DELETE /collections/:id/recipes', () => {
+    const createRecipe = (authorId: string, title = 'Test Recipe') =>
+      prisma.recipe.create({
+        data: {
+          authorId,
+          title,
+          description: 'Description',
+          category: 'ALMUERZO',
+          time: 20,
+          timeUnit: 'MINUTOS',
+          difficulty: 'FACIL',
+          servings: 2,
+        },
+      });
+
+    const membership = (collectionId: string, recipeId: string) =>
+      prisma.collectionRecipe.count({ where: { collectionId, recipeId } });
+
+    async function setup() {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      const app = await buildApp();
+      withAuthenticatedUser(app);
+      await app.init();
+
+      return { owner, collection, app };
+    }
+
+    it('adds a recipe to the collection', async () => {
+      const { owner, collection, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send({ recipeId: recipe.id })
+        .expect(204);
+
+      expect(await membership(collection.id, recipe.id)).toBe(1);
+
+      await app.close();
+    });
+
+    it('does not duplicate or fail when the recipe is added twice', async () => {
+      const { owner, collection, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await request(app.getHttpServer() as Server)
+          .post(`/collections/${collection.id}/recipes`)
+          .send({ recipeId: recipe.id })
+          .expect(204);
+      }
+
+      expect(await membership(collection.id, recipe.id)).toBe(1);
+
+      await app.close();
+    });
+
+    it("adds another user's recipe", async () => {
+      const { collection, app } = await setup();
+      const otherUser = await createLocalUser('auth0|zest-other-author');
+      const recipe = await createRecipe(otherUser.id, 'Receta ajena');
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send({ recipeId: recipe.id })
+        .expect(204);
+
+      expect(await membership(collection.id, recipe.id)).toBe(1);
+
+      await app.close();
+    });
+
+    it('is reflected by GET /collections with the recipeId flag', async () => {
+      const { owner, collection, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send({ recipeId: recipe.id })
+        .expect(204);
+      const response = await request(app.getHttpServer() as Server)
+        .get(`/collections?recipeId=${recipe.id}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject([
+        { id: collection.id, recipeCount: 1, containsRecipe: true },
+      ]);
+
+      await app.close();
+    });
+
+    it('returns 404 when the collection does not exist', async () => {
+      const { owner, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+
+      await request(app.getHttpServer() as Server)
+        .post('/collections/33333333-3333-4333-8333-333333333333/recipes')
+        .send({ recipeId: recipe.id })
+        .expect(404);
+
+      await app.close();
+    });
+
+    it("returns 403 when adding to another user's collection", async () => {
+      const { owner, app } = await setup();
+      const otherUser = await createLocalUser('auth0|zest-other-owner');
+      const otherCollection = await prisma.collection.create({
+        data: { ownerId: otherUser.id, ...validPayload },
+      });
+      const recipe = await createRecipe(owner.id);
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${otherCollection.id}/recipes`)
+        .send({ recipeId: recipe.id })
+        .expect(403);
+
+      expect(await membership(otherCollection.id, recipe.id)).toBe(0);
+
+      await app.close();
+    });
+
+    it('returns 404 when the recipe does not exist', async () => {
+      const { collection, app } = await setup();
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send({ recipeId: '44444444-4444-4444-8444-444444444444' })
+        .expect(404);
+
+      await app.close();
+    });
+
+    it.each([
+      { recipeId: 'not-a-uuid' },
+      { recipe_id: '44444444-4444-4444-8444-444444444444' },
+      {},
+    ])('returns 400 for the body %o', async (body) => {
+      const { collection, app } = await setup();
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send(body)
+        .expect(400);
+
+      await app.close();
+    });
+
+    it('returns 401 without a token', async () => {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      const app = await buildApp();
+      withRejectedAuthentication(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .post(`/collections/${collection.id}/recipes`)
+        .send({ recipeId: '44444444-4444-4444-8444-444444444444' })
+        .expect(401);
+
+      await app.close();
+    });
+
+    it('removes only the join row and keeps the recipe', async () => {
+      const { owner, collection, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+      await prisma.collectionRecipe.create({
+        data: { collectionId: collection.id, recipeId: recipe.id },
+      });
+
+      await request(app.getHttpServer() as Server)
+        .delete(`/collections/${collection.id}/recipes/${recipe.id}`)
+        .expect(204);
+
+      expect(await membership(collection.id, recipe.id)).toBe(0);
+      expect(
+        await prisma.recipe.findUnique({ where: { id: recipe.id } }),
+      ).not.toBeNull();
+      expect(
+        await prisma.collection.findUnique({ where: { id: collection.id } }),
+      ).not.toBeNull();
+
+      await app.close();
+    });
+
+    it('returns 204 when the recipe was not in the collection', async () => {
+      const { owner, collection, app } = await setup();
+      const recipe = await createRecipe(owner.id);
+
+      await request(app.getHttpServer() as Server)
+        .delete(`/collections/${collection.id}/recipes/${recipe.id}`)
+        .expect(204);
+
+      await app.close();
+    });
+
+    it("returns 403 when removing from another user's collection", async () => {
+      const { owner, app } = await setup();
+      const otherUser = await createLocalUser('auth0|zest-other-owner');
+      const otherCollection = await prisma.collection.create({
+        data: { ownerId: otherUser.id, ...validPayload },
+      });
+      const recipe = await createRecipe(owner.id);
+      await prisma.collectionRecipe.create({
+        data: { collectionId: otherCollection.id, recipeId: recipe.id },
+      });
+
+      await request(app.getHttpServer() as Server)
+        .delete(`/collections/${otherCollection.id}/recipes/${recipe.id}`)
+        .expect(403);
+
+      expect(await membership(otherCollection.id, recipe.id)).toBe(1);
+
+      await app.close();
+    });
+
+    it('returns 404 when removing from a missing collection or a missing recipe', async () => {
+      const { collection, app } = await setup();
+
+      await request(app.getHttpServer() as Server)
+        .delete(
+          `/collections/33333333-3333-4333-8333-333333333333/recipes/44444444-4444-4444-8444-444444444444`,
+        )
+        .expect(404);
+      await request(app.getHttpServer() as Server)
+        .delete(
+          `/collections/${collection.id}/recipes/44444444-4444-4444-8444-444444444444`,
+        )
+        .expect(404);
+
+      await app.close();
+    });
+
+    it('returns 401 without a token when removing', async () => {
+      const owner = await createLocalUser();
+      const collection = await prisma.collection.create({
+        data: { ownerId: owner.id, ...validPayload },
+      });
+      const app = await buildApp();
+      withRejectedAuthentication(app);
+      await app.init();
+
+      await request(app.getHttpServer() as Server)
+        .delete(
+          `/collections/${collection.id}/recipes/44444444-4444-4444-8444-444444444444`,
+        )
+        .expect(401);
+
+      await app.close();
+    });
+  });
+
   describe('GET /collections', () => {
     it("returns only the current user's collections with a recipe count", async () => {
       const owner = await createLocalUser();

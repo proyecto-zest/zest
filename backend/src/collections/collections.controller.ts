@@ -23,6 +23,7 @@ import {
   CollectionListItemResponseDto,
   CollectionResponseDto,
 } from './dto/collection-response.dto';
+import { AddRecipeToCollectionDto } from './dto/add-recipe-to-collection.dto';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { ListCollectionsQueryDto } from './dto/list-collections-query.dto';
 
@@ -60,6 +61,30 @@ export class CollectionsController {
     @Body() createCollectionDto: CreateCollectionDto,
   ): Promise<CollectionResponseDto> {
     return this.collectionsService.create(currentUser.id, createCollectionDto);
+  }
+
+  @Post(':id/recipes')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  addRecipe(
+    @CurrentUser() currentUser: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() addRecipeDto: AddRecipeToCollectionDto,
+  ): Promise<void> {
+    return this.collectionsService.addRecipe(
+      currentUser.id,
+      id,
+      addRecipeDto.recipeId,
+    );
+  }
+
+  @Delete(':id/recipes/:recipeId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeRecipe(
+    @CurrentUser() currentUser: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
+  ): Promise<void> {
+    return this.collectionsService.removeRecipe(currentUser.id, id, recipeId);
   }
 
   @Delete(':id')

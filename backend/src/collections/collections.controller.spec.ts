@@ -56,6 +56,38 @@ describe('CollectionsController', () => {
     expect(createCoverUploadUrl).toHaveBeenCalledWith(requestDto);
   });
 
+  it('delegates adding a recipe to the service with the current user id', async () => {
+    const addRecipe = jest.fn().mockResolvedValue(undefined);
+    const controller = new CollectionsController({
+      addRecipe,
+    } as unknown as CollectionsService);
+
+    await controller.addRecipe(currentUser, 'collection-id', {
+      recipeId: 'recipe-id',
+    });
+
+    expect(addRecipe).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+      'recipe-id',
+    );
+  });
+
+  it('delegates removing a recipe to the service with the current user id', async () => {
+    const removeRecipe = jest.fn().mockResolvedValue(undefined);
+    const controller = new CollectionsController({
+      removeRecipe,
+    } as unknown as CollectionsService);
+
+    await controller.removeRecipe(currentUser, 'collection-id', 'recipe-id');
+
+    expect(removeRecipe).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+      'recipe-id',
+    );
+  });
+
   it('delegates collection deletion to the service with the current user id', async () => {
     const remove = jest.fn().mockResolvedValue(undefined);
     const controller = new CollectionsController({
