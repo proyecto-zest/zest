@@ -38,7 +38,7 @@ export const getCollection = (id: string, options?: { signal?: AbortSignal }) =>
 /** ZEST-90: only the membership row is added; the recipe may belong to another user. */
 export const addRecipeToCollection = (collectionId: string, recipeId: string) =>
   httpClient.post<void>(`/collections/${encodeURIComponent(collectionId)}/recipes`, {
-    recipe_id: recipeId,
+    recipeId,
   })
 
 /** Deletes only the collection and its membership rows, leaving recipes intact. */
