@@ -4,39 +4,27 @@ import { Alert } from '../../components/alert'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
 import { TextField } from '../../components/ui/TextField'
+import { uploadCollectionCover } from '../../services/collectionImages'
 import { createCollection, type CreatedCollection } from '../../services/collections'
+import { CoverImageDropzone } from '../recipe-create/sections/CoverImageDropzone'
+import { useCoverImage } from '../recipe-create/useCoverImage'
 
 interface CreateCollectionModalProps {
   onClose: () => void
   onCreated: (collection: CreatedCollection) => void
 }
 
-const coverFiles = [
-  ['citrus-salad.png', 'Citrus salad'],
-  ['pancakes.png', 'Pancakes'],
-  ['pasta.png', 'Pasta'],
-  ['buddha-bowl.png', 'Buddha bowl'],
-  ['tacos.png', 'Tacos'],
-  ['smoothie.png', 'Smoothie bowl'],
-  ['roast-chicken.png', 'Roast chicken'],
-  ['dessert.png', 'Lemon tart'],
-] as const
-
-const covers = coverFiles.map(([file, label]) => ({
-  url: `${import.meta.env.BASE_URL}collection-covers/${file}`,
-  label,
-}))
-
 const accentColors = ['#e8415a', '#f2735a', '#f5c842', '#7dc242'] as const
 
 /** Shared creation dialog: the caller decides what to do with the new collection. */
 export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionModalProps) {
   const [name, setName] = useState('')
-  const [coverImageUrl, setCoverImageUrl] = useState<string>(covers[0].url)
+  const cover = useCoverImage()
   const [accentColor, setAccentColor] = useState<string>(accentColors[0])
   const [nameError, setNameError] = useState('')
   const [apiError, setApiError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const close = () => {
     if (!submitting) onClose()
@@ -55,7 +43,29 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
     setSubmitting(true)
     setApiError('')
     try {
-      const created = await createCollection({ name: trimmedName, coverImageUrl, accentColor })
+      let coverImageKey: string | undefined
+      if (cover.file) {
+        setUploading(true)
+        cover.setError(null)
+        try {
+          coverImageKey = await uploadCollectionCover(cover.file)
+        } catch (error) {
+          cover.setError(
+            error instanceof Error
+              ? error.message
+              : 'Could not upload the cover photo. Please try again.',
+          )
+          return
+        } finally {
+          setUploading(false)
+        }
+      }
+
+      const created = await createCollection({
+        name: trimmedName,
+        accentColor,
+        ...(coverImageKey ? { coverImageKey } : {}),
+      })
       onCreated(created)
       onClose()
     } catch (error) {
@@ -101,26 +111,22 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
             error={nameError}
           />
 
-          <div>
-            <p className="mb-2 text-sm font-semibold text-foreground">Cover image</p>
-            <div role="group" aria-label="Cover image" className="grid grid-cols-4 gap-2">
-              {covers.map((cover) => (
-                <button
-                  key={cover.url}
-                  type="button"
-                  aria-label={`Select ${cover.label} cover`}
-                  aria-pressed={coverImageUrl === cover.url}
-                  onClick={() => setCoverImageUrl(cover.url)}
-                  disabled={submitting}
-                  className={`aspect-square overflow-hidden rounded-xl border-2 bg-card p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    coverImageUrl === cover.url ? 'border-primary' : 'border-transparent'
-                  }`}
-                >
-                  <img src={cover.url} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
+          <fieldset disabled={submitting}>
+            <legend className="mb-2 text-sm font-semibold text-foreground">
+              Cover photo (optional)
+            </legend>
+            <CoverImageDropzone
+              preview={cover.preview}
+              error={cover.error}
+              uploading={uploading}
+              onSelect={(file) => {
+                if (!submitting) cover.select(file)
+              }}
+              onClear={() => {
+                if (!submitting) cover.clear()
+              }}
+            />
+          </fieldset>
 
           <div>
             <p className="mb-3 text-sm font-semibold text-foreground">Accent color</p>
@@ -150,7 +156,7 @@ export function CreateCollectionModal({ onClose, onCreated }: CreateCollectionMo
             Cancel
           </Button>
           <Button variant="primary" type="submit" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create collection'}
+            {uploading ? 'Uploading photo…' : submitting ? 'Creating…' : 'Create collection'}
           </Button>
         </div>
       </form>
