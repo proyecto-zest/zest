@@ -13,13 +13,38 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and set at least `VITE_API_URL` to the backend URL
-(`http://localhost:3000` in development). The app fails on startup if it is
-missing, on purpose: a clear error beats silent requests to `undefined`.
+Edit `.env` and set `VITE_API_URL` to the backend base URL
+(`http://localhost:3000` for a local backend).
 
-The Auth0 variables stay empty until login is implemented. The Auth0 _client
-secret_ does not belong here — it is backend-only and must never reach the
-frontend.
+For the authenticated application, also fill `VITE_AUTH0_DOMAIN`,
+`VITE_AUTH0_CLIENT_ID` and `VITE_AUTH0_AUDIENCE` with the SPA/API configuration
+from Auth0. Set `VITE_AUTH0_DB_CONNECTION` to the Database connection name when
+testing password-reset emails. The app reports missing API or required Auth0
+configuration on startup; the empty example values must be filled locally.
+
+Never commit your `.env`. All `VITE_*` values are included in the browser build:
+they are public configuration, not a place for client secrets, database
+credentials or AWS access keys.
+
+## Production configuration (Vercel)
+
+Configure the project under **Settings → Environment Variables**:
+
+- `VITE_API_URL`: the public HTTPS base URL of the Render backend, type **Config**,
+  scoped to **Production**. Do not use `localhost` or append `/health`.
+- Per ZEST-78, `VITE_AUTH0_*` remain empty during the initial provisioning. This
+  applies to the older `main` version without Auth0. Before deploying the
+  authenticated application from `dev`, configure its required Auth0 values;
+  empty values will prevent that version from starting.
+
+Redeploy after changing variables: Vite reads them during the build, so updating
+Vercel settings does not change an already published build. Keep actual
+environment-specific values in Vercel rather than this repository.
+
+To verify, open the production site and check in the browser Network panel that
+API requests target Render. A successful build does not establish that CORS or
+the backend endpoints work. Preview configuration and CORS are covered by
+ZEST-80.
 
 ## Daily use
 

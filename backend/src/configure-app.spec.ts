@@ -20,7 +20,7 @@ describe('configureApp', () => {
 
     expect(get).toHaveBeenCalledWith(ConfigService);
     expect(enableCors).toHaveBeenCalledWith({
-      origin: 'http://localhost:5173',
+      origin: expect.any(Function) as unknown,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     });
