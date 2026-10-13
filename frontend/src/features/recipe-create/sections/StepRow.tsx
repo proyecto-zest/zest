@@ -40,9 +40,9 @@ export function StepRow({
         draggable
         onDragStart={onDragStart}
         aria-label={`Reorder step ${stepNumber}`}
-        className="flex h-9 w-9 shrink-0 cursor-grab select-none items-center justify-center self-start rounded-full bg-accent font-serif text-base font-bold text-accent-foreground transition-shadow hover:shadow-md active:cursor-grabbing"
+        className="mt-1.5 flex h-9 w-9 shrink-0 cursor-grab select-none items-center justify-center self-start rounded-full bg-accent font-serif text-base font-bold leading-none text-accent-foreground transition-shadow hover:shadow-md active:cursor-grabbing"
       >
-        {stepNumber}
+        <span className="-translate-y-px">{stepNumber}</span>
       </span>
       <TextAreaField
         value={text}
