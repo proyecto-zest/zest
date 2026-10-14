@@ -33,15 +33,8 @@ jobs:
         working-directory: backend
 
     env:
-      NODE_ENV: test
       DATABASE_URL: postgresql://zest:zest@localhost:5432/zest_test?schema=public
-      CORS_ORIGIN: http://localhost:5173
-      AUTH0_DOMAIN: test.us.auth0.com
-      AUTH0_AUDIENCE: https://api.zest.test
-      AWS_S3_BUCKET: zest-images-test
-      AWS_S3_REGION: us-east-1
-      AWS_ACCESS_KEY_ID: test-access-key-id
-      AWS_SECRET_ACCESS_KEY: test-secret-access-key
+      DIRECT_URL: postgresql://zest:zest@localhost:5432/zest_test?schema=public
       RUN_DATABASE_TESTS: "true"
 
     steps:
