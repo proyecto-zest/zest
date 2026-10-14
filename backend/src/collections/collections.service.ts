@@ -173,6 +173,36 @@ export class CollectionsService {
     };
   }
 
+  async addRecipe(
+    ownerId: string,
+    collectionId: string,
+    recipeId: string,
+  ): Promise<void> {
+    await this.assertOwnedCollection(ownerId, collectionId);
+    await this.assertRecipeExists(recipeId);
+
+    // `skipDuplicates` turns adding a recipe that is already in the
+    // collection into a no-op instead of an error.
+    await this.prisma.collectionRecipe.createMany({
+      data: [{ collectionId, recipeId }],
+      skipDuplicates: true,
+    });
+  }
+
+  async removeRecipe(
+    ownerId: string,
+    collectionId: string,
+    recipeId: string,
+  ): Promise<void> {
+    await this.assertOwnedCollection(ownerId, collectionId);
+    await this.assertRecipeExists(recipeId);
+
+    // Only the join row goes away; the recipe itself is untouched.
+    await this.prisma.collectionRecipe.deleteMany({
+      where: { collectionId, recipeId },
+    });
+  }
+
   async remove(ownerId: string, id: string): Promise<void> {
     const collection = await this.prisma.collection.findUnique({
       where: { id },
@@ -198,6 +228,35 @@ export class CollectionsService {
 
   private async toCoverImageUrl(key: string | null): Promise<string | null> {
     return key === null ? null : this.storageService.getSignedReadUrl(key);
+  }
+
+  private async assertOwnedCollection(
+    ownerId: string,
+    id: string,
+  ): Promise<void> {
+    const collection = await this.prisma.collection.findUnique({
+      where: { id },
+      select: { ownerId: true },
+    });
+
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
+
+    if (collection.ownerId !== ownerId) {
+      throw new ForbiddenException('You do not own this collection');
+    }
+  }
+
+  private async assertRecipeExists(recipeId: string): Promise<void> {
+    const recipe = await this.prisma.recipe.findUnique({
+      where: { id: recipeId },
+      select: { id: true },
+    });
+
+    if (!recipe) {
+      throw new NotFoundException('Recipe not found');
+    }
   }
 
   private async toCollectionRecipeCard(
