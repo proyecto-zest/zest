@@ -6,13 +6,14 @@ interface ModalProps {
   /** Id of the element (usually the modal's heading) that labels it for screen readers. */
   labelledBy: string
   children: ReactNode
+  size?: 'md' | 'lg'
 }
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /** Centered overlay dialog. Closes on backdrop click or Escape, traps focus inside while open. */
-export function Modal({ onClose, labelledBy, children }: ModalProps) {
+export function Modal({ onClose, labelledBy, children, size = 'md' }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)
 
@@ -66,7 +67,7 @@ export function Modal({ onClose, labelledBy, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        className="w-full max-w-md"
+        className={`w-full ${size === 'lg' ? 'max-w-xl' : 'max-w-md'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

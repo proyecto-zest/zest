@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import type { CollectionDetail } from '../../services/collections'
 import type { CollectionRecipeCardData } from '../../types/recipe'
 import { CollectionDetailHeader } from './CollectionDetailHeader'
+import { AddRecipesToCollectionModal } from './AddRecipesToCollectionModal'
 import { CollectionActionDialog } from './CollectionActionDialog'
 import { CollectionDetailSkeleton } from './CollectionDetailSkeleton'
 import { CollectionRecipeGrid } from './CollectionRecipeGrid'
@@ -77,7 +78,16 @@ function CollectionDetailContent({
           />
         </>
       )}
-      {dialog && <CollectionActionDialog {...dialog} onClose={() => setDialog(null)} />}
+      {dialog?.title === 'Add to collection' && state.status === 'ok' && (
+        <AddRecipesToCollectionModal
+          collection={state.collection}
+          onAdded={refresh}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.title === 'Save to collection' && (
+        <CollectionActionDialog {...dialog} onClose={() => setDialog(null)} />
+      )}
     </div>
   )
 }
