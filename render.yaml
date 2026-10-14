@@ -9,7 +9,6 @@ services:
     dockerContext: ./backend
     healthCheckPath: /health
     autoDeployTrigger: checksPass
-    preDeployCommand: npm run prisma:migrate:deploy
     envVars:
       - key: DATABASE_URL
         sync: false
