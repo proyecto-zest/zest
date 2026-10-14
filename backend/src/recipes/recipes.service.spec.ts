@@ -1,4 +1,9 @@
-import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   IngredientUnit,
   RecipeCategory,
@@ -47,9 +52,19 @@ describe('RecipesService', () => {
     steps: ['Cortar el tomate.', 'Mezclar los ingredientes.'],
   };
 
-  const recipeRecord = (imageKeys: string[] = [imageKey]) => ({
+  const recipeAuthor = {
+    id: DEFAULT_RECIPE_AUTHOR_ID,
+    name: 'Zest Cook',
+    avatarUrl: null,
+  };
+
+  const recipeRecord = (
+    imageKeys: string[] = [imageKey],
+    author: typeof recipeAuthor | null = recipeAuthor,
+  ) => ({
     id: recipeId,
     authorId: DEFAULT_RECIPE_AUTHOR_ID,
+    author,
     title: createRecipeDto.title,
     description: createRecipeDto.description,
     category: createRecipeDto.category,
@@ -202,14 +217,24 @@ describe('RecipesService', () => {
       signedUrl('recipes/secondary.webp'),
     ]);
     expect(recipe).not.toHaveProperty('images');
+    expect(recipe.author).toEqual(recipeAuthor);
     expect(recipeFindUnique).toHaveBeenCalledWith({
       where: { id: recipeId },
       include: {
+        author: { select: { id: true, name: true, avatarUrl: true } },
         ingredients: { include: { ingredient: true } },
         steps: { orderBy: { stepNumber: 'asc' } },
         images: { select: { s3Key: true } },
       },
     });
+  });
+
+  it('returns author as null when the recipe has no author record', async () => {
+    recipeFindUnique.mockResolvedValue(recipeRecord([imageKey], null));
+
+    const recipe = await service.findOne(recipeId);
+
+    expect(recipe.author).toBeNull();
   });
 
   it('does not invent a default image when a recipe has no images', async () => {
@@ -240,6 +265,7 @@ describe('RecipesService', () => {
         time: createRecipeDto.time,
         timeUnit: createRecipeDto.timeUnit,
         servings: createRecipeDto.servings,
+        author: recipeAuthor,
         images: [{ s3Key: imageKey }],
       },
     ]);
@@ -254,11 +280,33 @@ describe('RecipesService', () => {
           time: createRecipeDto.time,
           timeUnit: createRecipeDto.timeUnit,
           servings: createRecipeDto.servings,
+          author: recipeAuthor,
           imageUrls: [signedUrl(imageKey)],
         },
       ],
       pagination: { total: 1, page: 1, limit: 20, totalPages: 1 },
     });
+  });
+
+  it('returns author as null in a recipe card when the recipe has no author record', async () => {
+    recipeCount.mockResolvedValue(1);
+    recipeFindMany.mockResolvedValue([
+      {
+        id: recipeId,
+        title: createRecipeDto.title,
+        category: createRecipeDto.category,
+        difficulty: createRecipeDto.difficulty,
+        time: createRecipeDto.time,
+        timeUnit: createRecipeDto.timeUnit,
+        servings: createRecipeDto.servings,
+        author: null,
+        images: [],
+      },
+    ]);
+
+    const { recipes } = await service.findAll({ page: 1, limit: 20 });
+
+    expect(recipes[0].author).toBeNull();
   });
 
   it('caps the requested limit and calculates pagination', async () => {
@@ -293,6 +341,9 @@ describe('RecipesService', () => {
       ingredient: [tomatoId, oilId],
       category: RecipeCategory.ALMUERZO,
       difficulty: RecipeDifficulty.FACIL,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      author: 'santi',
+      ingredientName: 'tomat',
     });
 
     const expectedWhere = {
@@ -302,12 +353,77 @@ describe('RecipesService', () => {
         { ingredients: { some: { ingredientId: oilId } } },
         { category: RecipeCategory.ALMUERZO },
         { difficulty: RecipeDifficulty.FACIL },
+        { authorId: DEFAULT_RECIPE_AUTHOR_ID },
+        { author: { name: { contains: 'santi', mode: 'insensitive' } } },
+        {
+          ingredients: {
+            some: {
+              ingredient: { name: { contains: 'tomat', mode: 'insensitive' } },
+            },
+          },
+        },
       ],
     };
     expect(recipeCount).toHaveBeenCalledWith({ where: expectedWhere });
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expectedWhere }),
     );
+  });
+
+  it('filters by a partial case-insensitive ingredient name', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({ page: 1, limit: 20, ingredientName: 'Tomat' });
+
+    expect(recipeCount).toHaveBeenCalledWith({
+      where: {
+        AND: [
+          {
+            ingredients: {
+              some: {
+                ingredient: {
+                  name: { contains: 'Tomat', mode: 'insensitive' },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  it('does not filter by ingredient name when it is an empty string', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({ page: 1, limit: 20, ingredientName: '' });
+
+    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
+  });
+
+  it('filters by authorId alone', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({
+      page: 1,
+      limit: 20,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+    });
+
+    expect(recipeCount).toHaveBeenCalledWith({
+      where: { AND: [{ authorId: DEFAULT_RECIPE_AUTHOR_ID }] },
+    });
+  });
+
+  it('does not filter by author when it is an empty string', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({ page: 1, limit: 20, author: '' });
+
+    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
   });
 
   it('returns an empty first page when there are no recipes', async () => {
@@ -346,7 +462,10 @@ describe('RecipesService', () => {
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
     recipeCreate.mockResolvedValue(recipeRecord([imageKey, secondaryImageKey]));
 
-    const createdRecipe = await service.create(createRecipeDto);
+    const createdRecipe = await service.create(
+      DEFAULT_RECIPE_AUTHOR_ID,
+      createRecipeDto,
+    );
 
     expect(objectExists).toHaveBeenCalledWith(imageKey);
     expect(objectExists).toHaveBeenCalledWith(secondaryImageKey);
@@ -354,6 +473,7 @@ describe('RecipesService', () => {
       signedUrl(imageKey),
       signedUrl(secondaryImageKey),
     ]);
+    expect(createdRecipe.author).toEqual(recipeAuthor);
     const createArguments = recipeCreate.mock
       .calls[0][0] as RecipeCreateArguments;
     expect(createArguments.data).toMatchObject({
@@ -376,7 +496,10 @@ describe('RecipesService', () => {
     recipeCreate.mockResolvedValue(recipeRecord([]));
     const recipeWithoutImages = { ...createRecipeDto, imageKeys: undefined };
 
-    const createdRecipe = await service.create(recipeWithoutImages);
+    const createdRecipe = await service.create(
+      DEFAULT_RECIPE_AUTHOR_ID,
+      recipeWithoutImages,
+    );
 
     expect(objectExists).not.toHaveBeenCalled();
     expect(createdRecipe.imageUrls).toEqual([]);
@@ -388,7 +511,9 @@ describe('RecipesService', () => {
   it('rejects a key that does not correspond to an uploaded object', async () => {
     objectExists.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
-    await expect(service.create(createRecipeDto)).rejects.toThrow(
+    await expect(
+      service.create(DEFAULT_RECIPE_AUTHOR_ID, createRecipeDto),
+    ).rejects.toThrow(
       new BadRequestException(
         `Las siguientes imágenes no existen en S3: ${secondaryImageKey}`,
       ),
@@ -399,7 +524,9 @@ describe('RecipesService', () => {
   it('rejects missing catalog ingredients before creating a recipe', async () => {
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }]);
 
-    await expect(service.create(createRecipeDto)).rejects.toThrow(
+    await expect(
+      service.create(DEFAULT_RECIPE_AUTHOR_ID, createRecipeDto),
+    ).rejects.toThrow(
       new BadRequestException(
         `Los siguientes ingredientes no existen: ${oilId}`,
       ),
@@ -420,6 +547,7 @@ describe('RecipesService', () => {
       imageKeys: newImageKeys,
     };
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -428,7 +556,11 @@ describe('RecipesService', () => {
       title: updateRecipeDto.title,
     });
 
-    const recipe = await service.update(recipeId, updateRecipeDto);
+    const recipe = await service.update(
+      DEFAULT_RECIPE_AUTHOR_ID,
+      recipeId,
+      updateRecipeDto,
+    );
 
     expect(transactionRecipeUpdate).toHaveBeenCalledWith({
       where: { id: recipeId },
@@ -472,6 +604,7 @@ describe('RecipesService', () => {
 
   it('keeps current images when a complete update omits imageKeys', async () => {
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -479,7 +612,7 @@ describe('RecipesService', () => {
       recipeRecord([imageKey]),
     );
 
-    const recipe = await service.update(recipeId, {
+    const recipe = await service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, {
       ...createRecipeDto,
       imageKeys: undefined,
     });
@@ -493,12 +626,13 @@ describe('RecipesService', () => {
 
   it('removes every image when an update sends an empty list', async () => {
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }, { s3Key: secondaryImageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
     transactionRecipeFindUniqueOrThrow.mockResolvedValue(recipeRecord([]));
 
-    const recipe = await service.update(recipeId, {
+    const recipe = await service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, {
       ...createRecipeDto,
       imageKeys: [],
     });
@@ -514,13 +648,14 @@ describe('RecipesService', () => {
 
   it('does not update a recipe when a new image does not exist', async () => {
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
     objectExists.mockResolvedValue(false);
 
     await expect(
-      service.update(recipeId, {
+      service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, {
         ...createRecipeDto,
         imageKeys: ['recipes/missing.webp'],
       }),
@@ -534,10 +669,15 @@ describe('RecipesService', () => {
   });
 
   it('rolls back before changes when an update ingredient is missing', async () => {
-    recipeFindUnique.mockResolvedValue({ images: [] });
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [],
+    });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }]);
 
-    await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
+    await expect(
+      service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, createRecipeDto),
+    ).rejects.toThrow(
       new BadRequestException(
         `Los siguientes ingredientes no existen: ${oilId}`,
       ),
@@ -550,17 +690,32 @@ describe('RecipesService', () => {
   it('returns 404 when updating a recipe that does not exist', async () => {
     recipeFindUnique.mockResolvedValue(null);
 
-    await expect(service.update(recipeId, createRecipeDto)).rejects.toThrow(
-      new NotFoundException('Recipe not found'),
-    );
+    await expect(
+      service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, createRecipeDto),
+    ).rejects.toThrow(new NotFoundException('Recipe not found'));
     expect(objectExists).not.toHaveBeenCalled();
     expect(runTransaction).not.toHaveBeenCalled();
   });
 
-  it('deletes a recipe, its database relations and its S3 objects', async () => {
-    recipeFindUnique.mockResolvedValue({ images: [{ s3Key: imageKey }] });
+  it('returns 403 when a different user tries to update the recipe', async () => {
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [],
+    });
 
-    await service.remove(recipeId);
+    await expect(
+      service.update('other-user-id', recipeId, createRecipeDto),
+    ).rejects.toThrow(new ForbiddenException('You do not own this recipe'));
+    expect(runTransaction).not.toHaveBeenCalled();
+  });
+
+  it('deletes a recipe, its database relations and its S3 objects', async () => {
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [{ s3Key: imageKey }],
+    });
+
+    await service.remove(DEFAULT_RECIPE_AUTHOR_ID, recipeId);
 
     expect(recipeIngredientDeleteMany).toHaveBeenCalledWith({
       where: { recipeId },
@@ -578,6 +733,7 @@ describe('RecipesService', () => {
   it('does not delete an updated image that another recipe still uses', async () => {
     const newImageKey = 'recipes/new.webp';
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -586,7 +742,7 @@ describe('RecipesService', () => {
     );
     recipeImageFindMany.mockResolvedValue([{ s3Key: imageKey }]);
 
-    await service.update(recipeId, {
+    await service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, {
       ...createRecipeDto,
       imageKeys: [newImageKey],
     });
@@ -608,6 +764,7 @@ describe('RecipesService', () => {
       .spyOn(Logger.prototype, 'error')
       .mockImplementation(() => undefined);
     recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
       images: [{ s3Key: imageKey }],
     });
     ingredientFindMany.mockResolvedValue([{ id: tomatoId }, { id: oilId }]);
@@ -617,7 +774,7 @@ describe('RecipesService', () => {
     deleteObject.mockRejectedValue(error);
 
     await expect(
-      service.update(recipeId, {
+      service.update(DEFAULT_RECIPE_AUTHOR_ID, recipeId, {
         ...createRecipeDto,
         imageKeys: [newImageKey],
       }),
@@ -629,10 +786,13 @@ describe('RecipesService', () => {
   });
 
   it('does not delete a removed recipe image that another recipe still uses', async () => {
-    recipeFindUnique.mockResolvedValue({ images: [{ s3Key: imageKey }] });
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [{ s3Key: imageKey }],
+    });
     recipeImageFindMany.mockResolvedValue([{ s3Key: imageKey }]);
 
-    await service.remove(recipeId);
+    await service.remove(DEFAULT_RECIPE_AUTHOR_ID, recipeId);
 
     expect(recipeImageFindMany).toHaveBeenCalledWith({
       where: {
@@ -647,8 +807,20 @@ describe('RecipesService', () => {
   it('returns 404 when deleting a recipe that does not exist', async () => {
     recipeFindUnique.mockResolvedValue(null);
 
-    await expect(service.remove(recipeId)).rejects.toThrow(
-      new NotFoundException('Recipe not found'),
+    await expect(
+      service.remove(DEFAULT_RECIPE_AUTHOR_ID, recipeId),
+    ).rejects.toThrow(new NotFoundException('Recipe not found'));
+    expect(runTransaction).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when a different user tries to delete the recipe', async () => {
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [{ s3Key: imageKey }],
+    });
+
+    await expect(service.remove('other-user-id', recipeId)).rejects.toThrow(
+      new ForbiddenException('You do not own this recipe'),
     );
     expect(runTransaction).not.toHaveBeenCalled();
   });
@@ -658,10 +830,15 @@ describe('RecipesService', () => {
     const loggerError = jest
       .spyOn(Logger.prototype, 'error')
       .mockImplementation(() => undefined);
-    recipeFindUnique.mockResolvedValue({ images: [{ s3Key: imageKey }] });
+    recipeFindUnique.mockResolvedValue({
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+      images: [{ s3Key: imageKey }],
+    });
     deleteObject.mockRejectedValue(error);
 
-    await expect(service.remove(recipeId)).resolves.toBeUndefined();
+    await expect(
+      service.remove(DEFAULT_RECIPE_AUTHOR_ID, recipeId),
+    ).resolves.toBeUndefined();
     expect(loggerError).toHaveBeenCalledWith(
       `No se pudo borrar de S3 la imagen ${imageKey}`,
       error.stack,

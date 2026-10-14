@@ -24,6 +24,11 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+`DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
+`prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
+la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como
+variables de entorno, nunca desde el repositorio.
+
 Las imágenes de recetas del entorno de desarrollo se almacenan en el bucket
 S3 `zest-recipes`, ubicado en la región `us-east-1`. El backend obtiene el
 bucket, la región y las credenciales exclusivamente desde las variables
@@ -84,6 +89,37 @@ Los tests end-to-end que verifican PostgreSQL real se habilitan con
 las migraciones sobre la base aislada `zest_test` y rechaza cualquier operación
 de limpieza si `DATABASE_URL` no termina en `_test`. El workflow de CI los
 ejecuta automáticamente contra su servicio PostgreSQL.
+
+### Tests de rutas protegidas
+
+Hay dos helpers en `test/`, para dos necesidades distintas:
+
+- **`test/protected-route-test-helper.ts`** — el camino rápido para cualquier
+  ticket que solo necesita "una request de un usuario autenticado", sin
+  probar el guard de JWT en sí mismo. `withAuthenticatedUser(app)`
+  sobreescribe `JwtAuthGuard` en la `INestApplication` ya creada (se llama
+  entre `createNestApplication()` y `app.init()`) para que toda request quede
+  autenticada como un usuario fijo (`request.user`), sin firmar ningún token
+  ni llamar a Auth0. `withRejectedAuthentication(app)` hace lo opuesto:
+  cualquier request devuelve 401, para probar ese caso sin necesitar un token
+  inválido de verdad.
+
+  ```ts
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+  const app = moduleFixture.createNestApplication();
+  withAuthenticatedUser(app);
+  await app.init();
+  ```
+
+- **`test/auth-test-helper.ts`** — para probar el guard/la validación de JWT
+  en sí (por ejemplo `test/auth.e2e-spec.ts`). Genera un par de claves RSA,
+  mockea `jwks-rsa` para servir la pública, y firma tokens reales con
+  `createTestToken(...)` contra la privada. Bastante más pesado: solo hace
+  falta cuando el propio mecanismo de autenticación es lo que se está
+  probando, no cuando un endpoint protegido simplemente necesita un usuario
+  de prueba.
 
 ## CI y protección de `main`
 

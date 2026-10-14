@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -29,12 +30,14 @@ import {
   RecipeMetadataResponseDto,
 } from './dto/recipe-response.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
-import {
-  DEFAULT_RECIPE_AUTHOR_ID,
-  MAX_RECIPES_LIMIT,
-} from './recipes.constants';
+import { MAX_RECIPES_LIMIT } from './recipes.constants';
+
+const recipeAuthorSelect = {
+  select: { id: true, name: true, avatarUrl: true },
+} satisfies { select: Prisma.UserSelect };
 
 const createdRecipeInclude = {
+  author: recipeAuthorSelect,
   ingredients: {
     include: { ingredient: true },
   },
@@ -54,12 +57,14 @@ const recipeCardSelect = {
   time: true,
   timeUnit: true,
   servings: true,
+  author: recipeAuthorSelect,
   images: {
     select: { s3Key: true },
   },
 } satisfies Prisma.RecipeSelect;
 
 const recipeDetailInclude = {
+  author: recipeAuthorSelect,
   ingredients: {
     include: { ingredient: true },
   },
@@ -130,6 +135,32 @@ export class RecipesService {
       filters.push({ difficulty: query.difficulty });
     }
 
+    if (query.authorId !== undefined) {
+      filters.push({ authorId: query.authorId });
+    }
+
+    // An empty `author` string must not filter — only a non-empty value
+    // narrows to a partial, case-insensitive match against the author's name.
+    if (query.author !== undefined && query.author !== '') {
+      filters.push({
+        author: { name: { contains: query.author, mode: 'insensitive' } },
+      });
+    }
+
+    // Free-text ingredient search (e.g. the "Add to collection" modal). Like
+    // `author`, an empty string must not filter.
+    if (query.ingredientName !== undefined && query.ingredientName !== '') {
+      filters.push({
+        ingredients: {
+          some: {
+            ingredient: {
+              name: { contains: query.ingredientName, mode: 'insensitive' },
+            },
+          },
+        },
+      });
+    }
+
     const where: Prisma.RecipeWhereInput =
       filters.length > 0 ? { AND: filters } : {};
     const [total, recipes] = await Promise.all([
@@ -192,6 +223,7 @@ export class RecipesService {
   }
 
   async create(
+    authorId: string,
     createRecipeDto: CreateRecipeDto,
   ): Promise<CreatedRecipeResponseDto> {
     const imageKeys = createRecipeDto.imageKeys ?? [];
@@ -205,7 +237,7 @@ export class RecipesService {
 
       const recipe = await transaction.recipe.create({
         data: {
-          authorId: DEFAULT_RECIPE_AUTHOR_ID,
+          authorId,
           title: createRecipeDto.title,
           description: createRecipeDto.description,
           category: createRecipeDto.category,
@@ -239,17 +271,21 @@ export class RecipesService {
   }
 
   async update(
+    currentUserId: string,
     id: string,
     updateRecipeDto: UpdateRecipeDto,
   ): Promise<RecipeDetailResponseDto> {
-    // TODO: validar que el usuario autenticado sea el autor de la receta.
     const currentRecipe = await this.prisma.recipe.findUnique({
       where: { id },
-      select: { images: { select: { s3Key: true } } },
+      select: { authorId: true, images: { select: { s3Key: true } } },
     });
 
     if (!currentRecipe) {
       throw new NotFoundException('Recipe not found');
+    }
+
+    if (currentRecipe.authorId !== currentUserId) {
+      throw new ForbiddenException('You do not own this recipe');
     }
 
     if (updateRecipeDto.imageKeys !== undefined) {
@@ -371,15 +407,18 @@ export class RecipesService {
     return this.toRecipeDetailResponse(updatedRecipe);
   }
 
-  async remove(id: string): Promise<void> {
-    // TODO: validar que el usuario autenticado sea el autor de la receta.
+  async remove(currentUserId: string, id: string): Promise<void> {
     const recipe = await this.prisma.recipe.findUnique({
       where: { id },
-      select: { images: { select: { s3Key: true } } },
+      select: { authorId: true, images: { select: { s3Key: true } } },
     });
 
     if (!recipe) {
       throw new NotFoundException('Recipe not found');
+    }
+
+    if (recipe.authorId !== currentUserId) {
+      throw new ForbiddenException('You do not own this recipe');
     }
 
     await this.prisma.$transaction(async (transaction) => {
@@ -418,6 +457,7 @@ export class RecipesService {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
+      author: recipe.author,
       title: recipe.title,
       description: recipe.description,
       category: recipe.category,
@@ -455,6 +495,7 @@ export class RecipesService {
     return {
       id: recipe.id,
       authorId: recipe.authorId,
+      author: recipe.author,
       title: recipe.title,
       description: recipe.description,
       category: recipe.category,

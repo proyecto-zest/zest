@@ -1,6 +1,7 @@
-/** The four filters `RecipeSearchFilters` controls — an empty/undefined field means "no filter". */
+/** The five filters `RecipeSearchFilters` controls — an empty field means "no filter". */
 export interface RecipeSearchFiltersValue {
   name: string
+  author: string
   ingredientIds: string[]
   category: string
   difficulty: string
@@ -8,6 +9,7 @@ export interface RecipeSearchFiltersValue {
 
 export const emptyRecipeSearchFilters: RecipeSearchFiltersValue = {
   name: '',
+  author: '',
   ingredientIds: [],
   category: '',
   difficulty: '',
@@ -15,6 +17,10 @@ export const emptyRecipeSearchFilters: RecipeSearchFiltersValue = {
 
 export function hasActiveFilters(value: RecipeSearchFiltersValue): boolean {
   return (
-    value.name.trim() !== '' || value.ingredientIds.length > 0 || value.category !== '' || value.difficulty !== ''
+    value.name.trim() !== '' ||
+    value.author.trim() !== '' ||
+    value.ingredientIds.length > 0 ||
+    value.category !== '' ||
+    value.difficulty !== ''
   )
 }

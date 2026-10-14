@@ -26,13 +26,13 @@ interface DeleteRecipeButtonProps {
   iconOnly?: boolean
 }
 
-/**
- * Delete entry point for a `RecipeCard`. Visible on every card for now — no
- * authentication yet to check authorship against.
- * TODO(ZEST-41): once auth exists, hide this for recipes the current user
- * doesn't own (Stage 2).
- */
-export function DeleteRecipeButton({ recipeId, recipeTitle, onDeleted, iconOnly }: DeleteRecipeButtonProps) {
+/** Delete entry point. Its parent only renders it when the current user owns the recipe. */
+export function DeleteRecipeButton({
+  recipeId,
+  recipeTitle,
+  onDeleted,
+  iconOnly,
+}: DeleteRecipeButtonProps) {
   const [open, setOpen] = useState(false)
   const [pending, setPending] = useState(false)
   const { showToast } = useToast()
@@ -47,7 +47,10 @@ export function DeleteRecipeButton({ recipeId, recipeTitle, onDeleted, iconOnly 
     } catch (err) {
       setPending(false)
       setOpen(false)
-      showToast(err instanceof Error ? err.message : 'Could not delete the recipe. Please try again.', 'error')
+      showToast(
+        err instanceof Error ? err.message : 'Could not delete the recipe. Please try again.',
+        'error',
+      )
     }
   }
 

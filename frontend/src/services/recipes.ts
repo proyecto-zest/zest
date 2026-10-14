@@ -16,9 +16,11 @@ export interface ListRecipesParams extends QueryParams {
   page: number
   limit: number
   name?: string
+  author?: string
   ingredient?: string[]
   category?: string
   difficulty?: string
+  authorId?: string
 }
 
 /** One page of the recipe feed, with optional search filters. `page` is 1-based, matching the API. */

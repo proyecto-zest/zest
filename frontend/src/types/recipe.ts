@@ -13,6 +13,22 @@ export interface RecipeCardData {
   time: number
   timeUnit: string
   servings: number
+  author: RecipeAuthorData | null
+}
+
+/** Reduced recipe projection returned by GET /collections/:id. */
+export interface CollectionRecipeCardData extends Pick<
+  RecipeCardData,
+  'id' | 'title' | 'time' | 'timeUnit' | 'author'
+> {
+  imageUrl: string | null
+}
+
+/** Public author projection embedded in recipe responses. */
+export interface RecipeAuthorData {
+  id: string
+  name: string
+  avatarUrl: string | null
 }
 
 export interface RecipePagination {
@@ -55,4 +71,5 @@ export interface RecipeDetailData {
   imageUrls: string[]
   ingredients: RecipeIngredientData[]
   steps: RecipeStepData[]
+  author: RecipeAuthorData | null
 }

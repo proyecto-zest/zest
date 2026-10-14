@@ -60,6 +60,15 @@ describe('ListRecipesQueryDto', () => {
     await expect(validate(query)).resolves.toHaveLength(0);
   });
 
+  it('accepts a free-text ingredient name', async () => {
+    const query = plainToInstance(ListRecipesQueryDto, {
+      ingredientName: 'tomato',
+    });
+
+    await expect(validate(query)).resolves.toHaveLength(0);
+    expect(query.ingredientName).toBe('tomato');
+  });
+
   it.each([
     { page: '0' },
     { page: '-1' },

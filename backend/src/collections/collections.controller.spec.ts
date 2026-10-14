@@ -1,0 +1,129 @@
+import { UserResponseDto } from '../users/dto/user-response.dto';
+import { CollectionsController } from './collections.controller';
+import { CollectionsService } from './collections.service';
+import {
+  CollectionDetailResponseDto,
+  CollectionListItemResponseDto,
+  CollectionResponseDto,
+} from './dto/collection-response.dto';
+import { CreateCollectionDto } from './dto/create-collection.dto';
+import { ListCollectionsQueryDto } from './dto/list-collections-query.dto';
+
+describe('CollectionsController', () => {
+  const currentUser: UserResponseDto = {
+    id: 'user-id',
+    name: 'Zest Cook',
+    avatarUrl: null,
+  };
+
+  it('delegates collection creation to the service with the current user id', async () => {
+    const createCollectionDto: CreateCollectionDto = {
+      name: 'Weeknight Dinners',
+      coverImageKey: 'collections/44444444-4444-4444-8444-444444444444.webp',
+      accentColor: '#e8415a',
+    };
+    const created: CollectionResponseDto = {
+      id: 'collection-id',
+      name: createCollectionDto.name,
+      coverImageUrl: 'https://signed.test/cover.webp',
+      accentColor: createCollectionDto.accentColor,
+    };
+    const create = jest.fn().mockResolvedValue(created);
+    const controller = new CollectionsController({
+      create,
+    } as unknown as CollectionsService);
+
+    await expect(
+      controller.create(currentUser, createCollectionDto),
+    ).resolves.toBe(created);
+    expect(create).toHaveBeenCalledWith('user-id', createCollectionDto);
+  });
+
+  it('delegates cover upload URL generation to the service', async () => {
+    const requestDto = { contentType: 'image/webp' as const };
+    const result = {
+      uploadUrl: 'https://upload.test',
+      coverImageKey: 'collections/generated.webp',
+    };
+    const createCoverUploadUrl = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      createCoverUploadUrl,
+    } as unknown as CollectionsService);
+
+    await expect(controller.createCoverUploadUrl(requestDto)).resolves.toBe(
+      result,
+    );
+    expect(createCoverUploadUrl).toHaveBeenCalledWith(requestDto);
+  });
+
+  it('delegates adding a recipe to the service with the current user id', async () => {
+    const addRecipe = jest.fn().mockResolvedValue(undefined);
+    const controller = new CollectionsController({
+      addRecipe,
+    } as unknown as CollectionsService);
+
+    await controller.addRecipe(currentUser, 'collection-id', {
+      recipeId: 'recipe-id',
+    });
+
+    expect(addRecipe).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+      'recipe-id',
+    );
+  });
+
+  it('delegates removing a recipe to the service with the current user id', async () => {
+    const removeRecipe = jest.fn().mockResolvedValue(undefined);
+    const controller = new CollectionsController({
+      removeRecipe,
+    } as unknown as CollectionsService);
+
+    await controller.removeRecipe(currentUser, 'collection-id', 'recipe-id');
+
+    expect(removeRecipe).toHaveBeenCalledWith(
+      'user-id',
+      'collection-id',
+      'recipe-id',
+    );
+  });
+
+  it('delegates collection deletion to the service with the current user id', async () => {
+    const remove = jest.fn().mockResolvedValue(undefined);
+    const controller = new CollectionsController({
+      remove,
+    } as unknown as CollectionsService);
+
+    await controller.remove(currentUser, 'collection-id');
+
+    expect(remove).toHaveBeenCalledWith('user-id', 'collection-id');
+  });
+
+  it('delegates collection listing to the service with the current user id and recipeId', async () => {
+    const query: ListCollectionsQueryDto = { recipeId: 'recipe-id' };
+    const result: CollectionListItemResponseDto[] = [];
+    const findAll = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      findAll,
+    } as unknown as CollectionsService);
+
+    await expect(controller.findAll(currentUser, query)).resolves.toBe(result);
+    expect(findAll).toHaveBeenCalledWith('user-id', 'recipe-id');
+  });
+
+  it('delegates collection detail retrieval to the service', async () => {
+    const result = {
+      id: 'collection-id',
+      recipes: [],
+    } as unknown as CollectionDetailResponseDto;
+    const findOne = jest.fn().mockResolvedValue(result);
+    const controller = new CollectionsController({
+      findOne,
+    } as unknown as CollectionsService);
+
+    await expect(
+      controller.findOne(currentUser, 'collection-id'),
+    ).resolves.toBe(result);
+    expect(findOne).toHaveBeenCalledWith('user-id', 'collection-id');
+  });
+});

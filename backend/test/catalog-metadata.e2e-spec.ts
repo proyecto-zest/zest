@@ -16,6 +16,7 @@ import {
   stableIngredientId,
 } from '../prisma/seed';
 import { AppModule } from '../src/app.module';
+import { JwtAuthGuard } from '../src/auth/jwt-auth.guard';
 import { configureApp } from '../src/configure-app';
 import { RecipeMetadataResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { resetTestDatabase } from './test-database';
@@ -39,7 +40,10 @@ describeWithDatabase('Catalog and recipe metadata endpoints (e2e)', () => {
 
     const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     app = moduleFixture.createNestApplication();
     configureApp(app);

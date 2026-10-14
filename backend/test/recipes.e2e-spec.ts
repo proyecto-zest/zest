@@ -1,4 +1,5 @@
 import { INestApplication, Logger } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import {
   IngredientUnit,
   PrismaClient,
@@ -11,12 +12,17 @@ import { randomUUID } from 'node:crypto';
 import { Server } from 'node:http';
 import request from 'supertest';
 
-import { AppModule } from '../src/app.module';
+import { AuthModule } from '../src/auth/auth.module';
 import { configureApp } from '../src/configure-app';
+import { PrismaModule } from '../src/prisma/prisma.module';
 import { CreatedRecipeResponseDto } from '../src/recipes/dto/recipe-response.dto';
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
+import { RecipesModule } from '../src/recipes/recipes.module';
 import { StorageService } from '../src/storage/storage.service';
+import { authTestConfigModuleOptions } from './auth-test-helper';
+import { withAuthenticatedUser } from './protected-route-test-helper';
 import { resetTestDatabase } from './test-database';
+import { createDefaultTestUser, defaultTestUser } from './test-users';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -74,6 +80,7 @@ describeWithDatabase('Recipes (e2e)', () => {
   const createExistingRecipe = () =>
     prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta existente',
         description: 'Descripción original.',
         category: RecipeCategory.ALMUERZO,
@@ -110,7 +117,12 @@ describeWithDatabase('Recipes (e2e)', () => {
     await resetTestDatabase(prisma);
 
     const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot(authTestConfigModuleOptions()),
+        PrismaModule,
+        AuthModule,
+        RecipesModule,
+      ],
     })
       .overrideProvider(StorageService)
       .useValue({
@@ -123,6 +135,7 @@ describeWithDatabase('Recipes (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     configureApp(app);
+    withAuthenticatedUser(app, { sub: defaultTestUser.auth0Sub });
     await app.init();
   });
 
@@ -131,6 +144,7 @@ describeWithDatabase('Recipes (e2e)', () => {
     objectExists.mockResolvedValue(true);
     deleteObject.mockResolvedValue(undefined);
     await resetTestDatabase(prisma);
+    await createDefaultTestUser(prisma);
     await createCatalog();
   });
 
@@ -599,6 +613,7 @@ describeWithDatabase('Recipes (e2e)', () => {
   it('deletes the recipe, its relations and its S3 object', async () => {
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,
@@ -644,6 +659,7 @@ describeWithDatabase('Recipes (e2e)', () => {
     deleteObject.mockRejectedValueOnce(new Error('S3 unavailable'));
     const recipe = await prisma.recipe.create({
       data: {
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
         title: 'Receta para borrar',
         description: 'Descripción.',
         category: RecipeCategory.ALMUERZO,

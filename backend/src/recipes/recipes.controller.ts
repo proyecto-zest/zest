@@ -10,8 +10,12 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
+import { CurrentUser } from '../auth/current-user.decorator';
+import { CurrentUserGuard } from '../auth/current-user.guard';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { ListRecipesQueryDto } from './dto/list-recipes-query.dto';
 import {
@@ -58,23 +62,31 @@ export class RecipesController {
   }
 
   @Post()
+  @UseGuards(CurrentUserGuard)
   create(
+    @CurrentUser() currentUser: UserResponseDto,
     @Body() createRecipeDto: CreateRecipeDto,
   ): Promise<CreatedRecipeResponseDto> {
-    return this.recipesService.create(createRecipeDto);
+    return this.recipesService.create(currentUser.id, createRecipeDto);
   }
 
   @Put(':id')
+  @UseGuards(CurrentUserGuard)
   update(
+    @CurrentUser() currentUser: UserResponseDto,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRecipeDto: UpdateRecipeDto,
   ): Promise<RecipeDetailResponseDto> {
-    return this.recipesService.update(id, updateRecipeDto);
+    return this.recipesService.update(currentUser.id, id, updateRecipeDto);
   }
 
   @Delete(':id')
+  @UseGuards(CurrentUserGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.recipesService.remove(id);
+  remove(
+    @CurrentUser() currentUser: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.recipesService.remove(currentUser.id, id);
   }
 }

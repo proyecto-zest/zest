@@ -32,6 +32,28 @@ describe('environment validation', () => {
     expect(validation.error?.message).toContain('DATABASE_URL');
   });
 
+  it('accepts several CORS origins including a preview wildcard', () => {
+    const validation = envValidationSchema.validate({
+      ...validEnvironment,
+      CORS_ORIGIN:
+        'https://zest-frontend-five.vercel.app,https://zest-frontend-*-zest20.vercel.app',
+    });
+
+    expect(validation.error).toBeUndefined();
+  });
+
+  it.each(['https://*.vercel.app', 'https://ok.com,localhost:5173', ' , '])(
+    'rejects the CORS origin list %p',
+    (corsOrigin) => {
+      const validation = envValidationSchema.validate({
+        ...validEnvironment,
+        CORS_ORIGIN: corsOrigin,
+      });
+
+      expect(validation.error?.message).toContain('CORS_ORIGIN');
+    },
+  );
+
   it('rejects an invalid CORS origin', () => {
     const validation = envValidationSchema.validate({
       ...validEnvironment,

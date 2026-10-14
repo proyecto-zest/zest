@@ -51,7 +51,7 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
   )
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={`relative ${open ? 'z-dropdown' : ''}`}>
       <button
         type="button"
         onClick={() => (open ? close() : setOpen(true))}
@@ -66,7 +66,7 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-10 w-full rounded-b-lg border border-input bg-card p-1.5 shadow-lg">
+        <div className="absolute left-0 top-full z-dropdown w-full rounded-b-lg border border-input bg-card p-1.5 shadow-lg">
           <div className="relative mb-1.5">
             <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input

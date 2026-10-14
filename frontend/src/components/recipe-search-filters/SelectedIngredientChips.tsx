@@ -8,16 +8,18 @@ interface SelectedIngredientChipsProps {
 }
 
 /**
- * Selected ingredients as removable chips, on their own row below the filter
- * controls — kept separate from `IngredientFilterField` so adding many
- * ingredients grows this row instead of reflowing the controls beside it.
+ * Removable ingredient chips; the parent controls their shared filter row.
  */
-export function SelectedIngredientChips({ ingredients, value, onChange }: SelectedIngredientChipsProps) {
+export function SelectedIngredientChips({
+  ingredients,
+  value,
+  onChange,
+}: SelectedIngredientChipsProps) {
   const selected = ingredients.filter((i) => value.includes(i.id))
   if (selected.length === 0) return null
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <>
       {selected.map((ingredient) => (
         <button
           key={ingredient.id}
@@ -29,6 +31,6 @@ export function SelectedIngredientChips({ ingredients, value, onChange }: Select
           <X aria-hidden="true" className="h-3 w-3" />
         </button>
       ))}
-    </div>
+    </>
   )
 }

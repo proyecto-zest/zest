@@ -28,6 +28,7 @@ type Result = Key & ({ status: 'ok'; data: PaginatedRecipes } | { status: 'error
 
 const sameFilters = (a: RecipeSearchFiltersValue, b: RecipeSearchFiltersValue) =>
   a.name === b.name &&
+  a.author === b.author &&
   a.category === b.category &&
   a.difficulty === b.difficulty &&
   a.ingredientIds.length === b.ingredientIds.length &&
@@ -59,6 +60,7 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
         page,
         limit: PAGE_SIZE,
         name: filters.name || undefined,
+        author: filters.author.trim() || undefined,
         ingredient: filters.ingredientIds.length > 0 ? filters.ingredientIds : undefined,
         category: filters.category || undefined,
         difficulty: filters.difficulty || undefined,
@@ -83,7 +85,7 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
     // `filters` is a new object every render (built fresh from URL search params) — depending on
     // its primitive fields instead keeps the effect from re-running (and re-fetching) every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filters.name, filters.category, filters.difficulty, filters.ingredientIds.join(','), attempt])
+  }, [page, filters.name, filters.author, filters.category, filters.difficulty, filters.ingredientIds.join(','), attempt])
 
   const isCurrent = result !== null && result.page === page && sameFilters(result.filters, filters)
 

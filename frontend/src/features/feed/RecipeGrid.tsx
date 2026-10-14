@@ -3,17 +3,23 @@ import type { RecipeCardData } from '../../types/recipe'
 
 interface RecipeGridProps {
   recipes: RecipeCardData[]
+  currentUserId?: string
   onDeleted?: (id: string) => void
 }
 
 /** 1 column on mobile, 2 on tablet, 3 on desktop — the design system only defines those two breakpoints. */
 const gridClasses = 'grid grid-cols-1 gap-5 tablet:grid-cols-2 desktop:grid-cols-3'
 
-export function RecipeGrid({ recipes, onDeleted }: RecipeGridProps) {
+export function RecipeGrid({ recipes, currentUserId, onDeleted }: RecipeGridProps) {
   return (
     <div className={gridClasses}>
       {recipes.map((recipe) => (
-        <RecipeCard key={recipe.id} recipe={recipe} onDeleted={onDeleted} />
+        <RecipeCard
+          key={recipe.id}
+          recipe={recipe}
+          currentUserId={currentUserId}
+          onDeleted={onDeleted}
+        />
       ))}
     </div>
   )
