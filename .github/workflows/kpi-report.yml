@@ -1,0 +1,70 @@
+name: KPI report
+
+# Scheduled workflows only run from the default branch (main).
+on:
+  schedule:
+    # 08:17 and 16:17 in Argentina. The second run is a safety net: resending
+    # accepted rows is a no-op, so it only fills in what the first one missed.
+    - cron: '17 11,19 * * *'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'dev or prod'
+        default: 'prod'
+      dry_run:
+        description: 'Only measure, do not send'
+        default: 'false'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: kpi-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Report KPIs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: kpis
+    env:
+      KPI_ENV: ${{ inputs.env || 'prod' }}
+      DRY_RUN: ${{ inputs.dry_run || 'false' }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+      NEON_READONLY_URL: ${{ secrets.NEON_READONLY_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_URL: ${{ (inputs.env == 'dev' && vars.SUPABASE_URL_DEV) || vars.SUPABASE_URL_PROD }}
+      PROJECT_KEY: ${{ (inputs.env == 'dev' && secrets.PROJECT_KEY_DEV) || secrets.PROJECT_KEY_PROD }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: kpis/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Measure and report
+        run: |
+          args=(--env "$KPI_ENV")
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          node src/run.ts "${args[@]}"
+
+      - name: Keep a copy of what was sent
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpi-batch-${{ github.run_id }}
+          path: kpis/kpi-batch-*.json
+          if-no-files-found: ignore
