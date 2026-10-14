@@ -80,7 +80,7 @@ export function NavAvatar({ placement = 'below', onNavigate }: NavAvatarProps) {
       {open && (
         <div
           role="menu"
-          className={`absolute right-0 z-50 w-44 overflow-hidden rounded-xl border border-border bg-card shadow-lg ${
+          className={`absolute right-0 z-dropdown w-44 overflow-hidden rounded-xl border border-border bg-card shadow-lg ${
             placement === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
         >

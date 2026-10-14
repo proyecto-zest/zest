@@ -343,6 +343,7 @@ describe('RecipesService', () => {
       difficulty: RecipeDifficulty.FACIL,
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
       author: 'santi',
+      ingredientName: 'tomat',
     });
 
     const expectedWhere = {
@@ -354,12 +355,51 @@ describe('RecipesService', () => {
         { difficulty: RecipeDifficulty.FACIL },
         { authorId: DEFAULT_RECIPE_AUTHOR_ID },
         { author: { name: { contains: 'santi', mode: 'insensitive' } } },
+        {
+          ingredients: {
+            some: {
+              ingredient: { name: { contains: 'tomat', mode: 'insensitive' } },
+            },
+          },
+        },
       ],
     };
     expect(recipeCount).toHaveBeenCalledWith({ where: expectedWhere });
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expectedWhere }),
     );
+  });
+
+  it('filters by a partial case-insensitive ingredient name', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({ page: 1, limit: 20, ingredientName: 'Tomat' });
+
+    expect(recipeCount).toHaveBeenCalledWith({
+      where: {
+        AND: [
+          {
+            ingredients: {
+              some: {
+                ingredient: {
+                  name: { contains: 'Tomat', mode: 'insensitive' },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+  });
+
+  it('does not filter by ingredient name when it is an empty string', async () => {
+    recipeCount.mockResolvedValue(0);
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({ page: 1, limit: 20, ingredientName: '' });
+
+    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
   });
 
   it('filters by authorId alone', async () => {

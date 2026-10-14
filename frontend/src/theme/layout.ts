@@ -21,7 +21,8 @@ export const spacing = Object.fromEntries([
  * styles instead of failing the build.
  */
 export const maxWidth = { content: '77.5rem' }
-export const zIndex = { nav: '40' }
+// Page dropdowns sit above card controls, but below the sticky navigation and modals.
+export const zIndex = { dropdown: '30', nav: '40' }
 
 export const borderRadius = {
   none: '0px',

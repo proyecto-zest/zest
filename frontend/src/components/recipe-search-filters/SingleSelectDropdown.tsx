@@ -96,7 +96,7 @@ export function SingleSelectDropdown({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className={`relative ${open ? 'z-dropdown' : ''}`}>
       <button
         type="button"
         onClick={() => (open ? setOpen(false) : openMenu())}
@@ -117,7 +117,7 @@ export function SingleSelectDropdown({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute left-0 top-full z-10 mt-1 max-h-64 w-full min-w-[10rem] origin-top animate-dropdown-in overflow-y-auto rounded-lg border border-border bg-card p-1.5 shadow-lg"
+          className="absolute left-0 top-full z-dropdown mt-1 max-h-64 w-full min-w-[10rem] origin-top animate-dropdown-in overflow-y-auto rounded-lg border border-border bg-card p-1.5 shadow-lg"
         >
           {options.map((option, index) => (
             <li key={option.value} role="presentation">

@@ -53,4 +53,8 @@ export class ListRecipesQueryDto {
   @IsOptional()
   @IsString()
   author?: string;
+
+  @IsOptional()
+  @IsString()
+  ingredientName?: string;
 }

@@ -5,7 +5,7 @@ import { DeleteCollectionButton } from './DeleteCollectionButton'
 
 interface CollectionCardProps {
   collection: CollectionSummary
-  onDeleted: (id: string) => void
+  onDeleted?: (id: string) => void
 }
 
 export function CollectionCard({ collection, onDeleted }: CollectionCardProps) {
@@ -41,7 +41,7 @@ export function CollectionCard({ collection, onDeleted }: CollectionCardProps) {
           {collection.recipeCount} {collection.recipeCount === 1 ? 'recipe' : 'recipes'}
         </p>
       </div>
-      <DeleteCollectionButton collection={collection} onDeleted={onDeleted} />
+      {onDeleted && <DeleteCollectionButton collection={collection} onDeleted={onDeleted} />}
     </div>
   )
 }

@@ -24,6 +24,11 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+`DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
+`prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
+la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como
+variables de entorno, nunca desde el repositorio.
+
 Las imágenes de recetas del entorno de desarrollo se almacenan en el bucket
 S3 `zest-recipes`, ubicado en la región `us-east-1`. El backend obtiene el
 bucket, la región y las credenciales exclusivamente desde las variables

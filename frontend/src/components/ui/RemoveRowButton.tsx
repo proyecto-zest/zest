@@ -5,10 +5,10 @@ interface RemoveRowButtonProps {
   onClick: () => void
 }
 
-/** Icon-only "remove this row" button. Stretches to the row's height, matching its inputs. */
+/** Fixed square control, aligned with the input rather than its counter or error text. */
 export function RemoveRowButton({ onClick }: RemoveRowButtonProps) {
   return (
-    <Button variant="icon" onClick={onClick} aria-label="Remove" className="w-12 shrink-0 self-stretch">
+    <Button variant="icon" onClick={onClick} aria-label="Remove" className="h-12 w-12 shrink-0 self-start">
       <X aria-hidden="true" className="h-4 w-4" />
     </Button>
   )

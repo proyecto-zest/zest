@@ -247,6 +247,113 @@ describe('CollectionsService', () => {
     });
   });
 
+  describe('addRecipe and removeRecipe', () => {
+    const buildRecipeService = (
+      collectionRecord: { ownerId: string } | null,
+      recipeRecord: { id: string } | null,
+    ) => {
+      const createMany = jest.fn().mockResolvedValue({ count: 1 });
+      const deleteMany = jest.fn().mockResolvedValue({ count: 1 });
+      const service = new CollectionsService(
+        {
+          collection: {
+            findUnique: jest.fn().mockResolvedValue(collectionRecord),
+          },
+          recipe: { findUnique: jest.fn().mockResolvedValue(recipeRecord) },
+          collectionRecipe: { createMany, deleteMany },
+        } as unknown as PrismaService,
+        storageService,
+      );
+
+      return { service, createMany, deleteMany };
+    };
+
+    it('adds a recipe ignoring duplicates so adding twice is not an error', async () => {
+      const { service, createMany } = buildRecipeService(
+        { ownerId },
+        { id: recipeId },
+      );
+
+      await expect(
+        service.addRecipe(ownerId, collectionId, recipeId),
+      ).resolves.toBeUndefined();
+      expect(createMany).toHaveBeenCalledWith({
+        data: [{ collectionId, recipeId }],
+        skipDuplicates: true,
+      });
+    });
+
+    it('does not add when the collection does not exist', async () => {
+      const { service, createMany } = buildRecipeService(null, {
+        id: recipeId,
+      });
+
+      await expect(
+        service.addRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(NotFoundException);
+      expect(createMany).not.toHaveBeenCalled();
+    });
+
+    it("does not add to another user's collection", async () => {
+      const { service, createMany } = buildRecipeService(
+        { ownerId: 'someone-else-id' },
+        { id: recipeId },
+      );
+
+      await expect(
+        service.addRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(ForbiddenException);
+      expect(createMany).not.toHaveBeenCalled();
+    });
+
+    it('does not add a recipe that does not exist', async () => {
+      const { service, createMany } = buildRecipeService({ ownerId }, null);
+
+      await expect(
+        service.addRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(new NotFoundException('Recipe not found'));
+      expect(createMany).not.toHaveBeenCalled();
+    });
+
+    it('removes only the join row', async () => {
+      const { service, deleteMany } = buildRecipeService(
+        { ownerId },
+        { id: recipeId },
+      );
+
+      await expect(
+        service.removeRecipe(ownerId, collectionId, recipeId),
+      ).resolves.toBeUndefined();
+      expect(deleteMany).toHaveBeenCalledWith({
+        where: { collectionId, recipeId },
+      });
+    });
+
+    it("does not remove from another user's collection", async () => {
+      const { service, deleteMany } = buildRecipeService(
+        { ownerId: 'someone-else-id' },
+        { id: recipeId },
+      );
+
+      await expect(
+        service.removeRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(ForbiddenException);
+      expect(deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('does not remove when the collection or the recipe does not exist', async () => {
+      const missingCollection = buildRecipeService(null, { id: recipeId });
+      const missingRecipe = buildRecipeService({ ownerId }, null);
+
+      await expect(
+        missingCollection.service.removeRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        missingRecipe.service.removeRecipe(ownerId, collectionId, recipeId),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('findAll', () => {
     const collectionRecord = (
       recipes?: Array<{ recipeId: string }>,
