@@ -261,6 +261,41 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
     expect(responseIds(body)).toEqual(new Set([recipes.otherAuthorRecipe]));
   });
 
+  it('filters recipes by a partial case-insensitive ingredient name', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .get('/recipes?ingredientName=TOMATO')
+      .expect(200);
+    const body = response.body as PaginatedRecipesResponseDto;
+
+    expect(responseIds(body)).toEqual(
+      new Set([
+        recipes.pastaTomato,
+        recipes.tomatoSoup,
+        recipes.otherAuthorRecipe,
+      ]),
+    );
+  });
+
+  it('combines ingredientName with other filters', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .get(
+        `/recipes?ingredientName=cheese&difficulty=${RecipeDifficulty.MEDIA}`,
+      )
+      .expect(200);
+    const body = response.body as PaginatedRecipesResponseDto;
+
+    expect(responseIds(body)).toEqual(new Set([recipes.greenPasta]));
+  });
+
+  it('does not filter by ingredientName when the value is empty', async () => {
+    const response = await request(app.getHttpServer() as Server)
+      .get('/recipes?ingredientName=')
+      .expect(200);
+    const body = response.body as PaginatedRecipesResponseDto;
+
+    expect(body.pagination.total).toBe(5);
+  });
+
   it('returns 400 when authorId is not a UUID', async () => {
     await request(app.getHttpServer() as Server)
       .get('/recipes?authorId=not-a-uuid')
