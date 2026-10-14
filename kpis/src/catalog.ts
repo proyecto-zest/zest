@@ -25,4 +25,7 @@ export type KpiValues = Record<string, number>;
 export interface KpiFailure {
   id: string;
   reason: string;
+  // A KPI that is only missing because an input KPI failed. It is a consequence
+  // of another failure, so it must not count as a second one.
+  derived?: boolean;
 }

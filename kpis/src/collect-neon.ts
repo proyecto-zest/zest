@@ -24,10 +24,34 @@ const MANAGED_USERS_SQL = `
       WHERE c.owner_id = u.id
     )`;
 
-// Lazily opened, reused connection. A failed connection is dropped so the next
-// attempt reconnects (Neon suspends after 5 idle minutes and wakes up slowly).
-export function createNeonSession(connectionString: string): NeonSession {
-  let client: pg.Client | undefined;
+interface PgLikeClient {
+  connect(): Promise<unknown>;
+  query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
+  end(): Promise<void>;
+  on(event: 'error', listener: (error: Error) => void): unknown;
+}
+
+type ClientFactory = (connectionString: string) => PgLikeClient;
+
+const defaultFactory: ClientFactory = (connectionString) =>
+  new pg.Client({
+    connectionString,
+    connectionTimeoutMillis: 30_000,
+    query_timeout: 30_000,
+  }) as unknown as PgLikeClient;
+
+// Lazily opened, reused connection. Neon suspends after 5 idle minutes and can
+// cut a connection between retries, so:
+//  - an 'error' event on an idle client must be handled (an unhandled one
+//    would crash the whole process), and
+//  - any failed query drops the connection, whatever the error code is,
+//    because a network error (ECONNRESET, 57P01) leaves a dead connection and
+//    the next attempt must reconnect instead of reusing it.
+export function createNeonSession(
+  connectionString: string,
+  createClient: ClientFactory = defaultFactory,
+): NeonSession {
+  let client: PgLikeClient | undefined;
 
   async function close(): Promise<void> {
     const current = client;
@@ -35,25 +59,37 @@ export function createNeonSession(connectionString: string): NeonSession {
     await current?.end().catch(() => undefined);
   }
 
+  async function open(): Promise<PgLikeClient> {
+    if (client) {
+      return client;
+    }
+
+    const candidate = createClient(connectionString);
+    candidate.on('error', () => {
+      if (client === candidate) {
+        client = undefined;
+      }
+    });
+
+    try {
+      await candidate.connect();
+    } catch (error) {
+      await candidate.end().catch(() => undefined);
+      throw error;
+    }
+
+    client = candidate;
+    return candidate;
+  }
+
   return {
     async query(sql, params) {
-      if (!client) {
-        const candidate = new pg.Client({
-          connectionString,
-          connectionTimeoutMillis: 30_000,
-          query_timeout: 30_000,
-        });
-        await candidate.connect();
-        client = candidate;
-      }
+      const active = await open();
 
       try {
-        return await client.query(sql, params);
+        return await active.query(sql, params);
       } catch (error) {
-        // SQL errors carry a code and keep the connection; network errors do not.
-        if ((error as { code?: string }).code === undefined) {
-          await close();
-        }
+        await close();
         throw error;
       }
     },

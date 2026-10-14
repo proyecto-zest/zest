@@ -22,8 +22,8 @@ corrected, so a KPI that could not be measured is never sent as 0.
 | `active_users_30d` | Neon | users with `updated_at` in the last 30 days |
 | `platform_managed_users` | Neon | active users with a collection that has recipes |
 | `platform_managed_rate` | derived | managed / active x 100, 0 if there are no active users |
-| `health_latency_p95` | HTTP | p95 of 20 `GET /health` calls after a warm-up |
-| `health_error_rate` | HTTP | % of those 20 calls with an error or 10 s timeout |
+| `health_latency_p95` | HTTP | p95 of 20 `GET /health` calls after a warm-up; a failed call counts as 10 s |
+| `health_error_rate` | HTTP | % of those 20 calls with an error, a non-200 answer or a 10 s timeout |
 | `db_query_latency` | Neon | median of 5 `SELECT 1` after a warm-up query |
 | `health_up` | HTTP | 1 if the warm-up answered 200 with `status: ok` |
 | `db_connected` | HTTP | 1 if the warm-up answered `db: connected` |
@@ -37,11 +37,19 @@ No account is excluded from the user KPIs, team accounts included.
 | Situation | What happens |
 |---|---|
 | All 10 measured | Batch sent, workflow green |
-| 1 KPI could not be measured | The other 9 are sent, workflow red; the next run completes the day |
+| 1 KPI could not be measured | The others are sent, workflow red; the next run completes the day |
 | 2 or more could not be measured | Nothing is sent, workflow red; re-run it the same day |
-| Backend or database really down | Reported as 0 (real data), not a failure |
+| Backend really down | `health_up` and `db_connected` are 0 (real data) and the rest is reported |
 
-Each failing KPI is retried 3 times, waiting 10 s and then 30 s.
+Each failing KPI is retried 3 times, waiting 10 s and then 30 s. A KPI that
+cannot be measured is never sent as 0.
+
+`platform_managed_rate` is derived from the two user KPIs. If one of them fails
+the rate cannot be calculated, but that is a consequence of a single failure and
+does not count as a second one: the remaining KPIs are still sent.
+
+Every failure is printed with its cause (for example `ECONNREFUSED` or the
+database error), so whoever re-runs the workflow knows what happened.
 
 ## Schedule
 
@@ -65,8 +73,11 @@ npm run dry-run   # measures and prints, sends nothing
 ```
 
 Needs Node 22.18 or later (it runs TypeScript directly). A dry run needs
-`BACKEND_URL`, `NEON_READONLY_URL` and `GITHUB_TOKEN`. Publishing also needs `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`
-and `PROJECT_KEY`. Use `--env dev` to publish to the dev environment.
+`BACKEND_URL`, `NEON_READONLY_URL` and `GITHUB_TOKEN`. Publishing also needs
+`SUPABASE_PUBLISHABLE_KEY` and, for the chosen environment, `SUPABASE_URL_<ENV>`
+and `PROJECT_KEY_<ENV>` (for example `SUPABASE_URL_DEV` and `PROJECT_KEY_DEV`
+with `--env dev`). It never falls back to another environment's key: if one is
+missing it fails and says which.
 
 ## GitHub configuration
 
@@ -78,6 +89,9 @@ and `PROJECT_KEY`. Use `--env dev` to publish to the dev environment.
 | `SUPABASE_PUBLISHABLE_KEY` | secret | Public key, same for every team |
 | `PROJECT_KEY_PROD` | secret | Private key of Zest for prod |
 | `PROJECT_KEY_DEV` | secret | Private key of Zest for dev |
+
+The workflow supports `dev` and `prod`. Running it with `env: dev` without the
+dev secrets fails with a clear message instead of using the prod key.
 | `NEON_READONLY_URL` | secret | Direct connection string of the read-only role |
 
 Keys never go in the code, the logs or the repository.

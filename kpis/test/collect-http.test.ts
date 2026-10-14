@@ -138,6 +138,17 @@ test('a dead backend is data: up and connected are 0, the rest is reported', asy
   assert.equal(kpis.health_error_rate, 100);
 });
 
+test('a backend that fails fast cannot look fast: errors count as 10000 ms', async () => {
+  const fetchImpl: FetchFn = async () => {
+    throw new Error('ECONNREFUSED');
+  };
+
+  const kpis = await collectHttpKpis('https://api.test', { fetchImpl, ...fakeClock() });
+
+  assert.equal(kpis.health_error_rate, 100);
+  assert.equal(kpis.health_latency_p95, 10_000);
+});
+
 test('a non-200 answer is an error and means not up', async () => {
   const kpis = await collectHttpKpis('https://api.test', {
     fetchImpl: reply(503, { status: 'error' }),
@@ -146,4 +157,5 @@ test('a non-200 answer is an error and means not up', async () => {
 
   assert.equal(kpis.health_up, 0);
   assert.equal(kpis.health_error_rate, 100);
+  assert.equal(kpis.health_latency_p95, 10_000);
 });

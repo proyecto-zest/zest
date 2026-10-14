@@ -118,6 +118,62 @@ test('a KPI that cannot be measured is a failure, never a filler 0', async () =>
   ]);
 });
 
+test('the managed rate is a derived failure, not a second root failure', async () => {
+  const { session } = fakeSession();
+  const original = session.query;
+  session.query = async (sql, params) => {
+    if (sql.includes('FROM users u') && !sql.includes('EXISTS')) {
+      throw Object.assign(new Error('boom'), { code: '57P01' });
+    }
+    return original(sql, params);
+  };
+
+  const { values, failures } = await collectAll(config, {
+    fetchImpl: fakeFetch(),
+    session,
+    sleepFn: noSleep,
+  });
+
+  assert.ok('platform_managed_users' in values);
+  assert.deepEqual(
+    failures.map(({ id, derived }) => ({ id, derived: derived === true })),
+    [
+      { id: 'active_users_30d', derived: false },
+      { id: 'platform_managed_rate', derived: true },
+    ],
+  );
+  assert.match(failures[1].reason, /active_users_30d/);
+});
+
+test('the failure reason is never empty, even for an AggregateError without message', async () => {
+  const aggregate = new AggregateError(
+    [
+      Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5432'), { code: 'ECONNREFUSED' }),
+      Object.assign(new Error('connect ECONNREFUSED ::1:5432'), { code: 'ECONNREFUSED' }),
+    ],
+    '',
+  );
+  const session: NeonSession = {
+    async query() {
+      throw aggregate;
+    },
+    async close() {},
+  };
+
+  const { failures } = await collectAll(config, {
+    fetchImpl: fakeFetch(),
+    session,
+    sleepFn: noSleep,
+  });
+
+  const reasons = failures.filter((failure) => !failure.derived).map((failure) => failure.reason);
+
+  assert.ok(reasons.length > 0);
+  for (const reason of reasons) {
+    assert.match(reason, /ECONNREFUSED/);
+  }
+});
+
 test('a failing KPI is retried with the 10 s and 30 s waits', async () => {
   const waits: number[] = [];
   const { session } = fakeSession({ failUsers: true });

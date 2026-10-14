@@ -1,6 +1,7 @@
 import { KPI_IDS } from './catalog.ts';
 import type { KpiFailure, KpiValues } from './catalog.ts';
 import { collectCiKpi } from './collect-ci.ts';
+import { describeError } from './errors.ts';
 import { collectHttpKpis } from './collect-http.ts';
 import type { FetchFn } from './collect-http.ts';
 import { createNeonSession, neonKpis } from './collect-neon.ts';
@@ -41,8 +42,8 @@ export async function collectAll(config: Config, deps: CollectDeps = {}): Promis
     try {
       values[id] = await withRetries(task, retryOptions);
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      failures.push({ id, reason: reason.slice(0, 200) });
+      const reason = describeError(error);
+      failures.push({ id, reason: reason.slice(0, 300) });
       log(`KPI ${id} could not be measured: ${reason}`);
     }
   }
@@ -65,9 +66,11 @@ export async function collectAll(config: Config, deps: CollectDeps = {}): Promis
       values.active_users_30d,
     );
   } else {
+    const missing = ['platform_managed_users', 'active_users_30d'].filter((id) => !(id in values));
     failures.push({
       id: 'platform_managed_rate',
-      reason: 'depends on KPIs that could not be measured',
+      reason: `cannot be calculated: ${missing.join(' and ')} could not be measured`,
+      derived: true,
     });
   }
 

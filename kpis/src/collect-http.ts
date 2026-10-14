@@ -32,21 +32,17 @@ export async function timedGet(
     } catch {
       body = undefined;
     }
+    const ok = response.status === 200;
     return {
-      ok: response.status === 200,
+      ok,
       status: response.status,
       body,
-      durationMs: performance.now() - startedAt,
+      // A failed call counts as the full timeout, like a timeout does, so a
+      // backend that fails fast cannot look fast.
+      durationMs: ok ? performance.now() - startedAt : timeoutMs,
     };
-  } catch (error) {
-    const name = (error as { name?: string } | null)?.name;
-    const timedOut = name === 'TimeoutError' || name === 'AbortError';
-    return {
-      ok: false,
-      status: undefined,
-      body: undefined,
-      durationMs: timedOut ? timeoutMs : performance.now() - startedAt,
-    };
+  } catch {
+    return { ok: false, status: undefined, body: undefined, durationMs: timeoutMs };
   }
 }
 

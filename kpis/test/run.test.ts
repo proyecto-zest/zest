@@ -73,6 +73,25 @@ test('one failure sends the other 9 and finishes red', async () => {
   assert.ok(!calls.send[0].some((row) => row.kpi_id === 'ci_last_run_ok'));
 });
 
+test('a root failure plus its derived KPI still sends the rest', async () => {
+  const partial = Object.fromEntries(
+    Object.entries(allValues).filter(
+      ([id]) => id !== 'active_users_30d' && id !== 'platform_managed_rate',
+    ),
+  );
+  const { calls, deps } = harness({
+    values: partial,
+    failures: [
+      { id: 'active_users_30d', reason: 'connection reset' },
+      { id: 'platform_managed_rate', reason: 'cannot be calculated', derived: true },
+    ],
+  });
+
+  assert.equal(await runReport(baseConfig, deps), 1);
+  assert.equal(calls.send.length, 1);
+  assert.equal(calls.send[0].length, 8);
+});
+
 test('two or more failures send nothing', async () => {
   const { calls, deps } = harness({
     values: {},

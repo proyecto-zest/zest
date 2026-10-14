@@ -37,8 +37,10 @@ jobs:
       BACKEND_URL: ${{ vars.BACKEND_URL }}
       NEON_READONLY_URL: ${{ secrets.NEON_READONLY_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
-      SUPABASE_URL: ${{ (inputs.env == 'dev' && vars.SUPABASE_URL_DEV) || vars.SUPABASE_URL_PROD }}
-      PROJECT_KEY: ${{ (inputs.env == 'dev' && secrets.PROJECT_KEY_DEV) || secrets.PROJECT_KEY_PROD }}
+      SUPABASE_URL_DEV: ${{ vars.SUPABASE_URL_DEV }}
+      SUPABASE_URL_PROD: ${{ vars.SUPABASE_URL_PROD }}
+      PROJECT_KEY_DEV: ${{ secrets.PROJECT_KEY_DEV }}
+      PROJECT_KEY_PROD: ${{ secrets.PROJECT_KEY_PROD }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:

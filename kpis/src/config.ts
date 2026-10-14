@@ -71,10 +71,13 @@ export function loadConfig(
   };
 
   if (!args.dryRun) {
+    // Each environment has its own credentials. Never fall back to another
+    // environment's key: report which variable is missing instead.
+    const suffix = kpiEnv.toUpperCase();
     config.publishing = {
-      supabaseUrl: required(env, 'SUPABASE_URL').replace(/\/+$/, ''),
+      supabaseUrl: required(env, `SUPABASE_URL_${suffix}`).replace(/\/+$/, ''),
       publishableKey: required(env, 'SUPABASE_PUBLISHABLE_KEY'),
-      projectKey: required(env, 'PROJECT_KEY'),
+      projectKey: required(env, `PROJECT_KEY_${suffix}`),
     };
   }
 

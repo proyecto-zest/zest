@@ -55,8 +55,11 @@ export async function runReport(config: Config, deps: RunDeps = {}): Promise<num
     return failures.length === 0 ? 0 : 1;
   }
 
-  if (failures.length >= 2) {
-    log(`${failures.length} KPIs could not be measured: nothing is sent. Re-run the workflow today.`);
+  // A derived KPI is a consequence of one failure, not a second failure.
+  const rootFailures = failures.filter((failure) => !failure.derived);
+
+  if (rootFailures.length >= 2) {
+    log(`${rootFailures.length} KPIs could not be measured: nothing is sent. Re-run the workflow today.`);
     return 1;
   }
 
