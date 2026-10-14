@@ -47,7 +47,7 @@ export async function collectAll(config: Config, deps: CollectDeps = {}): Promis
     }
   }
 
-  Object.assign(values, await collectHttpKpis(config.backendUrl, { fetchImpl }));
+  Object.assign(values, await collectHttpKpis(config.backendUrl, { fetchImpl, ...(sleepFn ? { sleepFn } : {}) }));
 
   try {
     for (const id of NEON_KPI_IDS) {

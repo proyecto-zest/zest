@@ -1,6 +1,9 @@
-import { percentile, ratioPercent, round2 } from './math.ts';
+import { percentile, ratioPercent, round2, sleep } from './math.ts';
+import type { SleepFn } from './math.ts';
 
 const WARMUP_TIMEOUT_MS = 120_000;
+const WARMUP_BUDGET_MS = 150_000;
+const WARMUP_PAUSE_MS = 5_000;
 const CALL_TIMEOUT_MS = 10_000;
 const CALL_COUNT = 20;
 
@@ -47,14 +50,28 @@ export async function timedGet(
   }
 }
 
-// Wakes Render up (first request after idle takes about a minute). Not measured.
-async function warmUp(url: string, fetchImpl: FetchFn): Promise<TimedResult> {
-  const first = await timedGet(url, { timeoutMs: WARMUP_TIMEOUT_MS, fetchImpl });
+interface Clock {
+  sleepFn: SleepFn;
+  now: () => number;
+}
 
-  if (first.status !== undefined) {
-    return first;
+// Wakes Render up (first request after idle takes about a minute). Not measured.
+// Waits until /health answers 200, or the time budget runs out: while Render
+// is starting it can answer 502/503 or reset the connection, and that must not
+// be mistaken for a real outage. Always makes at least one retry.
+async function warmUp(url: string, fetchImpl: FetchFn, clock: Clock): Promise<TimedResult> {
+  const deadline = clock.now() + WARMUP_BUDGET_MS;
+  let last = await timedGet(url, { timeoutMs: WARMUP_TIMEOUT_MS, fetchImpl });
+
+  for (let retries = 0; !last.ok; retries++) {
+    if (retries >= 1 && clock.now() + WARMUP_PAUSE_MS >= deadline) {
+      break;
+    }
+    await clock.sleepFn(WARMUP_PAUSE_MS);
+    last = await timedGet(url, { timeoutMs: WARMUP_TIMEOUT_MS, fetchImpl });
   }
-  return timedGet(url, { timeoutMs: WARMUP_TIMEOUT_MS, fetchImpl });
+
+  return last;
 }
 
 export interface HttpKpis {
@@ -67,10 +84,15 @@ export interface HttpKpis {
 // KPIs 4, 5, 7 and 8. A dead backend is real data (0), not a reporting failure.
 export async function collectHttpKpis(
   backendUrl: string,
-  { fetchImpl = fetch, calls = CALL_COUNT }: { fetchImpl?: FetchFn; calls?: number } = {},
+  {
+    fetchImpl = fetch,
+    calls = CALL_COUNT,
+    sleepFn = sleep,
+    now = () => performance.now(),
+  }: { fetchImpl?: FetchFn; calls?: number; sleepFn?: SleepFn; now?: () => number } = {},
 ): Promise<HttpKpis> {
   const url = `${backendUrl}/health`;
-  const warmup = await warmUp(url, fetchImpl);
+  const warmup = await warmUp(url, fetchImpl, { sleepFn, now });
 
   const results: TimedResult[] = [];
   for (let index = 0; index < calls; index++) {
