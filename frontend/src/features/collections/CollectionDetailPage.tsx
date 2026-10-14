@@ -7,7 +7,7 @@ import type { CollectionDetail } from '../../services/collections'
 import type { CollectionRecipeCardData } from '../../types/recipe'
 import { CollectionDetailHeader } from './CollectionDetailHeader'
 import { AddRecipesToCollectionModal } from './AddRecipesToCollectionModal'
-import { CollectionActionDialog } from './CollectionActionDialog'
+import { SaveToCollectionModal } from './SaveToCollectionModal'
 import { CollectionDetailSkeleton } from './CollectionDetailSkeleton'
 import { CollectionRecipeGrid } from './CollectionRecipeGrid'
 import { useCollectionDetail } from './useCollectionDetail'
@@ -33,6 +33,7 @@ function CollectionDetailContent({
   const [dialog, setDialog] = useState<{
     title: 'Add to collection' | 'Save to collection'
     subtitle: string
+    recipe?: CollectionRecipeCardData
   } | null>(null)
   return (
     <div className="flex flex-col gap-7">
@@ -73,7 +74,7 @@ function CollectionDetailContent({
             recipes={state.collection.recipes}
             onSaveRecipe={(recipe) => {
               if (onSaveRecipe) onSaveRecipe(recipe, refresh)
-              else setDialog({ title: 'Save to collection', subtitle: recipe.title })
+              else setDialog({ title: 'Save to collection', subtitle: recipe.title, recipe })
             }}
           />
         </>
@@ -85,8 +86,12 @@ function CollectionDetailContent({
           onClose={() => setDialog(null)}
         />
       )}
-      {dialog?.title === 'Save to collection' && (
-        <CollectionActionDialog {...dialog} onClose={() => setDialog(null)} />
+      {dialog?.title === 'Save to collection' && dialog.recipe && (
+        <SaveToCollectionModal
+          recipe={dialog.recipe}
+          onChanged={refresh}
+          onClose={() => setDialog(null)}
+        />
       )}
     </div>
   )

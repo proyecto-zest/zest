@@ -13,6 +13,21 @@ export interface CollectionSummary {
 export const listCollections = (options?: { signal?: AbortSignal }) =>
   httpClient.get<CollectionSummary[]>('/collections', options)
 
+export interface RecipeCollectionSummary extends CollectionSummary {
+  containsRecipe: boolean
+}
+
+export const listRecipeCollections = (recipeId: string, options?: { signal?: AbortSignal }) =>
+  httpClient.get<RecipeCollectionSummary[]>('/collections', {
+    ...options,
+    query: { recipeId },
+  })
+
+export const removeRecipeFromCollection = (collectionId: string, recipeId: string) =>
+  httpClient.delete<void>(
+    `/collections/${encodeURIComponent(collectionId)}/recipes/${encodeURIComponent(recipeId)}`,
+  )
+
 export interface CollectionDetail extends Omit<CollectionSummary, 'recipeCount'> {
   recipes: CollectionRecipeCardData[]
 }
