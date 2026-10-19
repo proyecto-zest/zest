@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Search, X } from 'lucide-react'
-import { SingleSelectDropdown } from './SingleSelectDropdown'
+import { SingleSelectDropdown } from '../ui/SingleSelectDropdown'
 
 export type SearchField = 'name' | 'author'
 
