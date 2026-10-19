@@ -73,6 +73,26 @@ docker compose up --build
 El servicio `migrate` espera a que PostgreSQL esté sano y aplica las migraciones
 pendientes. La API arranca cuando esa tarea termina correctamente.
 
+## Asignar una receta al planificador
+
+`POST /planner` requiere un access token válido y un usuario local ya sincronizado
+por `GET /users/me`. El usuario se obtiene de la sesión; no se acepta `userId` en
+el body. Permite recetas propias o de otro usuario.
+
+```json
+{ "recipeId": "UUID de la receta", "date": "2026-11-03", "quantity": 2 }
+```
+
+Los tres campos son obligatorios. `date` debe ser una fecha real `YYYY-MM-DD`,
+sin hora ni zona horaria. `quantity` debe ser un entero entre 1 y 100. Repetir
+usuario/receta/fecha suma la cantidad sobre la misma entrada; si el total supera
+100, responde 400 y revierte la operación. Fechas pasadas están permitidas.
+
+Devuelve 201 con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
+y `timeUnit` (el enum actual `MINUTOS`/`HORAS`). `imageUrl` es una URL firmada de
+una foto de la receta, o `null` cuando no hay imágenes. Un UUID de receta
+inexistente devuelve 404; entradas inválidas devuelven 400.
+
 ## Comandos útiles
 
 ```bash
