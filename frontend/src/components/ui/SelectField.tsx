@@ -1,7 +1,7 @@
 import { useId } from 'react'
 import { FieldWrap } from './FieldWrap'
 import { fieldInputClasses } from './fieldInputClasses'
-import { SelectChevron } from './SelectChevron'
+import { SingleSelectDropdown } from './SingleSelectDropdown'
 
 interface SelectFieldProps {
   label?: string
@@ -15,7 +15,10 @@ interface SelectFieldProps {
   'aria-label'?: string
 }
 
-/** Labeled select with a fixed-position chevron instead of the browser's own. */
+/**
+ * Labeled select. Built on `SingleSelectDropdown` rather than a native
+ * `<select>`, so the options always open right under the field, on mobile too.
+ */
 export function SelectField({
   label,
   value,
@@ -29,32 +32,28 @@ export function SelectField({
 }: SelectFieldProps) {
   const id = useId()
   const errorId = `${id}-error`
+  const fieldId = label ? id : undefined
 
   return (
-    <FieldWrap label={label} required={required} error={error} errorId={errorId} htmlFor={label ? id : undefined}>
-      <div className="relative">
-        <select
-          id={label ? id : undefined}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          disabled={disabled}
-          aria-label={label ? undefined : ariaLabel}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-          className={fieldInputClasses(error, 'w-full appearance-none pr-10')}
-        >
-          <option value="" disabled>
-            {placeholder ?? 'Select…'}
-          </option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <SelectChevron />
-      </div>
+    <FieldWrap {...{ label, required, error, errorId }} htmlFor={fieldId} labelId={`${id}-label`}>
+      <SingleSelectDropdown
+        id={fieldId}
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder ?? 'Select…'}
+        disabled={disabled}
+        aria-label={label ? undefined : ariaLabel}
+        // Label text plus the trigger's own text ("Category *, Dinner"), not the
+        // whole <label>, which also holds the open options and the error.
+        aria-labelledby={label ? `${id}-label ${id}` : undefined}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        triggerClassName={fieldInputClasses(
+          error,
+          'flex w-full items-center justify-between gap-2 text-left text-foreground',
+        )}
+      />
     </FieldWrap>
   )
 }
