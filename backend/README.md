@@ -24,6 +24,16 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+La migración `enable_unaccent_search` habilita la extensión PostgreSQL
+[`unaccent`](https://neon.com/docs/extensions/unaccent), soportada por Neon.
+`GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
+mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
+Los filtros se combinan con AND y se paginan en PostgreSQL. La comparación
+normaliza cada texto al consultar: sigue siendo una búsqueda parcial por escaneo,
+no una búsqueda indexada; no se agregan índices ni se reescriben tablas en esta
+migración. Aplicala con `npm run prisma:migrate:deploy` antes de desplegar el código;
+el usuario de migraciones necesita permiso CREATE sobre la base.
+
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
 la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como

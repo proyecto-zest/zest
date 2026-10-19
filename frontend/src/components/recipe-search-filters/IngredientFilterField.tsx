@@ -9,6 +9,9 @@ interface IngredientFilterFieldProps {
   onChange: (ingredientIds: string[]) => void
 }
 
+const normalizeSearchText = (text: string) =>
+  text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
 /**
  * Multi-select for the ingredient filter: a button opens a checkbox list with
  * its own search box (the catalog has 200+ ingredients — scrolling to find
@@ -45,10 +48,10 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
     onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id])
   }
 
-  const filtered = useMemo(
-    () => ingredients.filter((i) => i.name.toLowerCase().includes(query.trim().toLowerCase())),
-    [ingredients, query],
-  )
+  const filtered = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query.trim())
+    return ingredients.filter((i) => normalizeSearchText(i.name).includes(normalizedQuery))
+  }, [ingredients, query])
 
   return (
     <div ref={containerRef} className={`relative ${open ? 'z-dropdown' : ''}`}>
