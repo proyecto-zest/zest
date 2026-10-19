@@ -12,16 +12,24 @@ interface SingleSelectDropdownProps {
   options: Option[]
   value: string
   onChange: (value: string) => void
-  'aria-label': string
+  'aria-label'?: string
   triggerClassName?: string
+  /** Lets a `<label htmlFor>` point at the trigger, as `SelectField` does. */
+  id?: string
+  disabled?: boolean
+  'aria-labelledby'?: string
+  'aria-invalid'?: boolean
+  'aria-describedby'?: string
 }
 
 /**
  * Custom single-select dropdown — a button that opens a listbox styled with
  * the app's own tokens, so the open menu matches the page like the rest of
- * the UI. A native `<select>`'s open dropdown is rendered by the OS/browser
- * and can't be restyled (not even font-family), which is why this exists
- * instead of `SelectField` for the recipe search filters.
+ * the UI. A native `<select>`'s open dropdown is rendered by the OS/browser:
+ * it can't be restyled (not even font-family), and on some mobile browsers it
+ * opens away from the field that was tapped (ZEST-115). This list is
+ * positioned under its own trigger instead, so it backs both the recipe
+ * search filters and every `SelectField`.
  *
  * Keyboard focus stays on the trigger button the whole time (as in the ARIA
  * "collapsible dropdown listbox" pattern) — arrow keys move a virtual
@@ -35,6 +43,11 @@ export function SingleSelectDropdown({
   onChange,
   'aria-label': ariaLabel,
   triggerClassName,
+  id,
+  disabled,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-invalid': ariaInvalid,
+  'aria-describedby': ariaDescribedBy,
 }: SingleSelectDropdownProps) {
   const [open, setOpen] = useState(false)
   const [flash, setFlash] = useState(false)
@@ -62,6 +75,13 @@ export function SingleSelectDropdown({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [open])
 
+  // Long lists (the ingredient catalog) scroll so the highlighted option stays visible.
+  useEffect(() => {
+    if (!open) return
+    const option = document.getElementById(`${listboxId}-option-${activeIndex}`)
+    option?.scrollIntoView({ block: 'nearest' })
+  }, [open, activeIndex, listboxId])
+
   const selected = options.find((option) => option.value === value)
 
   const selectOption = (optionValue: string) => {
@@ -87,7 +107,8 @@ export function SingleSelectDropdown({
       setActiveIndex(options.length - 1)
     } else if ((e.key === 'Enter' || e.key === ' ') && open) {
       e.preventDefault()
-      selectOption(options[activeIndex].value)
+      // The list can be empty while a form's catalog is still loading.
+      if (options[activeIndex]) selectOption(options[activeIndex].value)
     } else if (e.key === 'Escape' && open) {
       e.preventDefault()
       e.stopPropagation()
@@ -106,10 +127,17 @@ export function SingleSelectDropdown({
         aria-controls={listboxId}
         aria-activedescendant={open ? optionId(activeIndex) : undefined}
         aria-label={ariaLabel}
+        id={id}
+        disabled={disabled}
+        aria-labelledby={ariaLabelledBy}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
         onAnimationEnd={() => setFlash(false)}
         className={`${triggerClassName ?? 'flex w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-3.5 py-3 text-base text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50'} ${flash ? 'animate-select-flash' : ''}`}
       >
-        {selected?.label ?? placeholder}
+        <span className={`truncate ${selected ? '' : 'text-muted-foreground'}`}>
+          {selected?.label ?? placeholder}
+        </span>
         <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 

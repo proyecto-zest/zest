@@ -8,16 +8,28 @@ interface FieldWrapProps {
   hint?: string
   errorId: string
   htmlFor?: string
+  /** Id for the label text, for controls that point at it with `aria-labelledby`. */
+  labelId?: string
   className?: string
   children: ReactNode
 }
 
 /** Shared label/required-mark/error/hint chrome for TextField, NumberField, SelectField and TextAreaField. */
-export function FieldWrap({ label, required, error, hint, errorId, htmlFor, className = '', children }: FieldWrapProps) {
+export function FieldWrap({
+  label,
+  required,
+  error,
+  hint,
+  errorId,
+  htmlFor,
+  labelId,
+  className = '',
+  children,
+}: FieldWrapProps) {
   return (
     <label className={`flex flex-col gap-2 ${className}`} htmlFor={htmlFor}>
       {label && (
-        <span className="text-sm font-semibold">
+        <span id={labelId} className="text-sm font-semibold">
           {label}
           {required && <span className="text-error"> *</span>}
         </span>
