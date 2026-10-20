@@ -88,6 +88,64 @@ describeWithDatabase('PlannerEntry model (database)', () => {
     ).resolves.toMatchObject({ quantity: 3 });
   });
 
+  it.each([1, 100])('accepts the quantity boundary %i', async (quantity) => {
+    const entry = await prisma.plannerEntry.create({
+      data: { userId, recipeId, date, quantity },
+    });
+    expect(entry.quantity).toBe(quantity);
+  });
+
+  it.each([0, -1, 101])(
+    'rejects quantity %i directly in the database',
+    async (quantity) => {
+      await expect(
+        prisma.plannerEntry.create({
+          data: { userId, recipeId, date, quantity },
+        }),
+      ).rejects.toThrow(/planner_entries_quantity_check/);
+      expect(await prisma.plannerEntry.count()).toBe(0);
+    },
+  );
+
+  it.each([0, -1, 101])(
+    'rejects an update to quantity %i and preserves the entry',
+    async (quantity) => {
+      const entry = await prisma.plannerEntry.create({
+        data: { userId, recipeId, date, quantity: 3 },
+      });
+      await expect(
+        prisma.plannerEntry.update({
+          where: { id: entry.id },
+          data: { quantity },
+        }),
+      ).rejects.toThrow(/planner_entries_quantity_check/);
+      expect(
+        await prisma.plannerEntry.findUniqueOrThrow({
+          where: { id: entry.id },
+        }),
+      ).toMatchObject({ quantity: 3 });
+    },
+  );
+
+  it('rejects an upsert increment exceeding 100 and preserves the previous quantity', async () => {
+    const entry = await prisma.plannerEntry.create({
+      data: { userId, recipeId, date, quantity: 100 },
+    });
+    await expect(
+      prisma.plannerEntry.upsert({
+        where: { userId_recipeId_date: { userId, recipeId, date } },
+        create: { userId, recipeId, date, quantity: 1 },
+        update: { quantity: { increment: 1 } },
+      }),
+    ).rejects.toThrow(/planner_entries_quantity_check/);
+    expect(
+      await prisma.plannerEntry.findUniqueOrThrow({
+        where: { id: entry.id },
+      }),
+    ).toMatchObject({ quantity: 100 });
+    expect(await prisma.plannerEntry.count()).toBe(1);
+  });
+
   it('rejects the same recipe and date twice for one user', async () => {
     const data = { userId, recipeId, date };
     await prisma.plannerEntry.create({ data });

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
@@ -50,16 +50,16 @@ enum IngredientUnit {
 }
 
 model User {
-  id             String         @id @default(uuid()) @db.Uuid
-  auth0Sub       String         @unique @map("auth0_sub") @db.VarChar
-  name           String         @db.VarChar
-  email          String         @unique @db.VarChar
-  emailVerified  Boolean        @default(false) @map("email_verified")
-  avatarUrl      String?        @map("avatar_url") @db.VarChar
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at")
-  recipes        Recipe[]
-  collections    Collection[]
+  id            String       @id @default(uuid()) @db.Uuid
+  auth0Sub      String       @unique @map("auth0_sub") @db.VarChar
+  name          String       @db.VarChar
+  email         String       @unique @db.VarChar
+  emailVerified Boolean      @default(false) @map("email_verified")
+  avatarUrl     String?      @map("avatar_url") @db.VarChar
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
+  recipes       Recipe[]
+  collections   Collection[]
   plannerEntries PlannerEntry[]
 
   @@map("users")
@@ -68,20 +68,20 @@ model User {
 model Recipe {
   id String @id @default(uuid()) @db.Uuid
 
-  authorId       String             @map("author_id") @db.Uuid
-  title          String             @db.VarChar
-  description    String             @db.Text
-  category       RecipeCategory
-  time           Int
-  timeUnit       RecipeTimeUnit     @map("time_unit")
-  difficulty     RecipeDifficulty
-  servings       Int
-  createdAt      DateTime           @default(now()) @map("created_at")
-  ingredients    RecipeIngredient[]
-  steps          RecipeStep[]
-  images         RecipeImage[]
-  author         User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  collections    CollectionRecipe[]
+  authorId    String             @map("author_id") @db.Uuid
+  title       String             @db.VarChar
+  description String             @db.Text
+  category    RecipeCategory
+  time        Int
+  timeUnit    RecipeTimeUnit     @map("time_unit")
+  difficulty  RecipeDifficulty
+  servings    Int
+  createdAt   DateTime           @default(now()) @map("created_at")
+  ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  images      RecipeImage[]
+  author      User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  collections CollectionRecipe[]
   plannerEntries PlannerEntry[]
 
   @@map("recipes")
@@ -157,6 +157,8 @@ model PlannerEntry {
   userId   String   @map("user_id") @db.Uuid
   recipeId String   @map("recipe_id") @db.Uuid
   date     DateTime @db.Date
+  /// Database CHECK planner_entries_quantity_check enforces 1..100, including increments.
+  /// Defined in migration 20261020130000_constrain_planner_quantity (Prisma cannot model CHECK).
   quantity Int      @default(1)
   user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
