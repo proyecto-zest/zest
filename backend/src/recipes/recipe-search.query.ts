@@ -26,18 +26,17 @@ export function recipeSearchQuery(
     )`);
   }
   if (query.ingredientName) {
-    filters.push(Prisma.sql`EXISTS (
-      SELECT 1 FROM recipe_ingredients ri
-      JOIN ingredients i ON i.id = ri.ingredient_id
-      WHERE ri.recipe_id = r.id
-      AND ${containsNormalized(Prisma.sql`i.name`, query.ingredientName)}
-    )`);
+    filters.push(
+      hasIngredient(Prisma.sql`ri.ingredient_id IN (
+      SELECT i.id FROM ingredients i
+      WHERE ${containsNormalized(Prisma.sql`i.name`, query.ingredientName)}
+    )`),
+    );
   }
   for (const ingredientId of query.ingredient ?? []) {
-    filters.push(Prisma.sql`EXISTS (
-      SELECT 1 FROM recipe_ingredients ri
-      WHERE ri.recipe_id = r.id AND ri.ingredient_id = ${ingredientId}::uuid
-    )`);
+    filters.push(
+      hasIngredient(Prisma.sql`ri.ingredient_id = ${ingredientId}::uuid`),
+    );
   }
   if (query.category !== undefined) {
     filters.push(Prisma.sql`r.category = ${query.category}::"RecipeCategory"`);
@@ -67,9 +66,18 @@ export function recipeSearchQuery(
   `;
 }
 
+function hasIngredient(predicate: Prisma.Sql): Prisma.Sql {
+  return Prisma.sql`EXISTS (
+    SELECT 1 FROM recipe_ingredients ri
+    WHERE ri.recipe_id = r.id AND ${predicate}
+  )`;
+}
+
 function containsNormalized(column: Prisma.Sql, text: string): Prisma.Sql {
-  // Keep the existing partial ILIKE search; normalize BOTH sides so ñ/n
-  // and decomposed accents match too. Input remains a bound parameter.
-  return Prisma.sql`public.unaccent(${column})
-    ILIKE '%' || public.unaccent(${text}::text) || '%'`;
+  // Escape AFTER unaccent too: its dictionary can expand full-width characters
+  // into LIKE metacharacters. "!" is the explicit escape character.
+  return Prisma.sql`public.search_unaccent(${column}) ILIKE
+    '%' || replace(replace(replace(
+      public.search_unaccent(${text}::text), '!', '!!'), '%', '!%'), '_', '!_')
+    || '%' ESCAPE '!'`;
 }

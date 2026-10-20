@@ -2,15 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import type { Ingredient } from '../../features/recipe-create/types'
 import { fieldInputClasses } from '../ui/fieldInputClasses'
+import { normalizeSearchText } from '../../lib/search/normalizeSearchText'
 
 interface IngredientFilterFieldProps {
   ingredients: Ingredient[]
   value: string[]
   onChange: (ingredientIds: string[]) => void
 }
-
-const normalizeSearchText = (text: string) =>
-  text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
 /**
  * Multi-select for the ingredient filter: a button opens a checkbox list with

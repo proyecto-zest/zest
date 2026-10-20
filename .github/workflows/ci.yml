@@ -90,5 +90,8 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Test search normalization
+        run: node --experimental-strip-types --test test/search-normalization.test.ts
+
       - name: Build
         run: npm run build

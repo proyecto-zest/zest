@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import {
   IngredientUnit,
+  Prisma,
   PrismaClient,
   RecipeCategory,
   RecipeDifficulty,
@@ -9,6 +10,8 @@ import {
 import { Test } from '@nestjs/testing';
 import { Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
@@ -18,6 +21,9 @@ import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { resetTestDatabase } from './test-database';
 import { createDefaultTestUser } from './test-users';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { RecipesService } from '../src/recipes/recipes.service';
+import { StorageService } from '../src/storage/storage.service';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -360,6 +366,110 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
   });
 
   describe('accent-insensitive search (ZEST-114)', () => {
+    it('keeps the count and cards on one snapshot during a concurrent deletion', async () => {
+      // Delete from a separate connection exactly between the search and the
+      // card read. The real service must still return its original snapshot.
+      const db = {
+        $transaction: (
+          operation: (tx: Prisma.TransactionClient) => Promise<unknown>,
+          options: { isolationLevel: Prisma.TransactionIsolationLevel },
+        ) =>
+          prisma.$transaction(async (tx) => {
+            const intercepted = new Proxy(tx, {
+              get(target, key) {
+                if (key === '$queryRaw') {
+                  return async (query: Prisma.Sql) => {
+                    const result = await tx.$queryRaw(query);
+                    await prisma.$transaction([
+                      prisma.recipeIngredient.deleteMany({
+                        where: { recipeId: recipes.pastaTomato },
+                      }),
+                      prisma.recipe.delete({
+                        where: { id: recipes.pastaTomato },
+                      }),
+                    ]);
+                    return result;
+                  };
+                }
+                return Reflect.get(target, key) as unknown;
+              },
+            });
+            return operation(intercepted);
+          }, options),
+      } as unknown as PrismaService;
+      const service = new RecipesService(db, app.get(StorageService));
+      const result = await service.findAll({
+        name: 'pasta',
+        page: 1,
+        limit: 20,
+      });
+      expect(result.pagination.total).toBe(3);
+      expect(responseIds(result)).toEqual(
+        new Set([
+          recipes.pastaTomato,
+          recipes.greenPasta,
+          recipes.otherAuthorRecipe,
+        ]),
+      );
+      expect(
+        await prisma.recipe.findUnique({ where: { id: recipes.pastaTomato } }),
+      ).toBeNull();
+    });
+
+    it('uses the same unaccent dictionary as the frontend ingredient picker', async () => {
+      const rules = JSON.parse(
+        readFileSync(
+          resolve(__dirname, '../../frontend/src/lib/search/unaccent.json'),
+          'utf8',
+        ),
+      ) as Record<string, string>;
+      const rows = await prisma.$queryRaw<
+        Array<{ original: string; normalized: string }>
+      >`
+        SELECT original, public.search_unaccent(original) AS normalized
+        FROM unnest(${Object.keys(rules)}::text[]) AS original
+      `;
+      for (const { original, normalized } of rows) {
+        expect({ original, normalized }).toEqual({
+          original,
+          normalized: rules[original],
+        });
+      }
+    });
+
+    it.each(['name', 'ingredientName', 'author'])(
+      'matches LIKE metacharacters literally in %s',
+      async (field) => {
+        const literal = '100%_\\!％';
+        const ingredient = await prisma.ingredient.create({
+          data: { name: literal },
+        });
+        const user = await prisma.user.create({
+          data: {
+            auth0Sub: `auth0|${randomUUID()}`,
+            email: `${randomUUID()}@zest.test`,
+            name: literal,
+          },
+        });
+        const id = await createRecipe(
+          literal,
+          RecipeCategory.CENA,
+          RecipeDifficulty.FACIL,
+          [ingredient.id],
+          user.id,
+        );
+        for (const query of ['%', '_', '\\', '!', '％', literal]) {
+          const response = await request(app.getHttpServer() as Server)
+            .get('/recipes')
+            .query({ [field]: query })
+            .expect(200);
+          expect(
+            responseIds(response.body as PaginatedRecipesResponseDto),
+          ).toEqual(new Set([id]));
+        }
+      },
+    );
+
     const cases = [
       {
         field: 'name',

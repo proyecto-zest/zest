@@ -114,14 +114,41 @@ export class RecipesService {
   ): Promise<PaginatedRecipesResponseDto> {
     const page = query.page;
     const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
-    const [{ total, ids }] = await this.prisma.$queryRaw<RecipeSearchPage[]>(
-      recipeSearchQuery(query, limit),
+    const { total, recipes } = await this.prisma.$transaction(
+      async (tx) => {
+        // The ordinary feed and structured filters stay in typed Prisma.
+        // Raw SQL is needed only when a text predicate must use unaccent.
+        if (!query.name && !query.author && !query.ingredientName) {
+          const where: Prisma.RecipeWhereInput = {
+            category: query.category,
+            difficulty: query.difficulty,
+            authorId: query.authorId,
+            AND: (query.ingredient ?? []).map((ingredientId) => ({
+              ingredients: { some: { ingredientId } },
+            })),
+          };
+          const total = await tx.recipe.count({ where });
+          const recipes = await tx.recipe.findMany({
+            where,
+            select: recipeCardSelect,
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            skip: (page - 1) * limit,
+            take: limit,
+          });
+          return { total, recipes };
+        }
+        const [{ total, ids }] = await tx.$queryRaw<RecipeSearchPage[]>(
+          recipeSearchQuery(query, limit),
+        );
+        const recipes = await tx.recipe.findMany({
+          where: { id: { in: ids } },
+          select: recipeCardSelect,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        });
+        return { total, recipes };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
     );
-    const recipes = await this.prisma.recipe.findMany({
-      where: { id: { in: ids } },
-      select: recipeCardSelect,
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    });
 
     return {
       recipes: await Promise.all(

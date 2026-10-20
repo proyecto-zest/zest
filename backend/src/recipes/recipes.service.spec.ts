@@ -100,6 +100,7 @@ describe('RecipesService', () => {
   >();
   const recipeCreate = jest.fn<Promise<unknown>, [unknown]>();
   const recipeSearch = jest.fn<Promise<RecipeSearchPage[]>, [Prisma.Sql]>();
+  const recipeCount = jest.fn<Promise<number>, [unknown]>();
   const recipeFindMany = jest.fn<
     Promise<Array<Record<string, unknown>>>,
     [unknown]
@@ -148,11 +149,15 @@ describe('RecipesService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     recipeSearch.mockResolvedValue([{ total: 0, ids: [] }]);
+    recipeCount.mockResolvedValue(0);
     runTransaction.mockImplementation(
       async (operation: (transaction: unknown) => Promise<unknown>) =>
         operation({
+          $queryRaw: recipeSearch,
           ingredient: { findMany: ingredientFindMany },
           recipe: {
+            count: recipeCount,
+            findMany: recipeFindMany,
             create: recipeCreate,
             delete: recipeDelete,
             findUniqueOrThrow: transactionRecipeFindUniqueOrThrow,
@@ -258,7 +263,7 @@ describe('RecipesService', () => {
   });
 
   it('returns paginated recipe cards with signed image URLs', async () => {
-    recipeSearch.mockResolvedValue([{ total: 1, ids: [recipeId] }]);
+    recipeCount.mockResolvedValue(1);
     recipeFindMany.mockResolvedValue([
       {
         id: recipeId,
@@ -292,7 +297,7 @@ describe('RecipesService', () => {
   });
 
   it('returns author as null in a recipe card when the recipe has no author record', async () => {
-    recipeSearch.mockResolvedValue([{ total: 1, ids: [recipeId] }]);
+    recipeCount.mockResolvedValue(1);
     recipeFindMany.mockResolvedValue([
       {
         id: recipeId,
@@ -313,7 +318,7 @@ describe('RecipesService', () => {
   });
 
   it('caps the requested limit and calculates pagination', async () => {
-    recipeSearch.mockResolvedValue([{ total: 250, ids: [] }]);
+    recipeCount.mockResolvedValue(250);
     recipeFindMany.mockResolvedValue([]);
 
     await expect(service.findAll({ page: 2, limit: 500 })).resolves.toEqual({
@@ -325,10 +330,15 @@ describe('RecipesService', () => {
         totalPages: 3,
       },
     });
-    expect(recipeSearch.mock.calls[0][0].values.slice(-2)).toEqual([
-      MAX_RECIPES_LIMIT,
-      MAX_RECIPES_LIMIT,
-    ]);
+    expect(runTransaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
+    expect(recipeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: MAX_RECIPES_LIMIT,
+        take: MAX_RECIPES_LIMIT,
+      }),
+    );
   });
 
   it('binds text and structured filters as SQL parameters', async () => {
@@ -347,18 +357,20 @@ describe('RecipesService', () => {
     });
 
     const sql = recipeSearch.mock.calls[0][0];
-    expect(sql.values).toEqual([
-      "limón' OR TRUE --",
-      'santi',
-      'tomat',
-      tomatoId,
-      oilId,
-      RecipeCategory.ALMUERZO,
-      RecipeDifficulty.FACIL,
-      DEFAULT_RECIPE_AUTHOR_ID,
-      20,
-      0,
-    ]);
+    expect(sql.values).toEqual(
+      expect.arrayContaining([
+        "limón' OR TRUE --",
+        'santi',
+        'tomat',
+        tomatoId,
+        oilId,
+        RecipeCategory.ALMUERZO,
+        RecipeDifficulty.FACIL,
+        DEFAULT_RECIPE_AUTHOR_ID,
+        20,
+        0,
+      ]),
+    );
     expect(sql.text).not.toContain("limón' OR TRUE --");
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: { in: [] } } }),
@@ -376,7 +388,8 @@ describe('RecipesService', () => {
       ingredientName: '',
     });
 
-    expect(recipeSearch.mock.calls[0][0].values).toEqual([20, 0]);
+    expect(recipeSearch).not.toHaveBeenCalled();
+    expect(recipeCount).toHaveBeenCalled();
   });
 
   it('returns an empty first page when there are no recipes', async () => {

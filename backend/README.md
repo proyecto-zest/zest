@@ -28,11 +28,37 @@ La migración `enable_unaccent_search` habilita la extensión PostgreSQL
 [`unaccent`](https://neon.com/docs/extensions/unaccent), soportada por Neon.
 `GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
 mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
-Los filtros se combinan con AND y se paginan en PostgreSQL. La comparación
-normaliza cada texto al consultar: sigue siendo una búsqueda parcial por escaneo,
-no una búsqueda indexada; no se agregan índices ni se reescriben tablas en esta
-migración. Aplicala con `npm run prisma:migrate:deploy` antes de desplegar el código;
-el usuario de migraciones necesita permiso CREATE sobre la base.
+Los filtros se combinan con AND y se paginan en PostgreSQL. `%`, `_` y `\`
+se buscan literalmente. La migración adicional `index_accent_search` instala
+`pg_trgm` e índices GIN sobre título, ingrediente y autor, usando una función
+inmutable con el diccionario `public.unaccent` fijo. Si se actualizan sus reglas
+(incluido un upgrade de PostgreSQL), actualizar el mapa del picker del frontend
+y ejecutar `REINDEX INDEX` sobre `recipes_title_search_idx`,
+`ingredients_name_search_idx` y `users_name_search_idx`. Las búsquedas muy cortas
+o poco selectivas todavía pueden requerir escaneos; el conteo exacto tiene costo.
+
+El feed sin texto y sus filtros estructurados usan queries tipadas de Prisma.
+Cuando hay texto, la búsqueda usa SQL parametrizado mediante Prisma para filtrar, contar y
+obtener los IDs de la página: Prisma no permite aplicar `unaccent` a una columna
+en `contains`. Es una excepción localizada a la convención de queries Prisma,
+que debe revisarse con el equipo; no introduce otro query builder. Mantener
+tablas, columnas y casts de `recipe-search.query.ts` sincronizados con el schema;
+los tests de integración cubren todos los filtros. Prisma sigue leyendo y tipando
+los datos de las cards. Ambas consultas comparten una transacción
+`RepeatableRead`; el firmado de imágenes ocurre fuera de ella.
+
+Aplicar `npm run prisma:migrate:deploy` antes de desplegar el código. El usuario
+de `DIRECT_URL` necesita permiso CREATE y acceso a `unaccent` y `pg_trgm`.
+Comprobar en Neon, con ese mismo rol, `has_database_privilege(current_user,
+current_database(), 'CREATE')` y la disponibilidad en `pg_available_extensions`
+antes del deploy. Esta verificación de producción debe hacerla el responsable
+del entorno; las pruebas locales no acreditan sus permisos.
+Las extensiones y los índices de expresión viven en migraciones SQL: Prisma
+6.19 recomienda migraciones personalizadas, no el preview obsoleto
+`postgresqlExtensions`:
+https://docs.prisma.io/docs/orm/v6/prisma-schema/postgresql-extensions
+La shadow DB reproduce estas migraciones; no instalar extensiones manualmente
+solo en la base principal. CI ejecuta los e2e con `RUN_DATABASE_TESTS=true`.
 
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
