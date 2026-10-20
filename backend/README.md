@@ -60,6 +60,10 @@ https://docs.prisma.io/docs/orm/v6/prisma-schema/postgresql-extensions
 La shadow DB reproduce estas migraciones; no instalar extensiones manualmente
 solo en la base principal. CI ejecuta los e2e con `RUN_DATABASE_TESTS=true`.
 
+`stabilize_fraction_search` unifica la expansión de fracciones entre PostgreSQL
+16 y 17 (`½` → ` 1/2`) antes de aplicar `unaccent` y reconstruye los índices.
+Así, el mismo texto se normaliza igual en CI, local y el picker del frontend.
+
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
 la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como

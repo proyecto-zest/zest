@@ -5,7 +5,10 @@ https://github.com/postgres/postgres/blob/REL_17_STABLE/contrib/unaccent/unaccen
 
 This keeps the local ingredient picker consistent with the API, including
 ligatures and combining accents. The database integration tests compare the
-whole mapping with the installed PostgreSQL dictionary. When upgrading
+whole mapping with the database's `search_unaccent` function. PostgreSQL 16
+and 17 differ in fraction expansion: the SQL wrapper explicitly expands
+fractions with a leading space (the PostgreSQL 17 convention) on both versions.
+When upgrading
 PostgreSQL or changing that dictionary, update the mapping and rebuild the
 search indexes together. Do not customize the database dictionary separately.
 

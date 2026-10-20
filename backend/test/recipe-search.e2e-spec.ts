@@ -416,7 +416,7 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
       ).toBeNull();
     });
 
-    it('uses the same unaccent dictionary as the frontend ingredient picker', async () => {
+    it('uses the same normalization as the frontend ingredient picker', async () => {
       const rules = JSON.parse(
         readFileSync(
           resolve(__dirname, '../../frontend/src/lib/search/unaccent.json'),
@@ -471,6 +471,11 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
     );
 
     const cases = [
+      {
+        field: 'name',
+        stored: ['Sopa 1½ limón', 'Sopa 1 1/2 limon'],
+        queries: ['sopa 1½ limón', 'sopa 1 1/2 limon', 'SOPA 1½ LIMÓN'],
+      },
       {
         field: 'name',
         stored: [
