@@ -10,8 +10,6 @@ import {
 import { Test } from '@nestjs/testing';
 import { Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
@@ -416,27 +414,6 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
       ).toBeNull();
     });
 
-    it('uses the same normalization as the frontend ingredient picker', async () => {
-      const rules = JSON.parse(
-        readFileSync(
-          resolve(__dirname, '../../frontend/src/lib/search/unaccent.json'),
-          'utf8',
-        ),
-      ) as Record<string, string>;
-      const rows = await prisma.$queryRaw<
-        Array<{ original: string; normalized: string }>
-      >`
-        SELECT original, public.search_unaccent(original) AS normalized
-        FROM unnest(${Object.keys(rules)}::text[]) AS original
-      `;
-      for (const { original, normalized } of rows) {
-        expect({ original, normalized }).toEqual({
-          original,
-          normalized: rules[original],
-        });
-      }
-    });
-
     it.each(['name', 'ingredientName', 'author'])(
       'matches LIKE metacharacters literally in %s',
       async (field) => {
@@ -471,11 +448,6 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
     );
 
     const cases = [
-      {
-        field: 'name',
-        stored: ['Sopa 1½ limón', 'Sopa 1 1/2 limon'],
-        queries: ['sopa 1½ limón', 'sopa 1 1/2 limon', 'SOPA 1½ LIMÓN'],
-      },
       {
         field: 'name',
         stored: [

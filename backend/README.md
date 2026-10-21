@@ -32,8 +32,7 @@ Los filtros se combinan con AND y se paginan en PostgreSQL. `%`, `_` y `\`
 se buscan literalmente. La migración adicional `index_accent_search` instala
 `pg_trgm` e índices GIN sobre título, ingrediente y autor, usando una función
 inmutable con el diccionario `public.unaccent` fijo. Si se actualizan sus reglas
-(incluido un upgrade de PostgreSQL), actualizar el mapa del picker del frontend
-y ejecutar `REINDEX INDEX` sobre `recipes_title_search_idx`,
+(incluido un upgrade de PostgreSQL), ejecutar `REINDEX INDEX` sobre `recipes_title_search_idx`,
 `ingredients_name_search_idx` y `users_name_search_idx`. Las búsquedas muy cortas
 o poco selectivas todavía pueden requerir escaneos; el conteo exacto tiene costo.
 
@@ -60,9 +59,18 @@ https://docs.prisma.io/docs/orm/v6/prisma-schema/postgresql-extensions
 La shadow DB reproduce estas migraciones; no instalar extensiones manualmente
 solo en la base principal. CI ejecuta los e2e con `RUN_DATABASE_TESTS=true`.
 
-`stabilize_fraction_search` unifica la expansión de fracciones entre PostgreSQL
-16 y 17 (`½` → ` 1/2`) antes de aplicar `unaccent` y reconstruye los índices.
-Así, el mismo texto se normaliza igual en CI, local y el picker del frontend.
+El picker del catálogo usa NFD para ignorar tildes y mayúsculas, sin copiar el
+diccionario de PostgreSQL al bundle. Caracteres como `ß`, `æ`, `ø` o `ł` pueden
+tener equivalencias adicionales en el backend; se acepta esa diferencia para
+mantener simple el filtro local. La transliteración de fracciones también puede
+variar entre versiones de PostgreSQL y queda fuera del contrato de este fix.
+CI corre la suite sobre PostgreSQL 16, cubriendo tildes, mayúsculas y `ñ`.
+
+`simplify_search_normalization` retira la compatibilidad especial de fracciones
+que había agregado `stabilize_fraction_search`. Se conservan las migraciones
+aplicadas; la nueva función vuelve a delegar en `unaccent`. Los `REINDEX` son
+necesarios si la base ya tiene datos indexados con la función anterior, aunque
+repitan trabajo en una instalación limpia que aplica todo el historial junto.
 
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es

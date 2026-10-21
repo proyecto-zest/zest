@@ -357,20 +357,18 @@ describe('RecipesService', () => {
     });
 
     const sql = recipeSearch.mock.calls[0][0];
-    expect(sql.values).toEqual(
-      expect.arrayContaining([
-        "limón' OR TRUE --",
-        'santi',
-        'tomat',
-        tomatoId,
-        oilId,
-        RecipeCategory.ALMUERZO,
-        RecipeDifficulty.FACIL,
-        DEFAULT_RECIPE_AUTHOR_ID,
-        20,
-        0,
-      ]),
-    );
+    expect(sql.values).toEqual([
+      "limón' OR TRUE --",
+      'santi',
+      'tomat',
+      tomatoId,
+      oilId,
+      RecipeCategory.ALMUERZO,
+      RecipeDifficulty.FACIL,
+      DEFAULT_RECIPE_AUTHOR_ID,
+      20,
+      0,
+    ]);
     expect(sql.text).not.toContain("limón' OR TRUE --");
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: { in: [] } } }),
