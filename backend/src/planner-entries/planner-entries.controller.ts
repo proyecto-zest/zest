@@ -13,6 +13,7 @@ export class PlannerEntriesController {
   constructor(private readonly plannerEntriesService: PlannerEntriesService) {}
 
   @Post()
+  // The assignment returns 201 both for a new entry and an accumulated quantity.
   create(
     @CurrentUser() user: UserResponseDto,
     @Body() dto: CreatePlannerEntryDto,

@@ -88,10 +88,19 @@ sin hora ni zona horaria. `quantity` debe ser un entero entre 1 y 100. Repetir
 usuario/receta/fecha suma la cantidad sobre la misma entrada; si el total supera
 100, responde 400 y revierte la operación. Fechas pasadas están permitidas.
 
-Devuelve 201 con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
+Devuelve 201 tanto al crear una entrada como al incrementar una existente,
+con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
 y `timeUnit` (el enum actual `MINUTOS`/`HORAS`). `imageUrl` es una URL firmada de
 una foto de la receta, o `null` cuando no hay imágenes. Un UUID de receta
 inexistente devuelve 404; entradas inválidas devuelven 400.
+
+La base también exige `quantity` entre 1 y 100 mediante el `CHECK` de ZEST-118;
+su rechazo se traduce a 400 y no modifica la cantidad anterior.
+El planner selecciona la imagen por ID ascendente, igual que las cards. Es un
+criterio estable, no un orden de subida ni una portada marcada en el modelo.
+La URL se firma fuera de la transacción, antes de escribir: si el firmado falla,
+no se crea ni incrementa la entrada. El upsert utiliza `ON CONFLICT` para sumar
+atómicamente incluso con requests concurrentes.
 
 ## Comandos útiles
 

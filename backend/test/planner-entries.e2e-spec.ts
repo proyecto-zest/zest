@@ -16,6 +16,8 @@ import { PlannerEntryResponseDto } from '../src/planner-entries/dto/planner-entr
 import { MAX_PLANNER_QUANTITY } from '../src/planner-entries/planner-entries.constants';
 import { PlannerEntriesModule } from '../src/planner-entries/planner-entries.module';
 import { PrismaModule } from '../src/prisma/prisma.module';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { RecipesService } from '../src/recipes/recipes.service';
 import { StorageService } from '../src/storage/storage.service';
 import { authTestConfigModuleOptions } from './auth-test-helper';
 import {
@@ -155,6 +157,37 @@ describeWithDatabase('POST /planner (e2e)', () => {
     expect(getSignedReadUrl).not.toHaveBeenCalled();
   });
 
+  it('selects the same stable first image as the recipe feed', async () => {
+    await prisma.recipeImage.deleteMany({ where: { recipeId } });
+    await prisma.recipeImage.createMany({
+      data: [
+        {
+          id: 'ffffffff-ffff-4fff-8fff-ffffffffffff',
+          recipeId,
+          s3Key: 'recipes/second.webp',
+        },
+        {
+          id: '00000000-0000-4000-8000-000000000001',
+          recipeId,
+          s3Key: imageKey,
+        },
+      ],
+    });
+    const feedService = new RecipesService(
+      app.get(PrismaService),
+      app.get(StorageService),
+    );
+    const feed = await feedService.findAll({ page: 1, limit: 20 });
+    const first = await post(payload()).expect(201);
+    const second = await post(payload()).expect(201);
+    expect((first.body as PlannerEntryResponseDto).imageUrl).toBe(
+      feed.recipes[0].imageUrls[0],
+    );
+    expect((second.body as PlannerEntryResponseDto).imageUrl).toBe(
+      `https://signed.test/${imageKey}`,
+    );
+  });
+
   it('increments the same entry on repeated assignment', async () => {
     const first = await post(payload()).expect(201);
     const second = await post(payload({ quantity: 3 })).expect(201);
@@ -282,6 +315,16 @@ describeWithDatabase('POST /planner (e2e)', () => {
     expect((response.body as { message: string }).message).toBe(
       'Recipe not found',
     );
+    expect(await prisma.plannerEntry.count()).toBe(0);
+  });
+
+  it('returns 404 if the recipe is deleted after lookup but before writing', async () => {
+    getSignedReadUrl.mockImplementationOnce(async () => {
+      await prisma.recipeImage.deleteMany({ where: { recipeId } });
+      await prisma.recipe.delete({ where: { id: recipeId } });
+      return 'https://signed.test/deleted.webp';
+    });
+    await post(payload()).expect(404);
     expect(await prisma.plannerEntry.count()).toBe(0);
   });
 
