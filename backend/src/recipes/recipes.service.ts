@@ -31,6 +31,7 @@ import {
 } from './dto/recipe-response.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { MAX_RECIPES_LIMIT } from './recipes.constants';
+import { RecipeSearchPage, recipeSearchQuery } from './recipe-search.query';
 
 const recipeAuthorSelect = {
   select: { id: true, name: true, avatarUrl: true },
@@ -113,66 +114,41 @@ export class RecipesService {
   ): Promise<PaginatedRecipesResponseDto> {
     const page = query.page;
     const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
-    const filters: Prisma.RecipeWhereInput[] = [];
-
-    if (query.name !== undefined) {
-      filters.push({
-        title: { contains: query.name, mode: 'insensitive' },
-      });
-    }
-
-    for (const ingredientId of query.ingredient ?? []) {
-      filters.push({
-        ingredients: { some: { ingredientId } },
-      });
-    }
-
-    if (query.category !== undefined) {
-      filters.push({ category: query.category });
-    }
-
-    if (query.difficulty !== undefined) {
-      filters.push({ difficulty: query.difficulty });
-    }
-
-    if (query.authorId !== undefined) {
-      filters.push({ authorId: query.authorId });
-    }
-
-    // An empty `author` string must not filter — only a non-empty value
-    // narrows to a partial, case-insensitive match against the author's name.
-    if (query.author !== undefined && query.author !== '') {
-      filters.push({
-        author: { name: { contains: query.author, mode: 'insensitive' } },
-      });
-    }
-
-    // Free-text ingredient search (e.g. the "Add to collection" modal). Like
-    // `author`, an empty string must not filter.
-    if (query.ingredientName !== undefined && query.ingredientName !== '') {
-      filters.push({
-        ingredients: {
-          some: {
-            ingredient: {
-              name: { contains: query.ingredientName, mode: 'insensitive' },
-            },
-          },
-        },
-      });
-    }
-
-    const where: Prisma.RecipeWhereInput =
-      filters.length > 0 ? { AND: filters } : {};
-    const [total, recipes] = await Promise.all([
-      this.prisma.recipe.count({ where }),
-      this.prisma.recipe.findMany({
-        where,
-        select: recipeCardSelect,
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-    ]);
+    const { total, recipes } = await this.prisma.$transaction(
+      async (tx) => {
+        // The ordinary feed and structured filters stay in typed Prisma.
+        // Raw SQL is needed only when a text predicate must use unaccent.
+        if (!query.name && !query.author && !query.ingredientName) {
+          const where: Prisma.RecipeWhereInput = {
+            category: query.category,
+            difficulty: query.difficulty,
+            authorId: query.authorId,
+            AND: (query.ingredient ?? []).map((ingredientId) => ({
+              ingredients: { some: { ingredientId } },
+            })),
+          };
+          const total = await tx.recipe.count({ where });
+          const recipes = await tx.recipe.findMany({
+            where,
+            select: recipeCardSelect,
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            skip: (page - 1) * limit,
+            take: limit,
+          });
+          return { total, recipes };
+        }
+        const [{ total, ids }] = await tx.$queryRaw<RecipeSearchPage[]>(
+          recipeSearchQuery(query, limit),
+        );
+        const recipes = await tx.recipe.findMany({
+          where: { id: { in: ids } },
+          select: recipeCardSelect,
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        });
+        return { total, recipes };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
 
     return {
       recipes: await Promise.all(

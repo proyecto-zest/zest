@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import {
   IngredientUnit,
+  Prisma,
   PrismaClient,
   RecipeCategory,
   RecipeDifficulty,
@@ -8,6 +9,7 @@ import {
 } from '@prisma/client';
 import { Test } from '@nestjs/testing';
 import { Server } from 'node:http';
+import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
@@ -17,6 +19,9 @@ import { PaginatedRecipesResponseDto } from '../src/recipes/dto/recipe-response.
 import { DEFAULT_RECIPE_AUTHOR_ID } from '../src/recipes/recipes.constants';
 import { resetTestDatabase } from './test-database';
 import { createDefaultTestUser } from './test-users';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { RecipesService } from '../src/recipes/recipes.service';
+import { StorageService } from '../src/storage/storage.service';
 
 const describeWithDatabase =
   process.env.RUN_DATABASE_TESTS === 'true' ? describe : describe.skip;
@@ -356,5 +361,243 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
       limit: 2,
       totalPages: 3,
     });
+  });
+
+  describe('accent-insensitive search (ZEST-114)', () => {
+    it('keeps the count and cards on one snapshot during a concurrent deletion', async () => {
+      // Delete from a separate connection exactly between the search and the
+      // card read. The real service must still return its original snapshot.
+      const db = {
+        $transaction: (
+          operation: (tx: Prisma.TransactionClient) => Promise<unknown>,
+          options: { isolationLevel: Prisma.TransactionIsolationLevel },
+        ) =>
+          prisma.$transaction(async (tx) => {
+            const intercepted = new Proxy(tx, {
+              get(target, key) {
+                if (key === '$queryRaw') {
+                  return async (query: Prisma.Sql) => {
+                    const result = await tx.$queryRaw(query);
+                    await prisma.$transaction([
+                      prisma.recipeIngredient.deleteMany({
+                        where: { recipeId: recipes.pastaTomato },
+                      }),
+                      prisma.recipe.delete({
+                        where: { id: recipes.pastaTomato },
+                      }),
+                    ]);
+                    return result;
+                  };
+                }
+                return Reflect.get(target, key) as unknown;
+              },
+            });
+            return operation(intercepted);
+          }, options),
+      } as unknown as PrismaService;
+      const service = new RecipesService(db, app.get(StorageService));
+      const result = await service.findAll({
+        name: 'pasta',
+        page: 1,
+        limit: 20,
+      });
+      expect(result.pagination.total).toBe(3);
+      expect(responseIds(result)).toEqual(
+        new Set([
+          recipes.pastaTomato,
+          recipes.greenPasta,
+          recipes.otherAuthorRecipe,
+        ]),
+      );
+      expect(
+        await prisma.recipe.findUnique({ where: { id: recipes.pastaTomato } }),
+      ).toBeNull();
+    });
+
+    it.each(['name', 'ingredientName', 'author'])(
+      'matches LIKE metacharacters literally in %s',
+      async (field) => {
+        const literal = '100%_\\!％';
+        const ingredient = await prisma.ingredient.create({
+          data: { name: literal },
+        });
+        const user = await prisma.user.create({
+          data: {
+            auth0Sub: `auth0|${randomUUID()}`,
+            email: `${randomUUID()}@zest.test`,
+            name: literal,
+          },
+        });
+        const id = await createRecipe(
+          literal,
+          RecipeCategory.CENA,
+          RecipeDifficulty.FACIL,
+          [ingredient.id],
+          user.id,
+        );
+        for (const query of ['%', '_', '\\', '!', '％', literal]) {
+          const response = await request(app.getHttpServer() as Server)
+            .get('/recipes')
+            .query({ [field]: query })
+            .expect(200);
+          expect(
+            responseIds(response.body as PaginatedRecipesResponseDto),
+          ).toEqual(new Set([id]));
+        }
+      },
+    );
+
+    const cases = [
+      {
+        field: 'name',
+        stored: [
+          'Pollo al horno con puré de limón',
+          'Pollo al horno con pure de limon',
+        ],
+        queries: ['puré de limón', 'pure de limon', 'PURÉ DE LIMÓN'],
+      },
+      {
+        field: 'ingredientName',
+        stored: ['ají amarillo', 'aji amarillo'],
+        queries: ['ají', 'aji', 'AJÍ'],
+      },
+      {
+        field: 'author',
+        stored: ['Inés Muñoz', 'Ines Munoz'],
+        queries: ['inés muñoz', 'ines munoz', 'INÉS MUÑOZ'],
+      },
+      {
+        field: 'name',
+        stored: ['Piña asada', 'Pina asada'],
+        queries: ['piña', 'pina', 'PIÑA'],
+      },
+      {
+        field: 'ingredientName',
+        stored: ['piñón', 'pinon'],
+        queries: ['piñón', 'pinon', 'PIÑÓN'],
+      },
+    ];
+
+    it.each(cases)(
+      'matches accented and plain $field values: $stored',
+      async ({ field, stored, queries }) => {
+        const expectedIds: string[] = [];
+        for (const value of stored) {
+          let authorId = DEFAULT_RECIPE_AUTHOR_ID;
+          let ingredientIds = [tomatoId];
+          if (field === 'author') {
+            const user = await prisma.user.create({
+              data: {
+                auth0Sub: `auth0|${randomUUID()}`,
+                email: `${randomUUID()}@zest.test`,
+                name: value,
+              },
+            });
+            authorId = user.id;
+          }
+          if (field === 'ingredientName') {
+            const ingredient = await prisma.ingredient.create({
+              data: { name: value },
+            });
+            ingredientIds = [ingredient.id];
+          }
+          expectedIds.push(
+            await createRecipe(
+              field === 'name' ? value : 'Accent search recipe',
+              RecipeCategory.ALMUERZO,
+              RecipeDifficulty.FACIL,
+              ingredientIds,
+              authorId,
+            ),
+          );
+        }
+
+        // NFD covers text entered with decomposed combining accents too.
+        for (const value of [...queries, queries[0].normalize('NFD')]) {
+          const response = await request(app.getHttpServer() as Server)
+            .get('/recipes')
+            .query({ [field]: value })
+            .expect(200);
+          const body = response.body as PaginatedRecipesResponseDto;
+          expect(responseIds(body)).toEqual(new Set(expectedIds));
+          expect(body.pagination.total).toBe(2);
+        }
+      },
+    );
+
+    it('combines normalized text with every existing filter and paginates matches', async () => {
+      await prisma.user.update({
+        where: { id: otherAuthorId },
+        data: { name: 'Inés Muñoz' },
+      });
+      const chili = await prisma.ingredient.create({
+        data: { name: 'ají amarillo' },
+      });
+      const createdIds: string[] = [];
+      for (let index = 0; index < 3; index++) {
+        const id = await createRecipe(
+          `Pollo con puré ${index}`,
+          RecipeCategory.CENA,
+          RecipeDifficulty.MEDIA,
+          [chili.id, tomatoId],
+          otherAuthorId,
+        );
+        await prisma.recipe.update({
+          where: { id },
+          data: { createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, index)) },
+        });
+        createdIds.push(id);
+      }
+      const filters = {
+        name: 'PURE',
+        author: 'INES MUNOZ',
+        ingredientName: 'AJI',
+        ingredient: [chili.id, tomatoId],
+        category: RecipeCategory.CENA,
+        difficulty: RecipeDifficulty.MEDIA,
+        authorId: otherAuthorId,
+        limit: 2,
+      };
+      const pages: PaginatedRecipesResponseDto[] = [];
+      for (const page of [1, 2, 3]) {
+        const response = await request(app.getHttpServer() as Server)
+          .get('/recipes')
+          .query({ ...filters, page })
+          .expect(200);
+        const body = response.body as PaginatedRecipesResponseDto;
+        expect(body.pagination).toEqual({
+          total: 3,
+          page,
+          limit: 2,
+          totalPages: 2,
+        });
+        pages.push(body);
+      }
+      expect(
+        pages.flatMap(({ recipes }) => recipes.map(({ id }) => id)),
+      ).toEqual([...createdIds].reverse());
+      expect(pages[2].recipes).toEqual([]);
+
+      const response = await request(app.getHttpServer() as Server)
+        .get('/recipes')
+        .query({ ...filters, difficulty: RecipeDifficulty.DIFICIL })
+        .expect(200);
+      expect(
+        (response.body as PaginatedRecipesResponseDto).pagination.total,
+      ).toBe(0);
+    });
+
+    it.each(['name', 'ingredientName', 'author'])(
+      'treats quotes and SQL-like input as text in %s',
+      async (field) => {
+        const response = await request(app.getHttpServer() as Server)
+          .get('/recipes')
+          .query({ [field]: "' OR TRUE --" })
+          .expect(200);
+        const body = response.body as PaginatedRecipesResponseDto;
+        expect(body.recipes).toEqual([]);
+        expect(body.pagination.total).toBe(0);
+      },
+    );
   });
 });

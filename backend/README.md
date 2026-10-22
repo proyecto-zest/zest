@@ -24,6 +24,25 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+`GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
+mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
+Los filtros se combinan con AND; `%`, `_` y `\` se buscan literalmente.
+`enable_unaccent_search` habilita `unaccent` e `index_accent_search` agrega
+`pg_trgm`, la función simple `search_unaccent` y los índices GIN de búsqueda.
+Aplicar las migraciones con `npm run prisma:migrate:deploy`; el rol de
+`DIRECT_URL` necesita permisos para instalar ambas extensiones.
+
+Los filtros de texto usan SQL parametrizado mediante Prisma para aplicar
+`unaccent`; el resto del feed usa Prisma tipado. El conteo y las cards se leen
+en una transacción `RepeatableRead`, con el firmado de imágenes afuera.
+Si cambia el diccionario de `unaccent`, reconstruir los índices
+`recipes_title_search_idx`, `ingredients_name_search_idx` y `users_name_search_idx`.
+Las búsquedas cortas o poco selectivas pueden requerir escaneos.
+
+El filtro local de ingredientes usa NFD. No replica las equivalencias de
+caracteres como `ß`, `æ`, `ø`, `ł` o fracciones de PostgreSQL. CI verifica la
+búsqueda sin tildes y mayúsculas sobre PostgreSQL 16.
+
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
 la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como
