@@ -24,53 +24,24 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
-La migración `enable_unaccent_search` habilita la extensión PostgreSQL
-[`unaccent`](https://neon.com/docs/extensions/unaccent), soportada por Neon.
 `GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
 mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
-Los filtros se combinan con AND y se paginan en PostgreSQL. `%`, `_` y `\`
-se buscan literalmente. La migración adicional `index_accent_search` instala
-`pg_trgm` e índices GIN sobre título, ingrediente y autor, usando una función
-inmutable con el diccionario `public.unaccent` fijo. Si se actualizan sus reglas
-(incluido un upgrade de PostgreSQL), ejecutar `REINDEX INDEX` sobre `recipes_title_search_idx`,
-`ingredients_name_search_idx` y `users_name_search_idx`. Las búsquedas muy cortas
-o poco selectivas todavía pueden requerir escaneos; el conteo exacto tiene costo.
+Los filtros se combinan con AND; `%`, `_` y `\` se buscan literalmente.
+`enable_unaccent_search` habilita `unaccent` e `index_accent_search` agrega
+`pg_trgm`, la función simple `search_unaccent` y los índices GIN de búsqueda.
+Aplicar las migraciones con `npm run prisma:migrate:deploy`; el rol de
+`DIRECT_URL` necesita permisos para instalar ambas extensiones.
 
-El feed sin texto y sus filtros estructurados usan queries tipadas de Prisma.
-Cuando hay texto, la búsqueda usa SQL parametrizado mediante Prisma para filtrar, contar y
-obtener los IDs de la página: Prisma no permite aplicar `unaccent` a una columna
-en `contains`. Es una excepción localizada a la convención de queries Prisma,
-que debe revisarse con el equipo; no introduce otro query builder. Mantener
-tablas, columnas y casts de `recipe-search.query.ts` sincronizados con el schema;
-los tests de integración cubren todos los filtros. Prisma sigue leyendo y tipando
-los datos de las cards. Ambas consultas comparten una transacción
-`RepeatableRead`; el firmado de imágenes ocurre fuera de ella.
+Los filtros de texto usan SQL parametrizado mediante Prisma para aplicar
+`unaccent`; el resto del feed usa Prisma tipado. El conteo y las cards se leen
+en una transacción `RepeatableRead`, con el firmado de imágenes afuera.
+Si cambia el diccionario de `unaccent`, reconstruir los índices
+`recipes_title_search_idx`, `ingredients_name_search_idx` y `users_name_search_idx`.
+Las búsquedas cortas o poco selectivas pueden requerir escaneos.
 
-Aplicar `npm run prisma:migrate:deploy` antes de desplegar el código. El usuario
-de `DIRECT_URL` necesita permiso CREATE y acceso a `unaccent` y `pg_trgm`.
-Comprobar en Neon, con ese mismo rol, `has_database_privilege(current_user,
-current_database(), 'CREATE')` y la disponibilidad en `pg_available_extensions`
-antes del deploy. Esta verificación de producción debe hacerla el responsable
-del entorno; las pruebas locales no acreditan sus permisos.
-Las extensiones y los índices de expresión viven en migraciones SQL: Prisma
-6.19 recomienda migraciones personalizadas, no el preview obsoleto
-`postgresqlExtensions`:
-https://docs.prisma.io/docs/orm/v6/prisma-schema/postgresql-extensions
-La shadow DB reproduce estas migraciones; no instalar extensiones manualmente
-solo en la base principal. CI ejecuta los e2e con `RUN_DATABASE_TESTS=true`.
-
-El picker del catálogo usa NFD para ignorar tildes y mayúsculas, sin copiar el
-diccionario de PostgreSQL al bundle. Caracteres como `ß`, `æ`, `ø` o `ł` pueden
-tener equivalencias adicionales en el backend; se acepta esa diferencia para
-mantener simple el filtro local. La transliteración de fracciones también puede
-variar entre versiones de PostgreSQL y queda fuera del contrato de este fix.
-CI corre la suite sobre PostgreSQL 16, cubriendo tildes, mayúsculas y `ñ`.
-
-`simplify_search_normalization` retira la compatibilidad especial de fracciones
-que había agregado `stabilize_fraction_search`. Se conservan las migraciones
-aplicadas; la nueva función vuelve a delegar en `unaccent`. Los `REINDEX` son
-necesarios si la base ya tiene datos indexados con la función anterior, aunque
-repitan trabajo en una instalación limpia que aplica todo el historial junto.
+El filtro local de ingredientes usa NFD. No replica las equivalencias de
+caracteres como `ß`, `æ`, `ø`, `ł` o fracciones de PostgreSQL. CI verifica la
+búsqueda sin tildes y mayúsculas sobre PostgreSQL 16.
 
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
