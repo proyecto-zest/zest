@@ -334,6 +334,18 @@ describeWithDatabase('POST /planner (e2e)', () => {
     expect(await prisma.plannerEntry.count()).toBe(0);
   });
 
+  it('returns 401 if the user is deleted after authentication but before writing', async () => {
+    getSignedReadUrl.mockImplementationOnce(async () => {
+      await prisma.user.delete({ where: { id: currentUserId } });
+      return `https://signed.test/${imageKey}`;
+    });
+    const response = await post(payload()).expect(401);
+    expect((response.body as { message: string }).message).toContain(
+      'GET /users/me',
+    );
+    expect(await prisma.plannerEntry.count()).toBe(0);
+  });
+
   it('registers POST /planner under the real global guard and rejects a missing token', async () => {
     const protectedApp = await buildApp(true);
     await protectedApp.init();

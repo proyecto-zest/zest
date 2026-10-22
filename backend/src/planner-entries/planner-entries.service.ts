@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -46,71 +47,23 @@ export class PlannerEntriesService {
     }
 
     const imageKey = recipe.images[0]?.s3Key;
-    // Sign outside the transaction, before writing: a signing failure leaves
+    // Sign before writing: a signing failure leaves
     // no increment behind for the client to accidentally retry.
     const imageUrl = imageKey
       ? await this.storageService.getSignedReadUrl(imageKey)
       : null;
 
-    const entry = await this.prisma
-      .$transaction(async (transaction) => {
-        // The unique key prevents duplicates; the database ON CONFLICT upsert
-        // makes the increment atomic. Do not replace it with read-then-update.
-        // The database CHECK enforces 1..100; retain the guard as a fallback.
-        const entry = await transaction.plannerEntry.upsert({
-          where: {
-            userId_recipeId_date: { userId, recipeId: recipe.id, date },
-          },
-          create: { userId, recipeId: recipe.id, date, quantity: dto.quantity },
-          update: { quantity: { increment: dto.quantity } },
-        });
-        if (entry.quantity > MAX_PLANNER_QUANTITY) {
-          throw new BadRequestException(
-            `Total quantity for this recipe and date must not exceed ${MAX_PLANNER_QUANTITY}`,
-          );
-        }
-        return entry;
+    // ON CONFLICT makes the increment atomic; the database CHECK enforces
+    // 1..100. No additional transaction or read-then-update is needed.
+    const entry = await this.prisma.plannerEntry
+      .upsert({
+        where: {
+          userId_recipeId_date: { userId, recipeId: recipe.id, date },
+        },
+        create: { userId, recipeId: recipe.id, date, quantity: dto.quantity },
+        update: { quantity: { increment: dto.quantity } },
       })
-      .catch((error: unknown) => {
-        // Prisma 6 reports native ON CONFLICT CHECK/FK errors as UnknownRequestError.
-        // Match both the PostgreSQL code and our exact constraint, never all DB errors.
-        if (error instanceof Prisma.PrismaClientUnknownRequestError) {
-          if (
-            error.message.includes('23514') &&
-            error.message.includes('planner_entries_quantity_check')
-          ) {
-            throw new BadRequestException(
-              `Total quantity for this recipe and date must not exceed ${MAX_PLANNER_QUANTITY}`,
-            );
-          }
-          if (
-            error.message.includes('23503') &&
-            error.message.includes('planner_entries_recipe_id_fkey')
-          ) {
-            throw new NotFoundException('Recipe not found');
-          }
-        }
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          if (
-            error.code === 'P2004' &&
-            error.message.includes('planner_entries_quantity_check')
-          ) {
-            throw new BadRequestException(
-              `Total quantity for this recipe and date must not exceed ${MAX_PLANNER_QUANTITY}`,
-            );
-          }
-          // The recipe can be deleted between the lookup and the upsert.
-          if (
-            error.code === 'P2003' &&
-            String(error.meta?.constraint ?? error.meta?.field_name).includes(
-              'planner_entries_recipe_id_fkey',
-            )
-          ) {
-            throw new NotFoundException('Recipe not found');
-          }
-        }
-        throw error;
-      });
+      .catch((error: unknown) => this.rethrowPersistenceError(error));
 
     return {
       id: entry.id,
@@ -122,5 +75,49 @@ export class PlannerEntriesService {
       time: recipe.time,
       timeUnit: recipe.timeUnit,
     };
+  }
+
+  private rethrowPersistenceError(error: unknown): never {
+    let code: string;
+    let details: string;
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      code = error.code;
+      const metadataDetails =
+        error.meta?.constraint ??
+        error.meta?.field_name ??
+        error.meta?.database_error;
+      details =
+        typeof metadataDetails === 'string' ? metadataDetails : error.message;
+    } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+      // Prisma 6 can expose native upsert errors without structured metadata.
+      // Keep this compatibility fallback here and match a code AND our constraint.
+      code = error.message.match(/\b(23514|23503)\b/)?.[1] ?? '';
+      details = error.message;
+    } else {
+      throw error;
+    }
+
+    const constraint = details.match(
+      /\bplanner_entries_(quantity_check|recipe_id_fkey|user_id_fkey)\b/,
+    )?.[0];
+    if (
+      (code === 'P2004' || code === '23514') &&
+      constraint === 'planner_entries_quantity_check'
+    ) {
+      throw new BadRequestException(
+        `Total quantity for this recipe and date must not exceed ${MAX_PLANNER_QUANTITY}`,
+      );
+    }
+    if (code === 'P2003' || code === '23503') {
+      if (constraint === 'planner_entries_recipe_id_fkey') {
+        throw new NotFoundException('Recipe not found');
+      }
+      if (constraint === 'planner_entries_user_id_fkey') {
+        throw new UnauthorizedException(
+          'No local account for this token — call GET /users/me first',
+        );
+      }
+    }
+    throw error;
   }
 }

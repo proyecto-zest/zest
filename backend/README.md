@@ -98,9 +98,10 @@ La base también exige `quantity` entre 1 y 100 mediante el `CHECK` de ZEST-118;
 su rechazo se traduce a 400 y no modifica la cantidad anterior.
 El planner selecciona la imagen por ID ascendente, igual que las cards. Es un
 criterio estable, no un orden de subida ni una portada marcada en el modelo.
-La URL se firma fuera de la transacción, antes de escribir: si el firmado falla,
-no se crea ni incrementa la entrada. El upsert utiliza `ON CONFLICT` para sumar
-atómicamente incluso con requests concurrentes.
+La URL se firma antes de escribir: si el firmado falla, no se crea ni incrementa
+la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
+requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
+adicional. Si el usuario se elimina durante la request, responde 401.
 
 ## Comandos útiles
 

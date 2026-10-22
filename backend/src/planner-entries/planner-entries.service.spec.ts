@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Prisma, RecipeTimeUnit } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,9 +20,6 @@ describe('PlannerEntriesService', () => {
   const dto = { recipeId: recipe.id, date: '2026-11-03', quantity: 1 };
   const upsert = jest.fn();
   const sign = jest.fn();
-  const transaction = jest.fn((operation: (tx: unknown) => Promise<unknown>) =>
-    operation({ plannerEntry: { upsert } }),
-  );
   let service: PlannerEntriesService;
 
   beforeEach(() => {
@@ -32,7 +33,7 @@ describe('PlannerEntriesService', () => {
     service = new PlannerEntriesService(
       {
         recipe: { findUnique: jest.fn().mockResolvedValue(recipe) },
-        $transaction: transaction,
+        plannerEntry: { upsert },
       } as unknown as PrismaService,
       {
         getSignedReadUrl: sign,
@@ -40,28 +41,20 @@ describe('PlannerEntriesService', () => {
     );
   });
 
-  it('finishes signing before opening the write transaction', async () => {
+  it('finishes signing before writing', async () => {
     sign.mockImplementationOnce(() => {
-      expect(transaction).not.toHaveBeenCalled();
+      expect(upsert).not.toHaveBeenCalled();
       return Promise.resolve('https://signed.test/soup');
     });
     await service.create('user', dto);
-    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(upsert).toHaveBeenCalledTimes(1);
   });
 
   it('does not write if signing fails', async () => {
     const error = new Error('Credentials unavailable');
     sign.mockRejectedValueOnce(error);
     await expect(service.create('user', dto)).rejects.toBe(error);
-    expect(transaction).not.toHaveBeenCalled();
     expect(upsert).not.toHaveBeenCalled();
-  });
-
-  it('retains the application overflow guard as a fallback', async () => {
-    upsert.mockResolvedValueOnce({ quantity: 101 });
-    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
   });
 
   it('maps only the quantity constraint to 400', async () => {
@@ -101,6 +94,51 @@ describe('PlannerEntriesService', () => {
     );
   });
 
+  it('prefers the structured constraint metadata over the message', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Check constraint violated', {
+        code: 'P2004',
+        clientVersion: '6.19.3',
+        meta: { constraint: 'planner_entries_quantity_check' },
+      }),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it.each([
+    new Prisma.PrismaClientKnownRequestError('Foreign key violated', {
+      code: 'P2003',
+      clientVersion: '6.19.3',
+      meta: { constraint: 'planner_entries_user_id_fkey' },
+    }),
+    new Prisma.PrismaClientUnknownRequestError(
+      '23503 violates planner_entries_user_id_fkey',
+      { clientVersion: '6.19.3' },
+    ),
+  ])(
+    'returns 401 if the user was deleted before writing: %s',
+    async (error) => {
+      upsert.mockRejectedValueOnce(error);
+      await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+    },
+  );
+
+  it('maps a native recipe FK violation to 404', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientUnknownRequestError(
+        '23503 violates planner_entries_recipe_id_fkey',
+        { clientVersion: '6.19.3' },
+      ),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
   it.each([
     new Error('Database unavailable'),
     new Prisma.PrismaClientUnknownRequestError(
@@ -114,7 +152,7 @@ describe('PlannerEntriesService', () => {
     new Prisma.PrismaClientKnownRequestError('Another FK', {
       code: 'P2003',
       clientVersion: '6.19.3',
-      meta: { field_name: 'planner_entries_user_id_fkey' },
+      meta: { field_name: 'another_table_user_id_fkey' },
     }),
   ])('preserves unrelated errors: %s', async (error) => {
     upsert.mockRejectedValueOnce(error);
