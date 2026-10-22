@@ -73,6 +73,47 @@ docker compose up --build
 El servicio `migrate` espera a que PostgreSQL esté sano y aplica las migraciones
 pendientes. La API arranca cuando esa tarea termina correctamente.
 
+## Asignar una receta al planificador
+
+`POST /planner` requiere un access token válido y un usuario local ya sincronizado
+por `GET /users/me`. El usuario se obtiene de la sesión; no se acepta `userId` en
+el body. Permite recetas propias o de otro usuario.
+
+```json
+{ "recipeId": "UUID de la receta", "date": "2026-11-03", "quantity": 2 }
+```
+
+Los tres campos son obligatorios. `date` debe ser una fecha real `YYYY-MM-DD`,
+sin hora ni zona horaria. `quantity` debe ser un entero entre 1 y 100. Repetir
+usuario/receta/fecha suma la cantidad sobre la misma entrada; si el total supera
+100, responde 400 y revierte la operación. Fechas pasadas están permitidas.
+
+Devuelve 201 tanto al crear una entrada como al incrementar una existente,
+con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
+y `timeUnit` (el enum actual `MINUTOS`/`HORAS`). `imageUrl` es una URL firmada de
+una foto de la receta, o `null` cuando no hay imágenes. Un UUID de receta
+inexistente devuelve 404; entradas inválidas devuelven 400.
+
+La base también exige `quantity` entre 1 y 100 mediante el `CHECK` de ZEST-118;
+su rechazo se traduce a 400 y no modifica la cantidad anterior.
+El planner selecciona la imagen por ID ascendente, igual que las cards. Es un
+criterio estable, no un orden de subida ni una portada marcada en el modelo.
+La URL se firma antes de escribir: si el firmado falla, no se crea ni incrementa
+la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
+requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
+adicional. Si el usuario se elimina durante la request, responde 401.
+
+## Consultar el planificador
+
+`GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
+un array con las entradas del usuario en ese rango, incluyendo ambos días.
+Cada entrada tiene la misma forma que la respuesta de `POST /planner`:
+`id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time` y `timeUnit`.
+Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`.
+El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
+Ambas fechas son obligatorias y deben ser fechas reales sin hora ni zona horaria.
+Un rango invertido o fechas inválidas devuelve 400; sin token, 401.
+
 ## Comandos útiles
 
 ```bash

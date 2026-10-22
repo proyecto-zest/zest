@@ -31,6 +31,7 @@ import {
 } from './dto/recipe-response.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { MAX_RECIPES_LIMIT } from './recipes.constants';
+import { RECIPE_IMAGE_ORDER } from './recipe-image-order';
 
 const recipeAuthorSelect = {
   select: { id: true, name: true, avatarUrl: true },
@@ -60,6 +61,7 @@ const recipeCardSelect = {
   author: recipeAuthorSelect,
   images: {
     select: { s3Key: true },
+    orderBy: RECIPE_IMAGE_ORDER,
   },
 } satisfies Prisma.RecipeSelect;
 
