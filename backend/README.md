@@ -103,6 +103,17 @@ la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
 requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
 adicional. Si el usuario se elimina durante la request, responde 401.
 
+## Consultar el planificador
+
+`GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
+un array con las entradas del usuario en ese rango, incluyendo ambos días.
+Cada entrada tiene la misma forma que la respuesta de `POST /planner`:
+`id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time` y `timeUnit`.
+Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`.
+El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
+Ambas fechas son obligatorias y deben ser fechas reales sin hora ni zona horaria.
+Un rango invertido o fechas inválidas devuelve 400; sin token, 401.
+
 ## Comandos útiles
 
 ```bash
