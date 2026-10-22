@@ -60,6 +60,7 @@ model User {
   updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
   recipes       Recipe[]
   collections   Collection[]
+  plannerEntries PlannerEntry[]
 
   @@map("users")
 }
@@ -81,6 +82,7 @@ model Recipe {
   images      RecipeImage[]
   author      User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
   collections CollectionRecipe[]
+  plannerEntries PlannerEntry[]
 
   @@map("recipes")
 }
@@ -148,4 +150,20 @@ model CollectionRecipe {
 
   @@id([collectionId, recipeId])
   @@map("collection_recipes")
+}
+
+model PlannerEntry {
+  id       String   @id @default(uuid()) @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  recipeId String   @map("recipe_id") @db.Uuid
+  date     DateTime @db.Date
+  /// Database CHECK planner_entries_quantity_check enforces 1..100, including increments.
+  /// Defined in migration 20261020130000_constrain_planner_quantity (Prisma cannot model CHECK).
+  quantity Int      @default(1)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  recipe   Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recipeId, date])
+  @@index([userId, date])
+  @@map("planner_entries")
 }
