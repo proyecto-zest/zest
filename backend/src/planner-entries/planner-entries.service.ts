@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -103,6 +104,30 @@ export class PlannerEntriesService {
       .catch((error: unknown) => this.rethrowPersistenceError(error));
 
     return this.toResponse(entry, recipe, imageUrl);
+  }
+
+  async remove(userId: string, id: string): Promise<void> {
+    const entry = await this.prisma.plannerEntry.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+    if (!entry) {
+      throw new NotFoundException('Planner entry not found');
+    }
+    if (entry.userId !== userId) {
+      throw new ForbiddenException(
+        'You can only delete your own planner entries',
+      );
+    }
+
+    // Keep ownership in the write predicate as well. If another request already
+    // removed the entry, report 404 rather than a Prisma record-not-found error.
+    const { count } = await this.prisma.plannerEntry.deleteMany({
+      where: { id, userId },
+    });
+    if (count === 0) {
+      throw new NotFoundException('Planner entry not found');
+    }
   }
 
   private toResponse(
