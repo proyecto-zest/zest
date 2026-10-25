@@ -114,6 +114,13 @@ El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
 Ambas fechas son obligatorias y deben ser fechas reales sin hora ni zona horaria.
 Un rango invertido o fechas inválidas devuelve 400; sin token, 401.
 
+## Quitar una entrada del planificador
+
+`DELETE /planner/:id` requiere autenticación y permite borrar solo una entrada
+del usuario logueado. Devuelve 204 sin body, 404 si no existe y 403 si pertenece
+a otro usuario. Un ID que no es UUID devuelve 400; sin token, 401.
+Solo elimina la entrada: la receta, sus imágenes y las demás entradas se conservan.
+
 ## Comandos útiles
 
 ```bash
