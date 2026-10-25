@@ -8,6 +8,7 @@ import { CollectionsModule } from './collections/collections.module';
 import { envValidationSchema } from './config/env.validation';
 import { HealthModule } from './health/health.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
+import { PlannerEntriesModule } from './planner-entries/planner-entries.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { UsersModule } from './users/users.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
     RecipesModule,
     UsersModule,
     CollectionsModule,
+    PlannerEntriesModule,
   ],
   providers: [
     JwtAuthGuard,
