@@ -5,21 +5,21 @@ import { PickerCollectionRow } from './PickerCollectionRow'
 import { PickerEmptyText } from './PickerEmptyText'
 import { PickerListStatus } from './PickerListStatus'
 import { PickerScrollArea } from './PickerScrollArea'
-import type { PickedRecipe } from './types'
+import type { PickerSelection } from './types'
 
 interface PickerCollectionsTabProps {
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
 /** The user's collections; tapping one shows its recipes inside the picker. */
-export function PickerCollectionsTab({ onSelect }: PickerCollectionsTabProps) {
+export function PickerCollectionsTab({ selection }: PickerCollectionsTabProps) {
   const { state, retry } = useCollections()
   const [openId, setOpenId] = useState<string | null>(null)
 
   if (openId) {
     return (
       <PickerScrollArea>
-        <PickerCollectionRecipes id={openId} onBack={() => setOpenId(null)} onSelect={onSelect} />
+        <PickerCollectionRecipes id={openId} onBack={() => setOpenId(null)} selection={selection} />
       </PickerScrollArea>
     )
   }

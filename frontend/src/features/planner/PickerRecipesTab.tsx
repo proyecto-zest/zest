@@ -7,14 +7,14 @@ import { CollectionRecipeSearchControls } from '../collections/CollectionRecipeS
 import { useCollectionRecipeSearch } from '../collections/useCollectionRecipeSearch'
 import { PickerRecipeResults } from './PickerRecipeResults'
 import { PickerScrollArea } from './PickerScrollArea'
-import type { PickedRecipe } from './types'
+import type { PickerSelection } from './types'
 
 interface PickerRecipesTabProps {
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
 /** Every recipe on Zest (own and other users'), searchable by name or ingredient. */
-export function PickerRecipesTab({ onSelect }: PickerRecipesTabProps) {
+export function PickerRecipesTab({ selection }: PickerRecipesTabProps) {
   const [field, setField] = useState<CollectionSearchField>('name')
   const [query, setQuery] = useState('')
   const [difficulty, setDifficulty] = useState<CollectionDifficulty>('')
@@ -47,7 +47,7 @@ export function PickerRecipesTab({ onSelect }: PickerRecipesTabProps) {
           difficulty={difficulty}
           page={page}
           onPageChange={setPage}
-          onSelect={onSelect}
+          selection={selection}
         />
       </PickerScrollArea>
     </>

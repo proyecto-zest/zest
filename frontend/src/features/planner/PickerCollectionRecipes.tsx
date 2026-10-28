@@ -3,15 +3,15 @@ import { useCollectionDetail } from '../collections/useCollectionDetail'
 import { PickerEmptyText } from './PickerEmptyText'
 import { PickerListStatus } from './PickerListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
-import type { PickedRecipe } from './types'
+import type { PickerSelection } from './types'
 
 interface PickerCollectionRecipesProps {
   id: string
   onBack: () => void
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
-export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollectionRecipesProps) {
+export function PickerCollectionRecipes({ id, onBack, selection }: PickerCollectionRecipesProps) {
   const { state, retry } = useCollectionDetail(id)
 
   return (
@@ -45,7 +45,7 @@ export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollecti
       )}
       {state.status === 'ok' &&
         state.collection.recipes.map((recipe) => (
-          <PickerRecipeRow key={recipe.id} recipe={recipe} onSelect={onSelect} />
+          <PickerRecipeRow key={recipe.id} recipe={recipe} selection={selection} />
         ))}
     </>
   )

@@ -4,7 +4,7 @@ import { PlannerDayCard } from './PlannerDayCard'
 import { PlannerHeader } from './PlannerHeader'
 import { PlannerWeekGrid } from './PlannerWeekGrid'
 import { PlannerWeekSkeleton } from './PlannerWeekSkeleton'
-import { RecipePicker } from './RecipePicker'
+import { PlannerPicker } from './PlannerPicker'
 import { usePlannerWeek } from './usePlannerWeek'
 import { addDays, DAY_LABELS, formatWeekLabel, toDateKey, weekStart } from './weekDates'
 
@@ -18,7 +18,7 @@ export function MealPlannerPage() {
     label,
     date: toDateKey(addDays(monday, index)),
   }))
-  const { state, retry } = usePlannerWeek(days[0].date, days[6].date)
+  const { state, retry, refetch } = usePlannerWeek(days[0].date, days[6].date)
 
   return (
     <div className="flex flex-col gap-6">
@@ -52,8 +52,7 @@ export function MealPlannerPage() {
         </PlannerWeekGrid>
       )}
       {pickerDate && (
-        // Saving the pick with POST /planner is a separate ZEST-117 ticket.
-        <RecipePicker date={pickerDate} onSelect={() => {}} onClose={() => setPickerDate(null)} />
+        <PlannerPicker date={pickerDate} refetch={refetch} onClose={() => setPickerDate(null)} />
       )}
     </div>
   )

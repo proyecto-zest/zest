@@ -13,9 +13,18 @@ export interface PlannerEntry {
   timeUnit: string
 }
 
-/**
- * The signed-in user's entries between two days, both inclusive.
- * Assumes GET /planner returns the same shape as POST /planner.
- */
+/** The signed-in user's entries between two days, both inclusive (GET /planner, ZEST-122). */
 export const listPlannerEntries = (from: string, to: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<PlannerEntry[]>('/planner', { ...options, query: { from, to } })
+
+export interface CreatePlannerEntryPayload {
+  recipeId: string
+  /** `YYYY-MM-DD` */
+  date: string
+  /** 1 to 100; planning the same recipe on the same day again adds to it. */
+  quantity: number
+}
+
+/** Plans a recipe on a day (POST /planner, ZEST-119). */
+export const createPlannerEntry = (payload: CreatePlannerEntryPayload) =>
+  httpClient.post<PlannerEntry>('/planner', payload)

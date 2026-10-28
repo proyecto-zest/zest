@@ -37,5 +37,7 @@ export function usePlannerWeek(from: string, to: string) {
     setResult(null)
     setAttempt((value) => value + 1)
   }
-  return { state, retry }
+  // Unlike `retry`, keeps the current week on screen while the new data loads.
+  const refetch = () => setAttempt((value) => value + 1)
+  return { state, retry, refetch }
 }
