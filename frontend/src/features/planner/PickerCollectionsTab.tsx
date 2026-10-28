@@ -2,20 +2,20 @@ import { useCollections } from '../collections/useCollections'
 import { PickerCollectionRecipes } from './PickerCollectionRecipes'
 import { PickerCollectionRow } from './PickerCollectionRow'
 import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
-import type { PickedRecipe } from './types'
+import type { PickerSelection } from './types'
 
 interface PickerCollectionsTabProps {
   /** Collection being browsed, or `null` while the list of collections shows. */
   openId: string | null
   onOpenChange: (id: string | null) => void
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
 /** The user's collections; tapping one shows its recipes inside the picker. */
 export function PickerCollectionsTab({
   openId,
   onOpenChange,
-  onSelect,
+  selection,
 }: PickerCollectionsTabProps) {
   const { state, retry } = useCollections()
 
@@ -25,7 +25,7 @@ export function PickerCollectionsTab({
         <PickerCollectionRecipes
           id={openId}
           onBack={() => onOpenChange(null)}
-          onSelect={onSelect}
+          selection={selection}
         />
       ) : (
         <>

@@ -20,3 +20,10 @@ export function toPickedRecipe(
 ): PickedRecipe {
   return { id, title, time, timeUnit, imageUrl }
 }
+
+/** What every list in the picker needs to pick a recipe and show that a save is running. */
+export interface PickerSelection {
+  /** Recipe being saved right now; its row shows a spinner and every row is disabled. */
+  pendingId: string | null
+  onSelect: (recipe: PickedRecipe) => void
+}
