@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import type { PlannerEntry } from '../../services/planner'
 import { PickerListStatus } from './PickerListStatus'
-import { PlannerDayCard } from './PlannerDayCard'
 import { PlannerHeader } from './PlannerHeader'
-import { PlannerWeekGrid } from './PlannerWeekGrid'
+import { PlannerWeekDays } from './PlannerWeekDays'
 import { PlannerWeekSkeleton } from './PlannerWeekSkeleton'
+import { RemoveMealDialog } from './RemoveMealDialog'
 import { PlannerPicker } from './PlannerPicker'
 import { usePlannerWeek } from './usePlannerWeek'
 import { addDays, DAY_LABELS, formatWeekLabel, toDateKey, weekStart } from './weekDates'
@@ -12,6 +13,7 @@ import { addDays, DAY_LABELS, formatWeekLabel, toDateKey, weekStart } from './we
 export function MealPlannerPage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [pickerDate, setPickerDate] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<PlannerEntry | null>(null)
   const today = new Date()
   const monday = weekStart(today, weekOffset)
   const days = DAY_LABELS.map((label, index) => ({
@@ -38,21 +40,19 @@ export function MealPlannerPage() {
         />
       )}
       {state.status === 'ok' && (
-        <PlannerWeekGrid>
-          {days.map(({ label, date }) => (
-            <PlannerDayCard
-              key={date}
-              label={label}
-              date={date}
-              isToday={date === toDateKey(today)}
-              entries={state.entries.filter((entry) => entry.date === date)}
-              onAddMeal={() => setPickerDate(date)}
-            />
-          ))}
-        </PlannerWeekGrid>
+        <PlannerWeekDays
+          days={days}
+          today={today}
+          entries={state.entries}
+          onAddMeal={setPickerDate}
+          onRemoveMeal={setRemoving}
+        />
       )}
       {pickerDate && (
         <PlannerPicker date={pickerDate} refetch={refetch} onClose={() => setPickerDate(null)} />
+      )}
+      {removing && (
+        <RemoveMealDialog entry={removing} refetch={refetch} onClose={() => setRemoving(null)} />
       )}
     </div>
   )

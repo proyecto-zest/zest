@@ -28,3 +28,7 @@ export interface CreatePlannerEntryPayload {
 /** Plans a recipe on a day (POST /planner, ZEST-119). */
 export const createPlannerEntry = (payload: CreatePlannerEntryPayload) =>
   httpClient.post<PlannerEntry>('/planner', payload)
+
+/** Removes one planned meal (DELETE /planner/:id, ZEST-123): 404 if it is gone, 403 if it is not the user's. */
+export const deletePlannerEntry = (id: string) =>
+  httpClient.delete<void>(`/planner/${encodeURIComponent(id)}`)

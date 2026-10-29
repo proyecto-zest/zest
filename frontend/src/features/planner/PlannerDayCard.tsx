@@ -9,9 +9,17 @@ interface PlannerDayCardProps {
   isToday: boolean
   entries: PlannerEntry[]
   onAddMeal: () => void
+  onRemoveMeal: (entry: PlannerEntry) => void
 }
 
-export function PlannerDayCard({ label, date, isToday, entries, onAddMeal }: PlannerDayCardProps) {
+export function PlannerDayCard({
+  label,
+  date,
+  isToday,
+  entries,
+  onAddMeal,
+  onRemoveMeal,
+}: PlannerDayCardProps) {
   return (
     <section
       aria-label={formatPlannerDate(date)}
@@ -32,7 +40,7 @@ export function PlannerDayCard({ label, date, isToday, entries, onAddMeal }: Pla
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-3">
         {entries.map((entry) => (
-          <PlannerMealRow key={entry.id} entry={entry} />
+          <PlannerMealRow key={entry.id} entry={entry} onRemove={() => onRemoveMeal(entry)} />
         ))}
         <button
           type="button"
