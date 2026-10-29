@@ -199,6 +199,7 @@ describe('RecipesService', () => {
         $transaction: runTransaction,
         $queryRaw: recipeSearch,
         recipe: {
+          count: recipeCount,
           findMany: recipeFindMany,
           findUnique: recipeFindUnique,
         },
@@ -330,9 +331,7 @@ describe('RecipesService', () => {
         totalPages: 3,
       },
     });
-    expect(runTransaction).toHaveBeenCalledWith(expect.any(Function), {
-      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
-    });
+    expect(runTransaction).not.toHaveBeenCalled();
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: MAX_RECIPES_LIMIT,
@@ -370,6 +369,9 @@ describe('RecipesService', () => {
       0,
     ]);
     expect(sql.text).not.toContain("limón' OR TRUE --");
+    expect(runTransaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: { in: [] } } }),
     );
@@ -388,6 +390,36 @@ describe('RecipesService', () => {
 
     expect(recipeSearch).not.toHaveBeenCalled();
     expect(recipeCount).toHaveBeenCalled();
+    expect(runTransaction).not.toHaveBeenCalled();
+  });
+
+  it('uses the shared structured filters for both typed feed queries without a transaction', async () => {
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({
+      page: 2,
+      limit: 20,
+      ingredient: [tomatoId, oilId],
+      category: RecipeCategory.ALMUERZO,
+      difficulty: RecipeDifficulty.FACIL,
+      authorId: DEFAULT_RECIPE_AUTHOR_ID,
+    });
+
+    const where: Prisma.RecipeWhereInput = {
+      AND: [
+        { ingredients: { some: { ingredientId: tomatoId } } },
+        { ingredients: { some: { ingredientId: oilId } } },
+        { category: RecipeCategory.ALMUERZO },
+        { difficulty: RecipeDifficulty.FACIL },
+        { authorId: DEFAULT_RECIPE_AUTHOR_ID },
+      ],
+    };
+    expect(recipeCount).toHaveBeenCalledWith({ where });
+    expect(recipeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where, skip: 20, take: 20 }),
+    );
+    expect(recipeSearch).not.toHaveBeenCalled();
+    expect(runTransaction).not.toHaveBeenCalled();
   });
 
   it('returns an empty first page when there are no recipes', async () => {

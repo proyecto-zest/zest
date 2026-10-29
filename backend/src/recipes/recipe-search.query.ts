@@ -7,12 +7,52 @@ export interface RecipeSearchPage {
   ids: string[];
 }
 
+// Define each structured filter once, with both required representations.
+// The typed feed and accent-insensitive search consume this same definition.
+export function buildRecipeStructuredFilters(query: ListRecipesQueryDto): {
+  where: Prisma.RecipeWhereInput;
+  sql: Prisma.Sql[];
+} {
+  const filters: { where: Prisma.RecipeWhereInput; sql: Prisma.Sql }[] = [];
+
+  for (const ingredientId of query.ingredient ?? []) {
+    filters.push({
+      where: { ingredients: { some: { ingredientId } } },
+      sql: hasIngredient(Prisma.sql`ri.ingredient_id = ${ingredientId}::uuid`),
+    });
+  }
+  if (query.category !== undefined) {
+    filters.push({
+      where: { category: query.category },
+      sql: Prisma.sql`r.category = ${query.category}::"RecipeCategory"`,
+    });
+  }
+  if (query.difficulty !== undefined) {
+    filters.push({
+      where: { difficulty: query.difficulty },
+      sql: Prisma.sql`r.difficulty = ${query.difficulty}::"RecipeDifficulty"`,
+    });
+  }
+  if (query.authorId !== undefined) {
+    filters.push({
+      where: { authorId: query.authorId },
+      sql: Prisma.sql`r.author_id = ${query.authorId}::uuid`,
+    });
+  }
+
+  return {
+    where: filters.length ? { AND: filters.map(({ where }) => where) } : {},
+    sql: filters.map(({ sql }) => sql),
+  };
+}
+
 // Prisma's contains/mode filters cannot apply unaccent to the stored column.
 // Keep every predicate and pagination in SQL; only the current page's IDs
 // leave PostgreSQL. All user input is bound through Prisma.sql parameters.
 export function recipeSearchQuery(
   query: ListRecipesQueryDto,
   limit: number,
+  structuredFilters: Prisma.Sql[],
 ): Prisma.Sql {
   const filters: Prisma.Sql[] = [];
 
@@ -33,22 +73,7 @@ export function recipeSearchQuery(
     )`),
     );
   }
-  for (const ingredientId of query.ingredient ?? []) {
-    filters.push(
-      hasIngredient(Prisma.sql`ri.ingredient_id = ${ingredientId}::uuid`),
-    );
-  }
-  if (query.category !== undefined) {
-    filters.push(Prisma.sql`r.category = ${query.category}::"RecipeCategory"`);
-  }
-  if (query.difficulty !== undefined) {
-    filters.push(
-      Prisma.sql`r.difficulty = ${query.difficulty}::"RecipeDifficulty"`,
-    );
-  }
-  if (query.authorId !== undefined) {
-    filters.push(Prisma.sql`r.author_id = ${query.authorId}::uuid`);
-  }
+  filters.push(...structuredFilters);
 
   const where = filters.length
     ? Prisma.join(filters, ' AND ')

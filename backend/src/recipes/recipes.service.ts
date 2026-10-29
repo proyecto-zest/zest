@@ -31,7 +31,12 @@ import {
 } from './dto/recipe-response.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { MAX_RECIPES_LIMIT } from './recipes.constants';
-import { RecipeSearchPage, recipeSearchQuery } from './recipe-search.query';
+import { RECIPE_IMAGE_ORDER } from './recipe-image-order';
+import {
+  buildRecipeStructuredFilters,
+  RecipeSearchPage,
+  recipeSearchQuery,
+} from './recipe-search.query';
 
 const recipeAuthorSelect = {
   select: { id: true, name: true, avatarUrl: true },
@@ -61,6 +66,7 @@ const recipeCardSelect = {
   author: recipeAuthorSelect,
   images: {
     select: { s3Key: true },
+    orderBy: RECIPE_IMAGE_ORDER,
   },
 } satisfies Prisma.RecipeSelect;
 
@@ -114,41 +120,39 @@ export class RecipesService {
   ): Promise<PaginatedRecipesResponseDto> {
     const page = query.page;
     const limit = Math.min(query.limit, MAX_RECIPES_LIMIT);
-    const { total, recipes } = await this.prisma.$transaction(
-      async (tx) => {
-        // The ordinary feed and structured filters stay in typed Prisma.
-        // Raw SQL is needed only when a text predicate must use unaccent.
-        if (!query.name && !query.author && !query.ingredientName) {
-          const where: Prisma.RecipeWhereInput = {
-            category: query.category,
-            difficulty: query.difficulty,
-            authorId: query.authorId,
-            AND: (query.ingredient ?? []).map((ingredientId) => ({
-              ingredients: { some: { ingredientId } },
-            })),
-          };
-          const total = await tx.recipe.count({ where });
-          const recipes = await tx.recipe.findMany({
-            where,
-            select: recipeCardSelect,
-            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-            skip: (page - 1) * limit,
-            take: limit,
-          });
-          return { total, recipes };
-        }
-        const [{ total, ids }] = await tx.$queryRaw<RecipeSearchPage[]>(
-          recipeSearchQuery(query, limit),
-        );
-        const recipes = await tx.recipe.findMany({
-          where: { id: { in: ids } },
+    const { where, sql } = buildRecipeStructuredFilters(query);
+    let total: number;
+    let recipes: Prisma.RecipeGetPayload<{ select: typeof recipeCardSelect }>[];
+
+    if (!query.name && !query.author && !query.ingredientName) {
+      // Ordinary feed queries stay in typed Prisma without an interactive
+      // transaction. SQL is limited to text matching that requires unaccent.
+      [total, recipes] = await Promise.all([
+        this.prisma.recipe.count({ where }),
+        this.prisma.recipe.findMany({
+          where,
           select: recipeCardSelect,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        });
-        return { total, recipes };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
-    );
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+      ]);
+    } else {
+      ({ total, recipes } = await this.prisma.$transaction(
+        async (tx) => {
+          const [{ total, ids }] = await tx.$queryRaw<RecipeSearchPage[]>(
+            recipeSearchQuery(query, limit, sql),
+          );
+          const recipes = await tx.recipe.findMany({
+            where: { id: { in: ids } },
+            select: recipeCardSelect,
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          });
+          return { total, recipes };
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      ));
+    }
 
     return {
       recipes: await Promise.all(

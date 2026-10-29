@@ -205,6 +205,45 @@ describeWithDatabase('GET /recipes search (e2e)', () => {
     );
   });
 
+  it.each([
+    ['category', () => ({ category: RecipeCategory.ALMUERZO })],
+    ['difficulty', () => ({ difficulty: RecipeDifficulty.FACIL })],
+    ['author ID', () => ({ authorId: otherAuthorId })],
+    ['one ingredient', () => ({ ingredient: [tomatoId] })],
+    ['all ingredients', () => ({ ingredient: [tomatoId, cheeseId] })],
+    [
+      'combined filters',
+      () => ({
+        category: RecipeCategory.ALMUERZO,
+        difficulty: RecipeDifficulty.FACIL,
+        authorId: DEFAULT_RECIPE_AUTHOR_ID,
+        ingredient: [tomatoId, cheeseId],
+      }),
+    ],
+    ['no matches', () => ({ category: RecipeCategory.POSTRE })],
+  ] as const)(
+    'applies %s identically with and without a text search',
+    async (_name, filters) => {
+      // Every fixture title contains "a", so this text must not narrow results.
+      // Compare full pages, counts and ordering across both query paths.
+      for (const page of [1, 2]) {
+        const query = { ...filters(), page, limit: 2 };
+        const feed = await request(app.getHttpServer() as Server)
+          .get('/recipes')
+          .query(query)
+          .expect(200);
+        const search = await request(app.getHttpServer() as Server)
+          .get('/recipes')
+          .query({ ...query, name: 'a' })
+          .expect(200);
+
+        expect(search.body as PaginatedRecipesResponseDto).toEqual(
+          feed.body as PaginatedRecipesResponseDto,
+        );
+      }
+    },
+  );
+
   it('requires all ingredients when more than one is selected', async () => {
     const response = await request(app.getHttpServer() as Server)
       .get(`/recipes?ingredient=${tomatoId}&ingredient=${cheeseId}`)

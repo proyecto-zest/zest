@@ -32,9 +32,10 @@ Los filtros se combinan con AND; `%`, `_` y `\` se buscan literalmente.
 Aplicar las migraciones con `npm run prisma:migrate:deploy`; el rol de
 `DIRECT_URL` necesita permisos para instalar ambas extensiones.
 
-Los filtros de texto usan SQL parametrizado mediante Prisma para aplicar
-`unaccent`; el resto del feed usa Prisma tipado. El conteo y las cards se leen
-en una transacción `RepeatableRead`, con el firmado de imágenes afuera.
+Los filtros estructurados comparten definición entre Prisma y SQL. Solo la
+búsqueda textual usa SQL parametrizado con `unaccent` y una transacción
+`RepeatableRead`; el feed sin texto usa Prisma sin transacción. El firmado de
+imágenes queda fuera de la transacción.
 Si cambia el diccionario de `unaccent`, reconstruir los índices
 `recipes_title_search_idx`, `ingredients_name_search_idx` y `users_name_search_idx`.
 Las búsquedas cortas o poco selectivas pueden requerir escaneos.
@@ -91,6 +92,36 @@ docker compose up --build
 
 El servicio `migrate` espera a que PostgreSQL esté sano y aplica las migraciones
 pendientes. La API arranca cuando esa tarea termina correctamente.
+
+## Asignar una receta al planificador
+
+`POST /planner` requiere un access token válido y un usuario local ya sincronizado
+por `GET /users/me`. El usuario se obtiene de la sesión; no se acepta `userId` en
+el body. Permite recetas propias o de otro usuario.
+
+```json
+{ "recipeId": "UUID de la receta", "date": "2026-11-03", "quantity": 2 }
+```
+
+Los tres campos son obligatorios. `date` debe ser una fecha real `YYYY-MM-DD`,
+sin hora ni zona horaria. `quantity` debe ser un entero entre 1 y 100. Repetir
+usuario/receta/fecha suma la cantidad sobre la misma entrada; si el total supera
+100, responde 400 y revierte la operación. Fechas pasadas están permitidas.
+
+Devuelve 201 tanto al crear una entrada como al incrementar una existente,
+con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
+y `timeUnit` (el enum actual `MINUTOS`/`HORAS`). `imageUrl` es una URL firmada de
+una foto de la receta, o `null` cuando no hay imágenes. Un UUID de receta
+inexistente devuelve 404; entradas inválidas devuelven 400.
+
+La base también exige `quantity` entre 1 y 100 mediante el `CHECK` de ZEST-118;
+su rechazo se traduce a 400 y no modifica la cantidad anterior.
+El planner selecciona la imagen por ID ascendente, igual que las cards. Es un
+criterio estable, no un orden de subida ni una portada marcada en el modelo.
+La URL se firma antes de escribir: si el firmado falla, no se crea ni incrementa
+la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
+requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
+adicional. Si el usuario se elimina durante la request, responde 401.
 
 ## Comandos útiles
 
