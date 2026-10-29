@@ -8,10 +8,17 @@ interface PlannerWeekDaysProps {
   today: string
   entries: PlannerEntry[]
   onAddMeal: (date: string) => void
+  onRemoveMeal: (entry: PlannerEntry) => void
 }
 
 /** One card per day of the week, each with its own planned meals. */
-export function PlannerWeekDays({ days, today, entries, onAddMeal }: PlannerWeekDaysProps) {
+export function PlannerWeekDays({
+  days,
+  today,
+  entries,
+  onAddMeal,
+  onRemoveMeal,
+}: PlannerWeekDaysProps) {
   return (
     <PlannerWeekGrid>
       {days.map(({ label, date }) => (
@@ -22,6 +29,7 @@ export function PlannerWeekDays({ days, today, entries, onAddMeal }: PlannerWeek
           isToday={date === today}
           entries={entries.filter((entry) => entry.date === date)}
           onAddMeal={() => onAddMeal(date)}
+          onRemoveMeal={onRemoveMeal}
         />
       ))}
     </PlannerWeekGrid>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { ListStatus } from '../../components/ListStatus'
+import type { PlannerEntry } from '../../services/planner'
 import { PlannerHeader } from './PlannerHeader'
 import { PlannerWeekDays } from './PlannerWeekDays'
 import { PlannerWeekSkeleton } from './PlannerWeekSkeleton'
+import { RemoveMealDialog } from './RemoveMealDialog'
 import { PlannerPicker } from './PlannerPicker'
 import { usePlannerWeek } from './usePlannerWeek'
 import { formatWeekLabel, toDateKey, weekDays, weekStart } from './weekDates'
@@ -11,6 +13,7 @@ import { formatWeekLabel, toDateKey, weekDays, weekStart } from './weekDates'
 export function MealPlannerPage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [pickerDate, setPickerDate] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<PlannerEntry | null>(null)
   const today = new Date()
   const monday = weekStart(today, weekOffset)
   const days = weekDays(monday)
@@ -39,10 +42,14 @@ export function MealPlannerPage() {
           today={toDateKey(today)}
           entries={state.entries}
           onAddMeal={setPickerDate}
+          onRemoveMeal={setRemoving}
         />
       )}
       {pickerDate && (
         <PlannerPicker date={pickerDate} refetch={refetch} onClose={() => setPickerDate(null)} />
+      )}
+      {removing && (
+        <RemoveMealDialog entry={removing} refetch={refetch} onClose={() => setRemoving(null)} />
       )}
     </div>
   )
