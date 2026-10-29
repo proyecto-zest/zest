@@ -1,9 +1,8 @@
 import { ArrowLeft } from 'lucide-react'
 import { useCollectionDetail } from '../collections/useCollectionDetail'
-import { PickerEmptyText } from './PickerEmptyText'
-import { PickerListStatus } from './PickerListStatus'
+import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
-import type { PickedRecipe } from './types'
+import { toPickedRecipe, type PickedRecipe } from './types'
 
 interface PickerCollectionRecipesProps {
   id: string
@@ -45,7 +44,11 @@ export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollecti
       )}
       {state.status === 'ok' &&
         state.collection.recipes.map((recipe) => (
-          <PickerRecipeRow key={recipe.id} recipe={recipe} onSelect={onSelect} />
+          <PickerRecipeRow
+            key={recipe.id}
+            recipe={toPickedRecipe(recipe, recipe.imageUrl)}
+            onSelect={onSelect}
+          />
         ))}
     </>
   )

@@ -1,9 +1,8 @@
 import type { useCollectionRecipeSearch } from '../collections/useCollectionRecipeSearch'
 import { Pagination } from '../feed/Pagination'
-import { PickerEmptyText } from './PickerEmptyText'
-import { PickerListStatus } from './PickerListStatus'
+import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
-import type { PickedRecipe } from './types'
+import { toPickedRecipe, type PickedRecipe } from './types'
 
 type PickerRecipeResultsProps = ReturnType<typeof useCollectionRecipeSearch> & {
   query: string
@@ -44,10 +43,10 @@ export function PickerRecipeResults({
 
   return (
     <>
-      {recipes.map(({ imageUrls, ...recipe }) => (
+      {recipes.map((recipe) => (
         <PickerRecipeRow
           key={recipe.id}
-          recipe={{ ...recipe, imageUrl: imageUrls[0] ?? null }}
+          recipe={toPickedRecipe(recipe, recipe.imageUrls[0] ?? null)}
           onSelect={onSelect}
         />
       ))}

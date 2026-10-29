@@ -4,7 +4,7 @@ import { PickerCollectionsTab } from './PickerCollectionsTab'
 import { PickerHeader } from './PickerHeader'
 import { PickerRecipesTab } from './PickerRecipesTab'
 import { PickerTabs, type PickerTab } from './PickerTabs'
-import type { PickedRecipe } from './types'
+import type { PickedRecipe, PickerSearch } from './types'
 
 interface RecipePickerProps {
   /** Planner day being filled, as `YYYY-MM-DD`. */
@@ -17,6 +17,14 @@ interface RecipePickerProps {
 /** "Add a meal" dialog: pick any recipe on Zest or one from the user's collections. */
 export function RecipePicker({ date, onSelect, onClose }: RecipePickerProps) {
   const [tab, setTab] = useState<PickerTab>('recipes')
+  // Kept here, not in the tabs: a tab unmounts when you leave it, taking its state along.
+  const [search, setSearch] = useState<PickerSearch>({
+    field: 'name',
+    query: '',
+    difficulty: '',
+    page: 1,
+  })
+  const [openCollectionId, setOpenCollectionId] = useState<string | null>(null)
 
   const select = (recipe: PickedRecipe) => {
     onSelect(recipe)
@@ -29,9 +37,13 @@ export function RecipePicker({ date, onSelect, onClose }: RecipePickerProps) {
         <PickerHeader titleId="recipe-picker-title" date={date} onClose={onClose} />
         <PickerTabs active={tab} onChange={setTab} />
         {tab === 'recipes' ? (
-          <PickerRecipesTab onSelect={select} />
+          <PickerRecipesTab search={search} onSearchChange={setSearch} onSelect={select} />
         ) : (
-          <PickerCollectionsTab onSelect={select} />
+          <PickerCollectionsTab
+            openId={openCollectionId}
+            onOpenChange={setOpenCollectionId}
+            onSelect={select}
+          />
         )}
       </div>
     </Modal>
