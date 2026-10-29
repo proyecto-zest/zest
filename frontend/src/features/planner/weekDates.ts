@@ -11,6 +11,11 @@ export function addDays(date: Date, days: number): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
+/** The seven days of the week starting at `monday`, labelled Mon to Sun. */
+export function weekDays(monday: Date): { label: string; date: string }[] {
+  return DAY_LABELS.map((label, index) => ({ label, date: toDateKey(addDays(monday, index)) }))
+}
+
 /** Local calendar day as `YYYY-MM-DD`; `toISOString` would shift it to UTC. */
 export function toDateKey(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')

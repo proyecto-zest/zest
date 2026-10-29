@@ -9,6 +9,10 @@ type PlannerWeekState =
 
 type Result = { from: string } & Exclude<PlannerWeekState, { status: 'loading' }>
 
+/** The API gives no meaningful order within a day, so keep it stable by title. */
+const sortByTitle = (entries: PlannerEntry[]) =>
+  [...entries].sort((a, b) => a.title.localeCompare(b.title))
+
 /** Loads one week of planner entries; switching weeks cancels the previous request. */
 export function usePlannerWeek(from: string, to: string) {
   const [result, setResult] = useState<Result | null>(null)
@@ -18,7 +22,8 @@ export function usePlannerWeek(from: string, to: string) {
     const controller = new AbortController()
     listPlannerEntries(from, to, { signal: controller.signal })
       .then((entries) => {
-        if (!controller.signal.aborted) setResult({ status: 'ok', from, entries })
+        if (!controller.signal.aborted)
+          setResult({ status: 'ok', from, entries: sortByTitle(entries) })
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return

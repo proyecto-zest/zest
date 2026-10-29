@@ -1,6 +1,6 @@
 import { httpClient } from './httpClient'
 
-/** One planned meal — mirrors the backend's `PlannerEntryResponseDto` (ZEST-119). */
+/** One planned meal — mirrors the backend's `PlannerEntryResponseDto` (ZEST-119, ZEST-122). */
 export interface PlannerEntry {
   id: string
   /** Calendar day as `YYYY-MM-DD`, with no time or timezone. */
@@ -15,7 +15,7 @@ export interface PlannerEntry {
 
 /**
  * The signed-in user's entries between two days, both inclusive.
- * Assumes GET /planner returns the same shape as POST /planner.
+ * GET /planner (ZEST-122) returns a flat array of the same shape as POST /planner.
  */
 export const listPlannerEntries = (from: string, to: string, options?: { signal?: AbortSignal }) =>
   httpClient.get<PlannerEntry[]>('/planner', { ...options, query: { from, to } })

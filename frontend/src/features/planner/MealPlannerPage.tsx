@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { PickerListStatus } from './PickerListStatus'
-import { PlannerDayCard } from './PlannerDayCard'
+import { ListStatus } from '../../components/ListStatus'
+import { useToast } from '../../components/ui/toast'
 import { PlannerHeader } from './PlannerHeader'
-import { PlannerWeekGrid } from './PlannerWeekGrid'
+import { PlannerWeekDays } from './PlannerWeekDays'
 import { PlannerWeekSkeleton } from './PlannerWeekSkeleton'
 import { RecipePicker } from './RecipePicker'
 import { usePlannerWeek } from './usePlannerWeek'
-import { addDays, DAY_LABELS, formatWeekLabel, toDateKey, weekStart } from './weekDates'
+import { formatWeekLabel, toDateKey, weekDays, weekStart } from './weekDates'
 
 /** The week, Monday to Sunday, with each day's planned meals. */
 export function MealPlannerPage() {
@@ -14,11 +14,9 @@ export function MealPlannerPage() {
   const [pickerDate, setPickerDate] = useState<string | null>(null)
   const today = new Date()
   const monday = weekStart(today, weekOffset)
-  const days = DAY_LABELS.map((label, index) => ({
-    label,
-    date: toDateKey(addDays(monday, index)),
-  }))
+  const days = weekDays(monday)
   const { state, retry } = usePlannerWeek(days[0].date, days[6].date)
+  const { showToast } = useToast()
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,7 +28,7 @@ export function MealPlannerPage() {
       />
       {state.status === 'loading' && <PlannerWeekSkeleton />}
       {state.status === 'error' && (
-        <PickerListStatus
+        <ListStatus
           status="error"
           label="your planner"
           message={state.message}
@@ -38,22 +36,20 @@ export function MealPlannerPage() {
         />
       )}
       {state.status === 'ok' && (
-        <PlannerWeekGrid>
-          {days.map(({ label, date }) => (
-            <PlannerDayCard
-              key={date}
-              label={label}
-              date={date}
-              isToday={date === toDateKey(today)}
-              entries={state.entries.filter((entry) => entry.date === date)}
-              onAddMeal={() => setPickerDate(date)}
-            />
-          ))}
-        </PlannerWeekGrid>
+        <PlannerWeekDays
+          days={days}
+          today={toDateKey(today)}
+          entries={state.entries}
+          onAddMeal={setPickerDate}
+        />
       )}
       {pickerDate && (
-        // Saving the pick with POST /planner is a separate ZEST-117 ticket.
-        <RecipePicker date={pickerDate} onSelect={() => {}} onClose={() => setPickerDate(null)} />
+        <RecipePicker
+          date={pickerDate}
+          // Saving with POST /planner is ZEST-117; say so instead of closing silently.
+          onSelect={() => showToast('Saving meals to the planner is not available yet.', 'error')}
+          onClose={() => setPickerDate(null)}
+        />
       )}
     </div>
   )

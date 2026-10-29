@@ -18,7 +18,7 @@ export function PlannerMealRow({ entry }: { entry: PlannerEntry }) {
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
         <Link
           to={recipePath}
-          className="truncate text-sm font-semibold text-foreground hover:underline"
+          className="line-clamp-2 break-words text-sm font-semibold text-foreground hover:underline"
         >
           {entry.title}
         </Link>

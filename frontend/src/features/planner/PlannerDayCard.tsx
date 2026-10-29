@@ -37,6 +37,7 @@ export function PlannerDayCard({ label, date, isToday, entries, onAddMeal }: Pla
         <button
           type="button"
           onClick={onAddMeal}
+          aria-label={`Add meal on ${formatPlannerDate(date)}`}
           className="mt-auto flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-background p-2.5 text-sm font-semibold text-primary transition-colors hover:border-primary"
         >
           + Add meal

@@ -1,7 +1,7 @@
 import { useCollections } from '../collections/useCollections'
 import { PickerCollectionRecipes } from './PickerCollectionRecipes'
 import { PickerCollectionRow } from './PickerCollectionRow'
-import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
+import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
 import type { PickedRecipe } from './types'
 
 interface PickerCollectionsTabProps {
@@ -29,9 +29,9 @@ export function PickerCollectionsTab({
         />
       ) : (
         <>
-          {state.status === 'loading' && <PickerListStatus status="loading" label="collections" />}
+          {state.status === 'loading' && <ListStatus status="loading" label="collections" />}
           {state.status === 'error' && (
-            <PickerListStatus
+            <ListStatus
               status="error"
               label="collections"
               message={state.message}
