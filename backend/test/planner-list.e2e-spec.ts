@@ -152,9 +152,71 @@ describeWithDatabase('GET /planner (e2e)', () => {
       timeUnit: RecipeTimeUnit.MINUTOS,
     }));
     expect(response.body as PlannerEntryResponseDto[]).toEqual(expected);
-    expect(getSignedReadUrl).toHaveBeenCalledTimes(3);
+    expect(getSignedReadUrl).toHaveBeenCalledTimes(1);
     expect(getSignedReadUrl).toHaveBeenCalledWith(imageKey);
     expect(await prisma.plannerEntry.count()).toBe(6);
+  });
+
+  it('signs each distinct image once even when recipes are planned on several days', async () => {
+    const second = await createRecipe('Tomato soup');
+    const secondKey = 'recipes/planner-list-tomato.webp';
+    await prisma.recipeImage.create({
+      data: { recipeId: second.id, s3Key: secondKey },
+    });
+    await createEntry('2026-11-03');
+    await createEntry('2026-11-04');
+    await createEntry('2026-11-05', userId, second.id);
+    await createEntry('2026-11-06', userId, second.id);
+
+    const response = await get().expect(200);
+    expect(
+      (response.body as PlannerEntryResponseDto[]).map(
+        ({ imageUrl }) => imageUrl,
+      ),
+    ).toEqual([
+      signedUrl(imageKey),
+      signedUrl(imageKey),
+      signedUrl(secondKey),
+      signedUrl(secondKey),
+    ]);
+    expect(getSignedReadUrl).toHaveBeenCalledTimes(2);
+    expect(getSignedReadUrl).toHaveBeenCalledWith(imageKey);
+    expect(getSignedReadUrl).toHaveBeenCalledWith(secondKey);
+  });
+
+  it('deduplicates by image key even when different recipes share the same object', async () => {
+    const second = await createRecipe('Roasted chicken');
+    await prisma.recipeImage.create({
+      data: { recipeId: second.id, s3Key: imageKey },
+    });
+    await createEntry('2026-11-03');
+    await createEntry('2026-11-04', userId, second.id);
+
+    const response = await get().expect(200);
+    expect(
+      (response.body as PlannerEntryResponseDto[]).map(
+        ({ imageUrl }) => imageUrl,
+      ),
+    ).toEqual([signedUrl(imageKey), signedUrl(imageKey)]);
+    expect(getSignedReadUrl).toHaveBeenCalledTimes(1);
+  });
+
+  it('signs again for each request rather than caching expiring URLs across requests', async () => {
+    await createEntry('2026-11-03');
+    getSignedReadUrl.mockResolvedValueOnce('https://signed.test/first-request');
+    getSignedReadUrl.mockResolvedValueOnce(
+      'https://signed.test/second-request',
+    );
+
+    const first = await get().expect(200);
+    const second = await get().expect(200);
+    expect((first.body as PlannerEntryResponseDto[])[0].imageUrl).toBe(
+      'https://signed.test/first-request',
+    );
+    expect((second.body as PlannerEntryResponseDto[])[0].imageUrl).toBe(
+      'https://signed.test/second-request',
+    );
+    expect(getSignedReadUrl).toHaveBeenCalledTimes(2);
   });
 
   it('returns an empty array for a user without entries, even when another user has some', async () => {
@@ -223,7 +285,11 @@ describeWithDatabase('GET /planner (e2e)', () => {
 
   it.each([
     { from: '2028-02-28', to: '2028-03-01', date: '2028-02-29' },
-    { from: '2026-10-20', to: '2026-11-20', date: '2026-11-03' },
+    { from: '2026-10-21', to: '2026-11-20', date: '2026-11-03' },
+    { from: '2028-02-01', to: '2028-03-02', date: '2028-02-29' },
+    { from: '2026-12-15', to: '2027-01-14', date: '2027-01-01' },
+    { from: '0001-01-01', to: '0001-01-31', date: '0001-01-31' },
+    { from: '9999-12-01', to: '9999-12-31', date: '9999-12-31' },
   ])(
     'accepts valid calendar ranges including $date',
     async ({ from, to, date }) => {
@@ -232,6 +298,22 @@ describeWithDatabase('GET /planner (e2e)', () => {
       expect(
         (response.body as PlannerEntryResponseDto[]).map((entry) => entry.id),
       ).toEqual([entry.id]);
+    },
+  );
+
+  it.each([
+    { from: '2026-10-20', to: '2026-11-20' },
+    { from: '2028-02-01', to: '2028-03-03' },
+    { from: '2026-12-15', to: '2027-01-15' },
+    { from: '0001-01-01', to: '9999-12-31' },
+  ])(
+    'rejects a range longer than 31 inclusive days: $from to $to',
+    async (query) => {
+      const response = await get(query).expect(400);
+      expect((response.body as { message: string[] }).message).toContain(
+        'planner range must not exceed 31 days, including from and to',
+      );
+      expect(getSignedReadUrl).not.toHaveBeenCalled();
     },
   );
 

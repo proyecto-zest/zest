@@ -55,16 +55,28 @@ export class PlannerEntriesService {
       orderBy: [{ date: 'asc' }, { id: 'asc' }],
     });
 
-    // Sign after the database read; no transaction or per-entry recipe lookup.
-    return Promise.all(
-      entries.map(async ({ recipe, ...entry }) => {
-        const imageKey = recipe.images[0]?.s3Key;
-        const imageUrl = imageKey
-          ? await this.storageService.getSignedReadUrl(imageKey)
-          : null;
-        return this.toResponse(entry, recipe, imageUrl);
-      }),
+    // Sign each distinct key once, after the database read. The map lives only
+    // for this request, so later requests always receive fresh signed URLs.
+    const imageKeys = [
+      ...new Set(
+        entries.flatMap(({ recipe }) =>
+          recipe.images.map(({ s3Key }) => s3Key),
+        ),
+      ),
+    ];
+    const signedImages = new Map(
+      await Promise.all(
+        imageKeys.map(
+          async (key) =>
+            [key, await this.storageService.getSignedReadUrl(key)] as const,
+        ),
+      ),
     );
+    return entries.map(({ recipe, ...entry }) => {
+      const imageKey = recipe.images[0]?.s3Key;
+      const imageUrl = imageKey ? (signedImages.get(imageKey) ?? null) : null;
+      return this.toResponse(entry, recipe, imageUrl);
+    });
   }
 
   async create(

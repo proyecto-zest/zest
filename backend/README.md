@@ -109,10 +109,13 @@ adicional. Si el usuario se elimina durante la request, responde 401.
 un array con las entradas del usuario en ese rango, incluyendo ambos días.
 Cada entrada tiene la misma forma que la respuesta de `POST /planner`:
 `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time` y `timeUnit`.
-Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`.
+Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`,
+firmada una vez por key en cada request.
 El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
-Ambas fechas son obligatorias y deben ser fechas reales sin hora ni zona horaria.
-Un rango invertido o fechas inválidas devuelve 400; sin token, 401.
+Ambas fechas son obligatorias, sin hora ni zona horaria, con un máximo de 31 días
+incluyendo los extremos. Fechas inválidas o un rango invertido/excesivo devuelven
+400; sin token, 401. Borrar una receta elimina sus entradas del planner de todos
+los usuarios por el `CASCADE` definido en ZEST-118.
 
 ## Comandos útiles
 
