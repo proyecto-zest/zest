@@ -47,6 +47,7 @@ export function SelectField({
         // Label text plus the trigger's own text ("Category *, Dinner"), not the
         // whole <label>, which also holds the open options and the error.
         aria-labelledby={label ? `${id}-label ${id}` : undefined}
+        aria-required={required}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         triggerClassName={fieldInputClasses(

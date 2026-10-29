@@ -14,7 +14,10 @@ interface FieldWrapProps {
   children: ReactNode
 }
 
-/** Shared label/required-mark/error/hint chrome for TextField, NumberField, SelectField and TextAreaField. */
+/**
+ * Shared label/required-mark/error/hint chrome for TextField, NumberField, SelectField and TextAreaField.
+ * Only the label text is a `<label>`: wrapping the control would forward clicks on a select's open list to its trigger.
+ */
 export function FieldWrap({
   label,
   required,
@@ -27,12 +30,12 @@ export function FieldWrap({
   children,
 }: FieldWrapProps) {
   return (
-    <label className={`flex flex-col gap-2 ${className}`} htmlFor={htmlFor}>
+    <div className={`flex flex-col gap-2 ${className}`}>
       {label && (
-        <span id={labelId} className="text-sm font-semibold">
+        <label id={labelId} htmlFor={htmlFor} className="text-sm font-semibold">
           {label}
           {required && <span className="text-error"> *</span>}
-        </span>
+        </label>
       )}
       {children}
       {(error || hint) && (
@@ -45,6 +48,6 @@ export function FieldWrap({
           {hint && <span className="ml-auto text-muted-foreground">{hint}</span>}
         </div>
       )}
-    </label>
+    </div>
   )
 }
