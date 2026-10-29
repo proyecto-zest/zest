@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Search } from 'lucide-react'
 import type { Ingredient } from '../../features/recipe-create/types'
 import { fieldInputClasses } from '../ui/fieldInputClasses'
+import { normalizeSearchText } from '../../lib/search/normalizeSearchText'
 
 interface IngredientFilterFieldProps {
   ingredients: Ingredient[]
@@ -45,10 +46,10 @@ export function IngredientFilterField({ ingredients, value, onChange }: Ingredie
     onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id])
   }
 
-  const filtered = useMemo(
-    () => ingredients.filter((i) => i.name.toLowerCase().includes(query.trim().toLowerCase())),
-    [ingredients, query],
-  )
+  const filtered = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query.trim())
+    return ingredients.filter((i) => normalizeSearchText(i.name).includes(normalizedQuery))
+  }, [ingredients, query])
 
   return (
     <div ref={containerRef} className={`relative ${open ? 'z-dropdown' : ''}`}>

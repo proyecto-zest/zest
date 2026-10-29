@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
   IngredientUnit,
+  Prisma,
   RecipeCategory,
   RecipeDifficulty,
   RecipeTimeUnit,
@@ -19,6 +20,7 @@ import {
   MAX_RECIPES_LIMIT,
 } from './recipes.constants';
 import { RecipesService } from './recipes.service';
+import { RecipeSearchPage } from './recipe-search.query';
 
 type RecipeCreateArguments = {
   data: {
@@ -97,6 +99,7 @@ describe('RecipesService', () => {
     [unknown]
   >();
   const recipeCreate = jest.fn<Promise<unknown>, [unknown]>();
+  const recipeSearch = jest.fn<Promise<RecipeSearchPage[]>, [Prisma.Sql]>();
   const recipeCount = jest.fn<Promise<number>, [unknown]>();
   const recipeFindMany = jest.fn<
     Promise<Array<Record<string, unknown>>>,
@@ -145,11 +148,16 @@ describe('RecipesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    recipeSearch.mockResolvedValue([{ total: 0, ids: [] }]);
+    recipeCount.mockResolvedValue(0);
     runTransaction.mockImplementation(
       async (operation: (transaction: unknown) => Promise<unknown>) =>
         operation({
+          $queryRaw: recipeSearch,
           ingredient: { findMany: ingredientFindMany },
           recipe: {
+            count: recipeCount,
+            findMany: recipeFindMany,
             create: recipeCreate,
             delete: recipeDelete,
             findUniqueOrThrow: transactionRecipeFindUniqueOrThrow,
@@ -189,6 +197,7 @@ describe('RecipesService', () => {
     service = new RecipesService(
       {
         $transaction: runTransaction,
+        $queryRaw: recipeSearch,
         recipe: {
           count: recipeCount,
           findMany: recipeFindMany,
@@ -322,6 +331,7 @@ describe('RecipesService', () => {
         totalPages: 3,
       },
     });
+    expect(runTransaction).not.toHaveBeenCalled();
     expect(recipeFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
         skip: MAX_RECIPES_LIMIT,
@@ -330,14 +340,13 @@ describe('RecipesService', () => {
     );
   });
 
-  it('combines all recipe filters with AND', async () => {
-    recipeCount.mockResolvedValue(0);
+  it('binds text and structured filters as SQL parameters', async () => {
     recipeFindMany.mockResolvedValue([]);
 
     await service.findAll({
       page: 1,
       limit: 20,
-      name: 'pasta',
+      name: "limón' OR TRUE --",
       ingredient: [tomatoId, oilId],
       category: RecipeCategory.ALMUERZO,
       difficulty: RecipeDifficulty.FACIL,
@@ -346,88 +355,74 @@ describe('RecipesService', () => {
       ingredientName: 'tomat',
     });
 
-    const expectedWhere = {
-      AND: [
-        { title: { contains: 'pasta', mode: 'insensitive' } },
-        { ingredients: { some: { ingredientId: tomatoId } } },
-        { ingredients: { some: { ingredientId: oilId } } },
-        { category: RecipeCategory.ALMUERZO },
-        { difficulty: RecipeDifficulty.FACIL },
-        { authorId: DEFAULT_RECIPE_AUTHOR_ID },
-        { author: { name: { contains: 'santi', mode: 'insensitive' } } },
-        {
-          ingredients: {
-            some: {
-              ingredient: { name: { contains: 'tomat', mode: 'insensitive' } },
-            },
-          },
-        },
-      ],
-    };
-    expect(recipeCount).toHaveBeenCalledWith({ where: expectedWhere });
+    const sql = recipeSearch.mock.calls[0][0];
+    expect(sql.values).toEqual([
+      "limón' OR TRUE --",
+      'santi',
+      'tomat',
+      tomatoId,
+      oilId,
+      RecipeCategory.ALMUERZO,
+      RecipeDifficulty.FACIL,
+      DEFAULT_RECIPE_AUTHOR_ID,
+      20,
+      0,
+    ]);
+    expect(sql.text).not.toContain("limón' OR TRUE --");
+    expect(runTransaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    });
     expect(recipeFindMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expectedWhere }),
+      expect.objectContaining({ where: { id: { in: [] } } }),
     );
   });
 
-  it('filters by a partial case-insensitive ingredient name', async () => {
-    recipeCount.mockResolvedValue(0);
-    recipeFindMany.mockResolvedValue([]);
-
-    await service.findAll({ page: 1, limit: 20, ingredientName: 'Tomat' });
-
-    expect(recipeCount).toHaveBeenCalledWith({
-      where: {
-        AND: [
-          {
-            ingredients: {
-              some: {
-                ingredient: {
-                  name: { contains: 'Tomat', mode: 'insensitive' },
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
-  });
-
-  it('does not filter by ingredient name when it is an empty string', async () => {
-    recipeCount.mockResolvedValue(0);
-    recipeFindMany.mockResolvedValue([]);
-
-    await service.findAll({ page: 1, limit: 20, ingredientName: '' });
-
-    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
-  });
-
-  it('filters by authorId alone', async () => {
-    recipeCount.mockResolvedValue(0);
+  it('does not filter by text when the values are empty', async () => {
     recipeFindMany.mockResolvedValue([]);
 
     await service.findAll({
       page: 1,
       limit: 20,
+      name: '',
+      author: '',
+      ingredientName: '',
+    });
+
+    expect(recipeSearch).not.toHaveBeenCalled();
+    expect(recipeCount).toHaveBeenCalled();
+    expect(runTransaction).not.toHaveBeenCalled();
+  });
+
+  it('uses the shared structured filters for both typed feed queries without a transaction', async () => {
+    recipeFindMany.mockResolvedValue([]);
+
+    await service.findAll({
+      page: 2,
+      limit: 20,
+      ingredient: [tomatoId, oilId],
+      category: RecipeCategory.ALMUERZO,
+      difficulty: RecipeDifficulty.FACIL,
       authorId: DEFAULT_RECIPE_AUTHOR_ID,
     });
 
-    expect(recipeCount).toHaveBeenCalledWith({
-      where: { AND: [{ authorId: DEFAULT_RECIPE_AUTHOR_ID }] },
-    });
-  });
-
-  it('does not filter by author when it is an empty string', async () => {
-    recipeCount.mockResolvedValue(0);
-    recipeFindMany.mockResolvedValue([]);
-
-    await service.findAll({ page: 1, limit: 20, author: '' });
-
-    expect(recipeCount).toHaveBeenCalledWith({ where: {} });
+    const where: Prisma.RecipeWhereInput = {
+      AND: [
+        { ingredients: { some: { ingredientId: tomatoId } } },
+        { ingredients: { some: { ingredientId: oilId } } },
+        { category: RecipeCategory.ALMUERZO },
+        { difficulty: RecipeDifficulty.FACIL },
+        { authorId: DEFAULT_RECIPE_AUTHOR_ID },
+      ],
+    };
+    expect(recipeCount).toHaveBeenCalledWith({ where });
+    expect(recipeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where, skip: 20, take: 20 }),
+    );
+    expect(recipeSearch).not.toHaveBeenCalled();
+    expect(runTransaction).not.toHaveBeenCalled();
   });
 
   it('returns an empty first page when there are no recipes', async () => {
-    recipeCount.mockResolvedValue(0);
     recipeFindMany.mockResolvedValue([]);
 
     await expect(service.findAll({ page: 1, limit: 20 })).resolves.toEqual({
