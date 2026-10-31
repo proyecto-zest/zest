@@ -1,16 +1,16 @@
 import { CollectionRecipeSearchControls } from '../collections/CollectionRecipeSearchControls'
 import { useCollectionRecipeSearch } from '../collections/useCollectionRecipeSearch'
 import { PickerRecipeResults } from './PickerRecipeResults'
-import type { PickedRecipe, PickerSearch } from './types'
+import type { PickerSearch, PickerSelection } from './types'
 
 interface PickerRecipesTabProps {
   search: PickerSearch
   onSearchChange: (search: PickerSearch) => void
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
 /** Every recipe on Zest (own and other users'), searchable by name or ingredient. */
-export function PickerRecipesTab({ search, onSearchChange, onSelect }: PickerRecipesTabProps) {
+export function PickerRecipesTab({ search, onSearchChange, selection }: PickerRecipesTabProps) {
   const results = useCollectionRecipeSearch(search)
 
   // Any filter change starts over from the first page of results.
@@ -34,7 +34,7 @@ export function PickerRecipesTab({ search, onSearchChange, onSelect }: PickerRec
           difficulty={search.difficulty}
           page={search.page}
           onPageChange={(page) => onSearchChange({ ...search, page })}
-          onSelect={onSelect}
+          selection={selection}
         />
       </div>
     </>

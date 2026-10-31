@@ -1,14 +1,14 @@
 import { RecipeImage } from '../../components/RecipeImage'
 import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import { PickerRow } from './PickerRow'
-import type { PickedRecipe } from './types'
+import type { PickedRecipe, PickerSelection } from './types'
 
 interface PickerRecipeRowProps {
   recipe: PickedRecipe
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
-export function PickerRecipeRow({ recipe, onSelect }: PickerRecipeRowProps) {
+export function PickerRecipeRow({ recipe, selection }: PickerRecipeRowProps) {
   return (
     <PickerRow
       title={recipe.title}
@@ -16,7 +16,9 @@ export function PickerRecipeRow({ recipe, onSelect }: PickerRecipeRowProps) {
       thumbnail={<RecipeImage src={recipe.imageUrl ?? undefined} alt="" />}
       action="add"
       aria-label={`Add ${recipe.title}`}
-      onClick={() => onSelect(recipe)}
+      pending={selection.pendingId === recipe.id}
+      disabled={selection.pendingId !== null}
+      onClick={() => selection.onSelect(recipe)}
     />
   )
 }
