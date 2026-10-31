@@ -2,8 +2,14 @@ import { Link } from 'react-router-dom'
 import { RecipeImage } from '../../components/RecipeImage'
 import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import type { PlannerEntry } from '../../services/planner'
+import { RemoveMealButton } from './RemoveMealButton'
 
-export function PlannerMealRow({ entry }: { entry: PlannerEntry }) {
+interface PlannerMealRowProps {
+  entry: PlannerEntry
+  onRemove: () => void
+}
+
+export function PlannerMealRow({ entry, onRemove }: PlannerMealRowProps) {
   const recipePath = `/recipes/${entry.recipeId}`
   return (
     <div className="flex gap-2.5 rounded-xl border border-border bg-background p-2">
@@ -30,6 +36,7 @@ export function PlannerMealRow({ entry }: { entry: PlannerEntry }) {
       <span className="flex shrink-0 items-center text-xs font-bold text-muted-foreground">
         <span className="sr-only">Quantity </span>×{entry.quantity}
       </span>
+      <RemoveMealButton title={entry.title} onClick={onRemove} />
     </div>
   )
 }
