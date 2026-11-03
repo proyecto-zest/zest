@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import { useCollectionDetail } from '../collections/useCollectionDetail'
-import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
+import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
 import { toPickedRecipe, type PickedRecipe } from './types'
 
@@ -23,16 +23,16 @@ export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollecti
         <ArrowLeft aria-hidden="true" className="h-4 w-4" />
         Collections
       </button>
-      {state.status === 'loading' && <PickerListStatus status="loading" label="recipes" />}
+      {state.status === 'loading' && <ListStatus status="loading" label="recipes" />}
       {state.status === 'notFound' && (
-        <PickerListStatus
+        <ListStatus
           status="error"
           label="recipes"
           message="This collection no longer exists."
         />
       )}
       {state.status === 'error' && (
-        <PickerListStatus
+        <ListStatus
           status="error"
           label="recipes"
           message={state.message}

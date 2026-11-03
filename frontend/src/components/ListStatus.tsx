@@ -1,15 +1,15 @@
-import { Alert } from '../../components/alert'
-import { Button } from '../../components/ui/Button'
+import { Alert } from './alert'
+import { Button } from './ui/Button'
 
-interface PickerListStatusProps {
+interface ListStatusProps {
   status: 'loading' | 'error'
   label: string
   message?: string
   onRetry?: () => void
 }
 
-/** Loading rows or an error with retry, for every list inside the picker. */
-export function PickerListStatus({ status, label, message, onRetry }: PickerListStatusProps) {
+/** Loading rows or an error with retry, for any list that loads from the API. */
+export function ListStatus({ status, label, message, onRetry }: ListStatusProps) {
   if (status === 'loading') {
     return (
       <div role="status" className="flex flex-col gap-2.5">

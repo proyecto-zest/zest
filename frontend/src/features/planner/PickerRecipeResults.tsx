@@ -1,6 +1,6 @@
 import type { useCollectionRecipeSearch } from '../collections/useCollectionRecipeSearch'
 import { Pagination } from '../feed/Pagination'
-import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
+import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
 import { toPickedRecipe, type PickedRecipe } from './types'
 
@@ -21,10 +21,10 @@ export function PickerRecipeResults({
   onPageChange,
   onSelect,
 }: PickerRecipeResultsProps) {
-  if (state.status === 'loading') return <PickerListStatus status="loading" label="recipes" />
+  if (state.status === 'loading') return <ListStatus status="loading" label="recipes" />
   if (state.status === 'error') {
     return (
-      <PickerListStatus
+      <ListStatus
         status="error"
         label="recipes"
         message={state.message}
