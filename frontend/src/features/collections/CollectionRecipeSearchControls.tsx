@@ -10,7 +10,7 @@ interface CollectionRecipeSearchControlsProps {
   field: CollectionSearchField
   query: string
   difficulty: CollectionDifficulty
-  disabled: boolean
+  disabled?: boolean
   onFieldChange: (field: CollectionSearchField) => void
   onQueryChange: (query: string) => void
   onDifficultyChange: (difficulty: CollectionDifficulty) => void
