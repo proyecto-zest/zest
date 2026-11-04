@@ -1,5 +1,6 @@
 import type { PlannerEntry } from '../../services/planner'
 import { formatPlannerDate } from './formatPlannerDate'
+import { PlannerDayHeader } from './PlannerDayHeader'
 import { PlannerMealRow } from './PlannerMealRow'
 
 interface PlannerDayCardProps {
@@ -10,6 +11,7 @@ interface PlannerDayCardProps {
   entries: PlannerEntry[]
   onAddMeal: () => void
   onRemoveMeal: (entry: PlannerEntry) => void
+  setQuantity: (id: string, quantity: number) => void
 }
 
 export function PlannerDayCard({
@@ -19,6 +21,7 @@ export function PlannerDayCard({
   entries,
   onAddMeal,
   onRemoveMeal,
+  setQuantity,
 }: PlannerDayCardProps) {
   return (
     <section
@@ -26,21 +29,15 @@ export function PlannerDayCard({
       aria-current={isToday ? 'date' : undefined}
       className="flex min-h-[20rem] flex-col overflow-hidden rounded-2xl border border-border bg-card"
     >
-      <div
-        className={`flex items-center justify-between border-b border-border px-4 py-3.5 ${isToday ? 'bg-accent/20' : 'bg-background'}`}
-      >
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
-        <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${isToday ? 'bg-accent text-accent-foreground' : 'text-foreground'}`}
-        >
-          {Number(date.slice(8))}
-        </span>
-      </div>
+      <PlannerDayHeader label={label} date={date} isToday={isToday} />
       <div className="flex flex-1 flex-col gap-2.5 p-3">
         {entries.map((entry) => (
-          <PlannerMealRow key={entry.id} entry={entry} onRemove={() => onRemoveMeal(entry)} />
+          <PlannerMealRow
+            key={entry.id}
+            entry={entry}
+            onRemove={() => onRemoveMeal(entry)}
+            setQuantity={setQuantity}
+          />
         ))}
         <button
           type="button"
