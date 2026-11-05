@@ -19,6 +19,8 @@ describe('PlannerEntriesService', () => {
   };
   const dto = { recipeId: recipe.id, date: '2026-11-03', quantity: 1 };
   const upsert = jest.fn();
+  const findEntry = jest.fn();
+  const deleteEntries = jest.fn();
   const sign = jest.fn();
   let service: PlannerEntriesService;
 
@@ -34,12 +36,28 @@ describe('PlannerEntriesService', () => {
     service = new PlannerEntriesService(
       {
         recipe: { findUnique: jest.fn().mockResolvedValue(recipe) },
-        plannerEntry: { upsert },
+        plannerEntry: {
+          upsert,
+          findUnique: findEntry,
+          deleteMany: deleteEntries,
+        },
       } as unknown as PrismaService,
       {
         getSignedReadUrl: sign,
       } as unknown as StorageService,
     );
+  });
+
+  it('returns 404 if the entry disappears between the ownership check and deletion', async () => {
+    findEntry.mockResolvedValueOnce({ userId: 'user' });
+    deleteEntries.mockResolvedValueOnce({ count: 0 });
+
+    await expect(service.remove('user', 'entry')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(deleteEntries).toHaveBeenCalledWith({
+      where: { id: 'entry', userId: 'user' },
+    });
   });
 
   it('finishes signing before writing', async () => {
