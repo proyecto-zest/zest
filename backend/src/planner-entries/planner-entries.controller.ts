@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CurrentUserGuard } from '../auth/current-user.guard';
@@ -6,6 +16,7 @@ import { UserResponseDto } from '../users/dto/user-response.dto';
 import { CreatePlannerEntryDto } from './dto/create-planner-entry.dto';
 import { ListPlannerEntriesQueryDto } from './dto/list-planner-entries-query.dto';
 import { PlannerEntryResponseDto } from './dto/planner-entry-response.dto';
+import { UpdatePlannerEntryDto } from './dto/update-planner-entry.dto';
 import { PlannerEntriesService } from './planner-entries.service';
 
 @Controller('planner')
@@ -28,5 +39,14 @@ export class PlannerEntriesController {
     @Body() dto: CreatePlannerEntryDto,
   ): Promise<PlannerEntryResponseDto> {
     return this.plannerEntriesService.create(user.id, dto);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePlannerEntryDto,
+  ): Promise<PlannerEntryResponseDto> {
+    return this.plannerEntriesService.update(user.id, id, dto);
   }
 }

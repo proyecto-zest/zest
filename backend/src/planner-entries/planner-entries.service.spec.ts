@@ -19,12 +19,21 @@ describe('PlannerEntriesService', () => {
   };
   const dto = { recipeId: recipe.id, date: '2026-11-03', quantity: 1 };
   const upsert = jest.fn();
+  const findEntry = jest.fn();
+  const updateEntry = jest.fn();
   const sign = jest.fn();
   let service: PlannerEntriesService;
 
   beforeEach(() => {
     jest.clearAllMocks();
     sign.mockResolvedValue('https://signed.test/soup');
+    findEntry.mockResolvedValue({ userId: 'user', recipe });
+    updateEntry.mockResolvedValue({
+      id: 'entry',
+      date: new Date('2026-11-03'),
+      recipeId: recipe.id,
+      quantity: 3,
+    });
     upsert.mockResolvedValue({
       id: 'entry',
       recipeId: recipe.id,
@@ -34,11 +43,53 @@ describe('PlannerEntriesService', () => {
     service = new PlannerEntriesService(
       {
         recipe: { findUnique: jest.fn().mockResolvedValue(recipe) },
-        plannerEntry: { upsert },
+        plannerEntry: { upsert, findUnique: findEntry, update: updateEntry },
       } as unknown as PrismaService,
       {
         getSignedReadUrl: sign,
       } as unknown as StorageService,
+    );
+  });
+
+  it('finishes signing before updating and scopes the write to the owner', async () => {
+    sign.mockImplementationOnce(() => {
+      expect(updateEntry).not.toHaveBeenCalled();
+      return Promise.resolve('https://signed.test/soup');
+    });
+    await service.update('user', 'entry', { quantity: 3 });
+    expect(updateEntry).toHaveBeenCalledWith({
+      where: { id: 'entry', userId: 'user' },
+      data: { quantity: 3 },
+      select: { id: true, date: true, quantity: true, recipeId: true },
+    });
+  });
+
+  it('does not update if image signing fails', async () => {
+    const error = new Error('Credentials unavailable');
+    sign.mockRejectedValueOnce(error);
+    await expect(service.update('user', 'entry', { quantity: 3 })).rejects.toBe(
+      error,
+    );
+    expect(updateEntry).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 if the entry is deleted between the ownership check and update', async () => {
+    updateEntry.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Record not found', {
+        code: 'P2025',
+        clientVersion: '6.19.3',
+      }),
+    );
+    await expect(
+      service.update('user', 'entry', { quantity: 3 }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('preserves unrelated update failures', async () => {
+    const error = new Error('Database unavailable');
+    updateEntry.mockRejectedValueOnce(error);
+    await expect(service.update('user', 'entry', { quantity: 3 })).rejects.toBe(
+      error,
     );
   });
 
