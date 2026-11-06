@@ -36,6 +36,7 @@ describe('PlannerEntriesService', () => {
     });
     upsert.mockResolvedValue({
       id: 'entry',
+      recipeId: recipe.id,
       date: new Date('2026-11-03'),
       quantity: 1,
     });

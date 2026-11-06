@@ -24,6 +24,26 @@ Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
 Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
 archivo `.env` al repositorio.
 
+`GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
+mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
+Los filtros se combinan con AND; `%`, `_` y `\` se buscan literalmente.
+`enable_unaccent_search` habilita `unaccent` e `index_accent_search` agrega
+`pg_trgm`, la función simple `search_unaccent` y los índices GIN de búsqueda.
+Aplicar las migraciones con `npm run prisma:migrate:deploy`; el rol de
+`DIRECT_URL` necesita permisos para instalar ambas extensiones.
+
+Los filtros estructurados comparten definición entre Prisma y SQL. Solo la
+búsqueda textual usa SQL parametrizado con `unaccent` y una transacción
+`RepeatableRead`; el feed sin texto usa Prisma sin transacción. El firmado de
+imágenes queda fuera de la transacción.
+Si cambia el diccionario de `unaccent`, reconstruir los índices
+`recipes_title_search_idx`, `ingredients_name_search_idx` y `users_name_search_idx`.
+Las búsquedas cortas o poco selectivas pueden requerir escaneos.
+
+El filtro local de ingredientes usa NFD. No replica las equivalencias de
+caracteres como `ß`, `æ`, `ø`, `ł` o fracciones de PostgreSQL. CI verifica la
+búsqueda sin tildes y mayúsculas sobre PostgreSQL 16.
+
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
 la conexión *pooled* y `DIRECT_URL` la directa. Ambas se cargan en Render como
@@ -107,6 +127,20 @@ adicional. Si el usuario se elimina durante la request, responde 401.
 de 1 a 100), sin cambiar receta ni fecha. Devuelve 200 con `PlannerEntryResponseDto`;
 400 si el body/UUID es inválido, 401 sin sesión, 403 si la entrada es ajena y 404
 si no existe.
+
+## Consultar el planificador
+
+`GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
+un array con las entradas del usuario en ese rango, incluyendo ambos días.
+Cada entrada tiene la misma forma que la respuesta de `POST /planner`:
+`id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time` y `timeUnit`.
+Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`,
+firmada una vez por key en cada request.
+El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
+Ambas fechas son obligatorias, sin hora ni zona horaria, con un máximo de 31 días
+incluyendo los extremos. Fechas inválidas o un rango invertido/excesivo devuelven
+400; sin token, 401. Borrar una receta elimina sus entradas del planner de todos
+los usuarios por el `CASCADE` definido en ZEST-118.
 
 ## Comandos útiles
 
