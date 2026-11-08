@@ -123,6 +123,11 @@ la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
 requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
 adicional. Si el usuario se elimina durante la request, responde 401.
 
+`PATCH /planner/:id` recibe `{ "quantity": 2 }` y reemplaza la cantidad (entero
+de 1 a 100), sin cambiar receta ni fecha. Devuelve 200 con `PlannerEntryResponseDto`;
+400 si el body/UUID es inválido, 401 sin sesión, 403 si la entrada es ajena y 404
+si no existe.
+
 ## Consultar el planificador
 
 `GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
