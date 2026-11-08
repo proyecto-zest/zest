@@ -137,6 +137,13 @@ incluyendo los extremos. Fechas inválidas o un rango invertido/excesivo devuelv
 400; sin token, 401. Borrar una receta elimina sus entradas del planner de todos
 los usuarios por el `CASCADE` definido en ZEST-118.
 
+## Quitar una entrada del planificador
+
+`DELETE /planner/:id` requiere autenticación y permite borrar solo una entrada
+del usuario logueado. Devuelve 204 sin body, 404 si no existe y 403 si pertenece
+a otro usuario. Un ID que no es UUID devuelve 400; sin token, 401.
+Solo elimina la entrada: la receta, sus imágenes y las demás entradas se conservan.
+
 ## Comandos útiles
 
 ```bash
