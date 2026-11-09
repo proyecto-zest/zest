@@ -13,16 +13,26 @@ API de Zest construida con NestJS, TypeScript, Prisma y PostgreSQL.
 ```bash
 git clone https://github.com/proyecto-zest/zest.git
 cd zest/backend
-npm install
+git switch dev
+npm ci
 cp .env.example .env
 docker compose up -d postgres
-npm run prisma:migrate:dev
+npm run prisma:generate
+npm run prisma:migrate:deploy
 npm run start:dev
 ```
 
-Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
-Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
-archivo `.env` al repositorio.
+Los valores de `.env.example` permiten arrancar y consultar `/health` con la
+base local. Para login y operaciones con imágenes, pedí al equipo los valores
+de Auth0 y AWS y reemplazá sus placeholders en `.env`. `CORS_ORIGIN` debe apuntar
+al origen del frontend. Nunca subas `.env` al repositorio.
+
+Si 5432 está ocupado, usá `POSTGRES_PORT=5433 docker compose up -d postgres`
+y cambiá el puerto a 5433 en **ambas** conexiones de `.env` (`DATABASE_URL` y
+`DIRECT_URL`). Si 3000 está ocupado, cambiá `PORT` y la URL de las requests.
+Para poblar o actualizar el catálogo local de ingredientes: `npx prisma db seed`.
+`prisma:migrate:deploy` aplica las migraciones existentes; `prisma:migrate:dev`
+se reserva para crear nuevas migraciones cuando se modifica el schema.
 
 `GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
 mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
@@ -93,49 +103,13 @@ docker compose up --build
 El servicio `migrate` espera a que PostgreSQL esté sano y aplica las migraciones
 pendientes. La API arranca cuando esa tarea termina correctamente.
 
-## Asignar una receta al planificador
+## Planificador y despliegue
 
-`POST /planner` requiere un access token válido y un usuario local ya sincronizado
-por `GET /users/me`. El usuario se obtiene de la sesión; no se acepta `userId` en
-el body. Permite recetas propias o de otro usuario.
+- [Contrato de POST, GET, PATCH y DELETE /planner](docs/planner.md).
+- [Despliegue en Render/Neon y variables de entorno](docs/deployment.md).
 
-```json
-{ "recipeId": "UUID de la receta", "date": "2026-11-03", "quantity": 2 }
-```
-
-Los tres campos son obligatorios. `date` debe ser una fecha real `YYYY-MM-DD`,
-sin hora ni zona horaria. `quantity` debe ser un entero entre 1 y 100. Repetir
-usuario/receta/fecha suma la cantidad sobre la misma entrada; si el total supera
-100, responde 400 y revierte la operación. Fechas pasadas están permitidas.
-
-Devuelve 201 tanto al crear una entrada como al incrementar una existente,
-con `id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time`
-y `timeUnit` (el enum actual `MINUTOS`/`HORAS`). `imageUrl` es una URL firmada de
-una foto de la receta, o `null` cuando no hay imágenes. Un UUID de receta
-inexistente devuelve 404; entradas inválidas devuelven 400.
-
-La base también exige `quantity` entre 1 y 100 mediante el `CHECK` de ZEST-118;
-su rechazo se traduce a 400 y no modifica la cantidad anterior.
-El planner selecciona la imagen por ID ascendente, igual que las cards. Es un
-criterio estable, no un orden de subida ni una portada marcada en el modelo.
-La URL se firma antes de escribir: si el firmado falla, no se crea ni incrementa
-la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
-requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
-adicional. Si el usuario se elimina durante la request, responde 401.
-
-## Consultar el planificador
-
-`GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
-un array con las entradas del usuario en ese rango, incluyendo ambos días.
-Cada entrada tiene la misma forma que la respuesta de `POST /planner`:
-`id`, `date`, `quantity`, `recipeId`, `title`, `imageUrl`, `time` y `timeUnit`.
-Las fechas viajan como `YYYY-MM-DD`; la imagen es una URL firmada o `null`,
-firmada una vez por key en cada request.
-El resultado se ordena por fecha e ID ascendentes; sin entradas devuelve `[]`.
-Ambas fechas son obligatorias, sin hora ni zona horaria, con un máximo de 31 días
-incluyendo los extremos. Fechas inválidas o un rango invertido/excesivo devuelven
-400; sin token, 401. Borrar una receta elimina sus entradas del planner de todos
-los usuarios por el `CASCADE` definido en ZEST-118.
+PATCH y DELETE corresponden a ZEST-130 y ZEST-123; para disponer de los cuatro
+endpoints en `dev` hay que completar su integración en ZEST-134.
 
 ## Comandos útiles
 
