@@ -4,8 +4,8 @@ import { deletePlannerEntry } from '../../services/planner'
 
 /**
  * Deletes one planned meal. On success the week reloads and the dialog closes.
- * On error the dialog stays open with the backend's message; a 404 also reloads
- * the week, since the meal is already gone and the grid should say so.
+ * A 404 counts as success: the meal is already gone, which is what the user
+ * wanted. Any other error keeps the dialog open with the backend's message.
  */
 export function useRemoveMeal(id: string, refetch: () => void, onDone: () => void) {
   const [pending, setPending] = useState(false)
@@ -23,8 +23,12 @@ export function useRemoveMeal(id: string, refetch: () => void, onDone: () => voi
       refetch()
       onDone()
     } catch (e) {
+      if (e instanceof HttpError && e.status === 404) {
+        refetch()
+        onDone()
+        return
+      }
       setError(e instanceof Error ? e.message : 'Could not remove the meal. Please try again.')
-      if (e instanceof HttpError && e.status === 404) refetch()
       busy.current = false
       setPending(false)
     }
