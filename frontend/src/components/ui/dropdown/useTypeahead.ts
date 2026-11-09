@@ -7,7 +7,7 @@ export function typeaheadIndex(labels: string[], query: string, from: number): n
   // Pressing one letter repeatedly cycles through the options that start with it.
   const cycle = [...query].every((char) => char === query[0])
   const prefix = cycle ? query[0] : query
-  const start = cycle ? from + 1 : from
+  const start = Math.max(cycle ? from + 1 : from, 0)
   for (let i = 0; i < labels.length; i++) {
     const index = (start + i) % labels.length
     if (labels[index].toLowerCase().startsWith(prefix)) return index

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useScrollToActive } from './useScrollToActive'
 
 interface OptionListProps {
   id: string
@@ -22,9 +22,7 @@ export function OptionList({
   onHover,
   onSelect,
 }: OptionListProps) {
-  useEffect(() => {
-    document.getElementById(optionId(activeIndex))?.scrollIntoView({ block: 'nearest' })
-  }, [activeIndex, optionId])
+  const markHover = useScrollToActive(activeIndex, optionId)
 
   return (
     <ul
@@ -43,7 +41,10 @@ export function OptionList({
             tabIndex={-1}
             aria-selected={option.value === value}
             onMouseDown={(e) => e.preventDefault()}
-            onMouseEnter={() => onHover(index)}
+            onMouseEnter={() => {
+              markHover()
+              onHover(index)
+            }}
             onClick={() => onSelect(option.value)}
             className={`w-full rounded-md px-2.5 py-1.5 text-left text-sm text-foreground ${
               index === activeIndex ? 'bg-secondary' : ''

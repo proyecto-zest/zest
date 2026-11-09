@@ -39,6 +39,7 @@ export function useDropdown(
     options,
     activeIndex,
     selectedIndex,
+    hasSelection: selected !== undefined,
     setActiveIndex,
     openMenu,
     close,

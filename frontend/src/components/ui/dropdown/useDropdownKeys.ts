@@ -19,6 +19,7 @@ interface DropdownKeys {
   options: { value: string; label: string }[]
   activeIndex: number
   selectedIndex: number
+  hasSelection: boolean
   setActiveIndex: (index: number) => void
   openMenu: () => void
   close: () => void
@@ -27,18 +28,19 @@ interface DropdownKeys {
 
 /** Keyboard handler for the trigger: focus never leaves it, the highlight is virtual. */
 export function useDropdownKeys(keys: DropdownKeys) {
-  const { open, options, activeIndex, selectedIndex, setActiveIndex, openMenu, close, select } =
-    keys
+  const { open, options, activeIndex, selectedIndex, hasSelection, setActiveIndex } = keys
+  const { openMenu, close, select } = keys
   const typeahead = useTypeahead(options.map((option) => option.label))
 
   return (e: KeyboardEvent<HTMLButtonElement>) => {
     const next = navigatedIndex(e.key, activeIndex, options.length - 1)
     if (e.key === 'Tab') {
       close()
-    } else if (next !== null) {
+    } else if (next !== null && (open || e.key.startsWith('Arrow'))) {
+      // A closed trigger lets Home/End/PageUp/PageDown scroll the page, like a native select.
       e.preventDefault()
       if (open) setActiveIndex(next)
-      else if (e.key.startsWith('Arrow')) openMenu()
+      else openMenu()
     } else if (open && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault()
       // The list can be empty while a form's catalog is still loading.
@@ -48,7 +50,8 @@ export function useDropdownKeys(keys: DropdownKeys) {
       e.stopPropagation()
       close()
     } else if (e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      const match = typeahead(e.key, open ? activeIndex : selectedIndex)
+      // With nothing selected, start before the first option so it can match too.
+      const match = typeahead(e.key, open ? activeIndex : hasSelection ? selectedIndex : -1)
       if (match < 0) return
       if (!open) openMenu()
       setActiveIndex(match)
