@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { ListStatus } from '../../components/ListStatus'
-import { useToast } from '../../components/ui/toast'
 import { PlannerHeader } from './PlannerHeader'
 import { PlannerWeekDays } from './PlannerWeekDays'
 import { PlannerWeekSkeleton } from './PlannerWeekSkeleton'
-import { RecipePicker } from './RecipePicker'
+import { PlannerPicker } from './PlannerPicker'
 import { usePlannerWeek } from './usePlannerWeek'
 import { formatWeekLabel, toDateKey, weekDays, weekStart } from './weekDates'
 
@@ -15,8 +14,7 @@ export function MealPlannerPage() {
   const today = new Date()
   const monday = weekStart(today, weekOffset)
   const days = weekDays(monday)
-  const { state, retry } = usePlannerWeek(days[0].date, days[6].date)
-  const { showToast } = useToast()
+  const { state, retry, refetch } = usePlannerWeek(days[0].date, days[6].date)
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,12 +42,7 @@ export function MealPlannerPage() {
         />
       )}
       {pickerDate && (
-        <RecipePicker
-          date={pickerDate}
-          // Saving with POST /planner is ZEST-117; say so instead of closing silently.
-          onSelect={() => showToast('Saving meals to the planner is not available yet.', 'error')}
-          onClose={() => setPickerDate(null)}
-        />
+        <PlannerPicker date={pickerDate} refetch={refetch} onClose={() => setPickerDate(null)} />
       )}
     </div>
   )

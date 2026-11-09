@@ -2,14 +2,14 @@ import type { useCollectionRecipeSearch } from '../collections/useCollectionReci
 import { Pagination } from '../feed/Pagination'
 import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
-import { toPickedRecipe, type PickedRecipe } from './types'
+import { toPickedRecipe, type PickerSelection } from './types'
 
 type PickerRecipeResultsProps = ReturnType<typeof useCollectionRecipeSearch> & {
   query: string
   difficulty: string
   page: number
   onPageChange: (page: number) => void
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
 export function PickerRecipeResults({
@@ -19,7 +19,7 @@ export function PickerRecipeResults({
   difficulty,
   page,
   onPageChange,
-  onSelect,
+  selection,
 }: PickerRecipeResultsProps) {
   if (state.status === 'loading') return <ListStatus status="loading" label="recipes" />
   if (state.status === 'error') {
@@ -47,7 +47,7 @@ export function PickerRecipeResults({
         <PickerRecipeRow
           key={recipe.id}
           recipe={toPickedRecipe(recipe, recipe.imageUrls[0] ?? null)}
-          onSelect={onSelect}
+          selection={selection}
         />
       ))}
       <Pagination page={page} totalPages={pagination.totalPages} onPageChange={onPageChange} />
