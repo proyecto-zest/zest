@@ -1,4 +1,5 @@
 import type { PlannerEntry } from '../../services/planner'
+import type { QuantityActions } from './useMealQuantity'
 import { formatPlannerDate } from './formatPlannerDate'
 import { PlannerDayHeader } from './PlannerDayHeader'
 import { PlannerMealRow } from './PlannerMealRow'
@@ -11,7 +12,7 @@ interface PlannerDayCardProps {
   entries: PlannerEntry[]
   onAddMeal: () => void
   onRemoveMeal: (entry: PlannerEntry) => void
-  setQuantity: (id: string, quantity: number) => void
+  quantityActions: QuantityActions
 }
 
 export function PlannerDayCard({
@@ -21,7 +22,7 @@ export function PlannerDayCard({
   entries,
   onAddMeal,
   onRemoveMeal,
-  setQuantity,
+  quantityActions,
 }: PlannerDayCardProps) {
   return (
     <section
@@ -36,7 +37,7 @@ export function PlannerDayCard({
             key={entry.id}
             entry={entry}
             onRemove={() => onRemoveMeal(entry)}
-            setQuantity={setQuantity}
+            quantityActions={quantityActions}
           />
         ))}
         <button

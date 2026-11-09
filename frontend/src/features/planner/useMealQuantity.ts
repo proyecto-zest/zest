@@ -1,17 +1,25 @@
 import { useRef, useState } from 'react'
+import { HttpError } from '../../services/httpClient'
 import { useToast } from '../../components/ui/toast'
 import { updatePlannerEntry, type PlannerEntry } from '../../services/planner'
 
 export const MAX_QUANTITY = 100
 
+/** What the stepper needs from `usePlannerWeek`. */
+export interface QuantityActions {
+  setQuantity: (id: string, quantity: number) => void
+  refetch: () => void
+}
+
 /**
  * Step ± one portion on a planned meal. The number changes on screen at once and
  * goes back, with an error toast, if PATCH /planner/:id fails. Stepping down from
  * 1 is not a quantity change: it hands over to `onRemove`, the existing remove flow.
+ * A 404 means the meal was removed elsewhere, so the week reloads instead.
  */
 export function useMealQuantity(
   entry: PlannerEntry,
-  setQuantity: (id: string, quantity: number) => void,
+  { setQuantity, refetch }: QuantityActions,
   onRemove: () => void,
 ) {
   const { showToast } = useToast()
@@ -28,7 +36,8 @@ export function useMealQuantity(
     try {
       await updatePlannerEntry(entry.id, next)
     } catch (e) {
-      setQuantity(entry.id, previous)
+      if (e instanceof HttpError && e.status === 404) refetch()
+      else setQuantity(entry.id, previous)
       showToast(
         e instanceof Error ? e.message : 'Could not change the quantity. Please try again.',
         'error',

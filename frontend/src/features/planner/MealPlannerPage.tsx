@@ -43,7 +43,7 @@ export function MealPlannerPage() {
           entries={state.entries}
           onAddMeal={setPickerDate}
           onRemoveMeal={setRemoving}
-          setQuantity={setQuantity}
+          quantityActions={{ setQuantity, refetch }}
         />
       )}
       {pickerDate && (

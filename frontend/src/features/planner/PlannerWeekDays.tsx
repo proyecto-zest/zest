@@ -1,4 +1,5 @@
 import type { PlannerEntry } from '../../services/planner'
+import type { QuantityActions } from './useMealQuantity'
 import { PlannerDayCard } from './PlannerDayCard'
 import { PlannerWeekGrid } from './PlannerWeekGrid'
 
@@ -9,7 +10,7 @@ interface PlannerWeekDaysProps {
   entries: PlannerEntry[]
   onAddMeal: (date: string) => void
   onRemoveMeal: (entry: PlannerEntry) => void
-  setQuantity: (id: string, quantity: number) => void
+  quantityActions: QuantityActions
 }
 
 /** One card per day of the week, each with its own planned meals. */
@@ -19,7 +20,7 @@ export function PlannerWeekDays({
   entries,
   onAddMeal,
   onRemoveMeal,
-  setQuantity,
+  quantityActions,
 }: PlannerWeekDaysProps) {
   return (
     <PlannerWeekGrid>
@@ -32,7 +33,7 @@ export function PlannerWeekDays({
           entries={entries.filter((entry) => entry.date === date)}
           onAddMeal={() => onAddMeal(date)}
           onRemoveMeal={onRemoveMeal}
-          setQuantity={setQuantity}
+          quantityActions={quantityActions}
         />
       ))}
     </PlannerWeekGrid>

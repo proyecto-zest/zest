@@ -2,16 +2,17 @@ import { Link } from 'react-router-dom'
 import { RecipeImage } from '../../components/RecipeImage'
 import { formatRecipeTime } from '../../lib/formatRecipeTime'
 import type { PlannerEntry } from '../../services/planner'
+import type { QuantityActions } from './useMealQuantity'
 import { QuantityStepper } from './QuantityStepper'
 import { RemoveMealButton } from './RemoveMealButton'
 
 interface PlannerMealRowProps {
   entry: PlannerEntry
   onRemove: () => void
-  setQuantity: (id: string, quantity: number) => void
+  quantityActions: QuantityActions
 }
 
-export function PlannerMealRow({ entry, onRemove, setQuantity }: PlannerMealRowProps) {
+export function PlannerMealRow({ entry, onRemove, quantityActions }: PlannerMealRowProps) {
   const recipePath = `/recipes/${entry.recipeId}`
   return (
     <div className="flex gap-2.5 rounded-xl border border-border bg-background p-2">
@@ -33,7 +34,7 @@ export function PlannerMealRow({ entry, onRemove, setQuantity }: PlannerMealRowP
         <span className="text-xs text-muted-foreground">
           {formatRecipeTime(entry.time, entry.timeUnit)}
         </span>
-        <QuantityStepper entry={entry} setQuantity={setQuantity} onRemove={onRemove} />
+        <QuantityStepper entry={entry} quantityActions={quantityActions} onRemove={onRemove} />
       </div>
       <RemoveMealButton title={entry.title} onClick={onRemove} />
     </div>
