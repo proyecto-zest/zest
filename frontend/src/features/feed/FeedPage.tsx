@@ -52,9 +52,11 @@ export function FeedPage() {
     }
   }
 
-  /** The total and the page controls stay on screen while a new page loads — only the cards below are swapped for skeletons. */
-  const pagination =
-    state.status === 'ok' || state.status === 'switchingPage' ? state.data.pagination : null
+  /** The total and the page controls stay on screen while a new page or search loads. */
+  const pagination = 'data' in state ? state.data.pagination : null
+  const loadingMore = state.status === 'switchingPage' || state.status === 'searching'
+  /** Recipes on screen: the current ones, or the previous ones (dimmed) while a search is in flight. */
+  const shown = state.status === 'ok' || state.status === 'searching' ? state.data : null
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,9 +64,7 @@ export function FeedPage() {
         <h1 className="font-serif text-2xl font-bold text-foreground">Discover</h1>
         {pagination && (
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            {state.status === 'switchingPage' && (
-              <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
-            )}
+            {loadingMore && <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />}
             {pagination.total} recipes
           </span>
         )}
@@ -125,16 +125,18 @@ export function FeedPage() {
         <p className="my-8 text-center text-sm text-muted-foreground">No recipes yet.</p>
       )}
 
-      {state.status === 'ok' && state.data.recipes.length > 0 && (
+      {shown && shown.recipes.length > 0 && (
         <div className="flex flex-col gap-6">
-          <RecipeGrid
-            recipes={state.data.recipes}
-            currentUserId={user?.id}
-            onDeleted={handleDeleted}
-          />
+          <div className={state.status === 'searching' ? 'opacity-60' : undefined}>
+            <RecipeGrid
+              recipes={shown.recipes}
+              currentUserId={user?.id}
+              onDeleted={handleDeleted}
+            />
+          </div>
           <Pagination
             page={page}
-            totalPages={state.data.pagination.totalPages}
+            totalPages={shown.pagination.totalPages}
             onPageChange={goToPage}
           />
         </div>

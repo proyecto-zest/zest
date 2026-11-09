@@ -9,9 +9,11 @@ import type { PaginatedRecipes } from '../../types/recipe'
 type SearchState =
   | { status: 'loading' }
   | { status: 'ok'; data: PaginatedRecipes }
+  /** The search changed and its results are in flight: `data` is the last good result, shown dimmed. */
+  | { status: 'searching'; data: PaginatedRecipes }
   | { status: 'error'; message: string; retryable: boolean }
 
-type Result = { key: string } & Exclude<SearchState, { status: 'loading' }>
+type Result = { key: string } & Exclude<SearchState, { status: 'loading' | 'searching' }>
 
 /** Debounces text input and cancels stale requests when a filter or page changes. */
 export function useCollectionRecipeSearch({
@@ -21,9 +23,11 @@ export function useCollectionRecipeSearch({
   page,
 }: CollectionRecipeSearchParams) {
   const [result, setResult] = useState<Result | null>(null)
+  const [lastGood, setLastGood] = useState<{ search: string; data: PaginatedRecipes } | null>(null)
   const [attempt, setAttempt] = useState(0)
   const text = query.trim()
-  const key = JSON.stringify({ field, query: text, difficulty, page })
+  const search = JSON.stringify({ field, query: text, difficulty })
+  const key = JSON.stringify({ search, page })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -34,7 +38,9 @@ export function useCollectionRecipeSearch({
           { signal: controller.signal },
         )
           .then((data) => {
-            if (!controller.signal.aborted) setResult({ status: 'ok', key, data })
+            if (controller.signal.aborted) return
+            setResult({ status: 'ok', key, data })
+            setLastGood({ search, data })
           })
           .catch((error: unknown) => {
             if (controller.signal.aborted) return
@@ -52,9 +58,15 @@ export function useCollectionRecipeSearch({
       clearTimeout(timer)
       controller.abort()
     }
-  }, [field, text, difficulty, page, key, attempt])
+  }, [field, text, difficulty, page, search, key, attempt])
 
-  const state: SearchState = result?.key === key ? result : { status: 'loading' }
+  // A page change keeps the skeletons; only a new search keeps the previous rows on screen.
+  const state: SearchState =
+    result?.key === key
+      ? result
+      : lastGood && lastGood.search !== search
+        ? { status: 'searching', data: lastGood.data }
+        : { status: 'loading' }
   const retry = () => {
     setResult(null)
     setAttempt((value) => value + 1)
