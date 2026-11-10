@@ -44,5 +44,17 @@ export function usePlannerWeek(from: string, to: string) {
   }
   // Unlike `retry`, keeps the current week on screen while the new data loads.
   const refetch = () => setAttempt((value) => value + 1)
-  return { state, retry, refetch }
+  // Optimistic edit of one entry's portions; the caller puts the old value back on failure.
+  const setQuantity = (id: string, quantity: number) =>
+    setResult((current) =>
+      current?.status === 'ok'
+        ? {
+            ...current,
+            entries: current.entries.map((entry) =>
+              entry.id === id ? { ...entry, quantity } : entry,
+            ),
+          }
+        : current,
+    )
+  return { state, retry, refetch, setQuantity }
 }

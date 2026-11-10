@@ -35,3 +35,7 @@ export const createPlannerEntry = (payload: CreatePlannerEntryPayload) =>
 /** Removes one planned meal (DELETE /planner/:id, ZEST-123): 404 if it is gone, 403 if it is not the user's. */
 export const deletePlannerEntry = (id: string) =>
   httpClient.delete<void>(`/planner/${encodeURIComponent(id)}`)
+
+/** Sets how many portions of a planned meal (PATCH /planner/:id, ZEST-130), from 1 to 100. */
+export const updatePlannerEntry = (id: string, quantity: number) =>
+  httpClient.patch<PlannerEntry>(`/planner/${encodeURIComponent(id)}`, { quantity })
