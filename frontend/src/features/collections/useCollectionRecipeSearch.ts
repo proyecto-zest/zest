@@ -60,11 +60,12 @@ export function useCollectionRecipeSearch({
     }
   }, [field, text, difficulty, page, search, key, attempt])
 
-  // A page change keeps the skeletons; only a new search keeps the previous rows on screen.
+  // A page change keeps the skeletons; only a new search keeps the previous rows on screen,
+  // and only if there were any (an empty previous result would leave a blank list).
   const state: SearchState =
     result?.key === key
       ? result
-      : lastGood && lastGood.search !== search
+      : lastGood && lastGood.search !== search && lastGood.data.recipes.length > 0
         ? { status: 'searching', data: lastGood.data }
         : { status: 'loading' }
   const retry = () => {

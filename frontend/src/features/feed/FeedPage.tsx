@@ -126,14 +126,13 @@ export function FeedPage() {
       )}
 
       {shown && shown.recipes.length > 0 && (
-        <div className="flex flex-col gap-6">
-          <div className={state.status === 'searching' ? 'opacity-60' : undefined}>
-            <RecipeGrid
-              recipes={shown.recipes}
-              currentUserId={user?.id}
-              onDeleted={handleDeleted}
-            />
-          </div>
+        // While searching, the previous results can't be opened, deleted or paged.
+        <div
+          inert={state.status === 'searching'}
+          aria-busy={state.status === 'searching'}
+          className={`flex flex-col gap-6 ${state.status === 'searching' ? 'opacity-60' : ''}`}
+        >
+          <RecipeGrid recipes={shown.recipes} currentUserId={user?.id} onDeleted={handleDeleted} />
           <Pagination
             page={page}
             totalPages={shown.pagination.totalPages}

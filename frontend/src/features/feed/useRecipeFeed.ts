@@ -20,7 +20,7 @@ export type RecipeFeedState =
    * previous cards and then collapsing to a shorter list.
    */
   | { status: 'switchingPage'; data: PaginatedRecipes; skeletonCount: number }
-  /** The filters changed and their results are in flight. `data` is the last good result, shown dimmed so typing never empties the grid. */
+  /** The filters changed and their results are in flight. `data` is the last good (non-empty) result, shown dimmed and inert so typing never empties the grid. */
   | { status: 'searching'; data: PaginatedRecipes }
   /** `staleData`, when present, is a previous page's recipes shown (atenuated) behind the error banner instead of the grid vanishing. */
   | { status: 'error'; message: string; staleData?: PaginatedRecipes }
@@ -115,7 +115,7 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
     // Only a page change within the same filters has a predictable size: the
     // pagination metadata already says how many recipes the target page holds.
     // A filter change can return anything, so the previous results stay on
-    // screen (dimmed) until the new ones arrive instead of skeletons.
+    // screen (dimmed) until the new ones arrive, or skeletons if there were none.
     const onlyPageChanged = result !== null && sameFilters(result.filters, filters)
     state = onlyPageChanged
       ? {
@@ -123,7 +123,9 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
           data: lastGoodData,
           skeletonCount: countForPage(lastGoodData.pagination, page),
         }
-      : { status: 'searching', data: lastGoodData }
+      : lastGoodData.recipes.length > 0
+        ? { status: 'searching', data: lastGoodData }
+        : { status: 'loading', skeletonCount: UNKNOWN_SKELETON_COUNT }
   } else {
     state = { status: 'loading', skeletonCount: UNKNOWN_SKELETON_COUNT }
   }

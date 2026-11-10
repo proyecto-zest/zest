@@ -130,7 +130,10 @@ export function AddRecipesToCollectionModal({
             </p>
           )}
           {shown && (
+            // While searching, the previous rows can't be added or paged.
             <div
+              inert={state.status === 'searching'}
+              aria-busy={state.status === 'searching'}
               className={`flex flex-col gap-2.5 ${state.status === 'searching' ? 'opacity-60' : ''}`}
             >
               {shown.recipes.map((recipe) => (
@@ -145,16 +148,14 @@ export function AddRecipesToCollectionModal({
                   }}
                 />
               ))}
+              <fieldset disabled={Boolean(pendingId)} className="min-w-0">
+                <Pagination
+                  page={page}
+                  totalPages={shown.pagination.totalPages}
+                  onPageChange={setPage}
+                />
+              </fieldset>
             </div>
-          )}
-          {shown && (
-            <fieldset disabled={Boolean(pendingId)} className="min-w-0">
-              <Pagination
-                page={page}
-                totalPages={shown.pagination.totalPages}
-                onPageChange={setPage}
-              />
-            </fieldset>
           )}
         </div>
       </div>
