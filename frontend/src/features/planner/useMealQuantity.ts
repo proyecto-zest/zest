@@ -9,6 +9,8 @@ export const MAX_QUANTITY = 100
 export interface QuantityActions {
   setQuantity: (id: string, quantity: number) => void
   refetch: () => void
+  /** The week is reloading: stepping now could be undone by the reload's response. */
+  refreshing: boolean
 }
 
 /**
@@ -19,7 +21,7 @@ export interface QuantityActions {
  */
 export function useMealQuantity(
   entry: PlannerEntry,
-  { setQuantity, refetch }: QuantityActions,
+  { setQuantity, refetch, refreshing }: QuantityActions,
   onRemove: () => void,
 ) {
   const { showToast } = useToast()
@@ -50,5 +52,6 @@ export function useMealQuantity(
 
   const decrease = () => (entry.quantity <= 1 ? onRemove() : void change(entry.quantity - 1))
   const increase = () => void change(entry.quantity + 1)
-  return { pending, decrease, increase, canIncrease: entry.quantity < MAX_QUANTITY }
+  const canIncrease = entry.quantity < MAX_QUANTITY
+  return { pending: pending || refreshing, decrease, increase, canIncrease }
 }

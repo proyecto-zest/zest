@@ -17,7 +17,10 @@ export function MealPlannerPage() {
   const today = new Date()
   const monday = weekStart(today, weekOffset)
   const days = weekDays(monday)
-  const { state, retry, refetch, setQuantity } = usePlannerWeek(days[0].date, days[6].date)
+  const { state, retry, refetch, setQuantity, refreshing } = usePlannerWeek(
+    days[0].date,
+    days[6].date,
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -43,7 +46,7 @@ export function MealPlannerPage() {
           entries={state.entries}
           onAddMeal={setPickerDate}
           onRemoveMeal={setRemoving}
-          quantityActions={{ setQuantity, refetch }}
+          quantityActions={{ setQuantity, refetch, refreshing }}
         />
       )}
       {pickerDate && (
