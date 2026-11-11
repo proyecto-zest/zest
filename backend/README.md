@@ -108,9 +108,6 @@ pendientes. La API arranca cuando esa tarea termina correctamente.
 - [Contrato de POST, GET, PATCH y DELETE /planner](docs/planner.md).
 - [Despliegue en Render/Neon y variables de entorno](docs/deployment.md).
 
-PATCH y DELETE corresponden a ZEST-130 y ZEST-123; para disponer de los cuatro
-endpoints en `dev` hay que completar su integración en ZEST-134.
-
 ## Comandos útiles
 
 ```bash
