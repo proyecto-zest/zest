@@ -3,6 +3,7 @@ import { RecipeMetaBadges } from '../../components/RecipeMetaBadges'
 import { RecipeAuthor } from '../../components/recipe-author'
 import type { RecipeDetailData } from '../../types/recipe'
 import { SaveRecipeButton } from '../collections/SaveRecipeButton'
+import { AddToPlannerButton } from './AddToPlannerButton'
 
 interface RecipeDetailHeaderProps {
   recipe: RecipeDetailData
@@ -34,7 +35,10 @@ export function RecipeDetailHeader({ recipe }: RecipeDetailHeaderProps) {
           servings={recipe.servings}
           size="lg"
         />
-        <SaveRecipeButton recipe={recipe} />
+        <div className="flex flex-wrap items-start gap-3">
+          <SaveRecipeButton recipe={recipe} />
+          <AddToPlannerButton recipeId={recipe.id} recipeTitle={recipe.title} />
+        </div>
       </div>
     </div>
   )
