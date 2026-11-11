@@ -7,7 +7,7 @@ type PlannerWeekState =
   | { status: 'ok'; entries: PlannerEntry[] }
   | { status: 'error'; message: string; retryable: boolean }
 
-type Result = { from: string } & Exclude<PlannerWeekState, { status: 'loading' }>
+type Result = { from: string; attempt: number } & Exclude<PlannerWeekState, { status: 'loading' }>
 
 /** The API gives no meaningful order within a day, so keep it stable by title. */
 const sortByTitle = (entries: PlannerEntry[]) =>
@@ -23,13 +23,14 @@ export function usePlannerWeek(from: string, to: string) {
     listPlannerEntries(from, to, { signal: controller.signal })
       .then((entries) => {
         if (!controller.signal.aborted)
-          setResult({ status: 'ok', from, entries: sortByTitle(entries) })
+          setResult({ status: 'ok', from, attempt, entries: sortByTitle(entries) })
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
         setResult({
           status: 'error',
           from,
+          attempt,
           message: error instanceof Error ? error.message : 'Could not load your planner.',
           retryable: !(error instanceof HttpError) || error.status >= 500,
         })
@@ -44,5 +45,14 @@ export function usePlannerWeek(from: string, to: string) {
   }
   // Unlike `retry`, keeps the current week on screen while the new data loads.
   const refetch = () => setAttempt((value) => value + 1)
-  return { state, retry, refetch }
+  // A reload is in flight; an optimistic edit now would be overwritten by its response.
+  const refreshing = result !== null && result.attempt !== attempt
+  // Optimistic edit of one entry's portions; the caller puts the old value back on failure.
+  const setQuantity = (id: string, quantity: number) =>
+    setResult((current) => {
+      if (current?.status !== 'ok') return current
+      const entries = current.entries.map((e) => (e.id === id ? { ...e, quantity } : e))
+      return { ...current, entries }
+    })
+  return { state, retry, refetch, setQuantity, refreshing }
 }

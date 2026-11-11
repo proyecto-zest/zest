@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { SingleSelectDropdown } from '../../components/recipe-search-filters/SingleSelectDropdown'
+import { SingleSelectDropdown } from '../../components/ui/SingleSelectDropdown'
 import { enumLabel } from '../../lib/enumLabels'
 import type {
   CollectionDifficulty,
@@ -10,7 +10,7 @@ interface CollectionRecipeSearchControlsProps {
   field: CollectionSearchField
   query: string
   difficulty: CollectionDifficulty
-  disabled: boolean
+  disabled?: boolean
   onFieldChange: (field: CollectionSearchField) => void
   onQueryChange: (query: string) => void
   onDifficultyChange: (difficulty: CollectionDifficulty) => void
