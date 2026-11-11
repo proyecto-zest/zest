@@ -9,7 +9,7 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ user }: ProfileHeaderProps) {
   return (
     <section className="overflow-hidden rounded-3xl border border-border bg-card">
-      <div className="h-28 bg-gradient-to-r from-primary via-ring to-accent tablet:h-36" />
+      <div className="h-28 bg-gradient-to-r from-primary via-ring to-accent tablet:h-32" />
       <div className="px-6 pb-6">
         <div className="-mt-12">
           <ProfileAvatar name={user.name} avatarUrl={user.avatarUrl} />
