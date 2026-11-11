@@ -32,6 +32,7 @@ export function AddRecipesToCollectionModal({
   const [addError, setAddError] = useState('')
   const { state, retry } = useCollectionRecipeSearch({ field, query, difficulty, page })
   const addedIds = new Set(collection.recipes.map((recipe) => recipe.id))
+  const shown = state.status === 'ok' || state.status === 'searching' ? state.data : null
 
   const close = () => {
     if (!pendingId) onClose()
@@ -128,27 +129,33 @@ export function AddRecipesToCollectionModal({
                   : 'No recipes available.'}
             </p>
           )}
-          {state.status === 'ok' &&
-            state.data.recipes.map((recipe) => (
-              <AddCollectionRecipeRow
-                key={recipe.id}
-                recipe={recipe}
-                added={addedIds.has(recipe.id)}
-                pending={pendingId === recipe.id}
-                disabled={Boolean(pendingId)}
-                onAdd={() => {
-                  void add(recipe.id)
-                }}
-              />
-            ))}
-          {state.status === 'ok' && (
-            <fieldset disabled={Boolean(pendingId)} className="min-w-0">
-              <Pagination
-                page={page}
-                totalPages={state.data.pagination.totalPages}
-                onPageChange={setPage}
-              />
-            </fieldset>
+          {shown && (
+            // While searching, the previous rows can't be added or paged.
+            <div
+              inert={state.status === 'searching'}
+              aria-busy={state.status === 'searching'}
+              className={`flex flex-col gap-2.5 ${state.status === 'searching' ? 'opacity-60' : ''}`}
+            >
+              {shown.recipes.map((recipe) => (
+                <AddCollectionRecipeRow
+                  key={recipe.id}
+                  recipe={recipe}
+                  added={addedIds.has(recipe.id)}
+                  pending={pendingId === recipe.id}
+                  disabled={Boolean(pendingId)}
+                  onAdd={() => {
+                    void add(recipe.id)
+                  }}
+                />
+              ))}
+              <fieldset disabled={Boolean(pendingId)} className="min-w-0">
+                <Pagination
+                  page={page}
+                  totalPages={shown.pagination.totalPages}
+                  onPageChange={setPage}
+                />
+              </fieldset>
+            </div>
           )}
         </div>
       </div>

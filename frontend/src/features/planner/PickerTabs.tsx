@@ -1,7 +1,7 @@
 export type PickerTab = 'recipes' | 'collections'
 
 const tabs: { id: PickerTab; label: string }[] = [
-  { id: 'recipes', label: 'Recipes' },
+  { id: 'recipes', label: 'Discover' },
   { id: 'collections', label: 'Collections' },
 ]
 
