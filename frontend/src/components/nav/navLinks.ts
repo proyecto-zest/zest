@@ -9,4 +9,5 @@ export interface NavLinkItem {
 export const navLinks: NavLinkItem[] = [
   { to: '/', label: 'Feed', end: true },
   { to: '/collections', label: 'Collections', end: false },
+  { to: '/planner', label: 'Meal Planner', end: true },
 ]

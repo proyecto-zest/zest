@@ -1,16 +1,16 @@
 import { ArrowLeft } from 'lucide-react'
 import { useCollectionDetail } from '../collections/useCollectionDetail'
-import { PickerEmptyText, PickerListStatus } from './PickerListStatus'
+import { ListStatus, PickerEmptyText } from '../../components/ListStatus'
 import { PickerRecipeRow } from './PickerRecipeRow'
-import { toPickedRecipe, type PickedRecipe } from './types'
+import { toPickedRecipe, type PickerSelection } from './types'
 
 interface PickerCollectionRecipesProps {
   id: string
   onBack: () => void
-  onSelect: (recipe: PickedRecipe) => void
+  selection: PickerSelection
 }
 
-export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollectionRecipesProps) {
+export function PickerCollectionRecipes({ id, onBack, selection }: PickerCollectionRecipesProps) {
   const { state, retry } = useCollectionDetail(id)
 
   return (
@@ -23,16 +23,12 @@ export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollecti
         <ArrowLeft aria-hidden="true" className="h-4 w-4" />
         Collections
       </button>
-      {state.status === 'loading' && <PickerListStatus status="loading" label="recipes" />}
+      {state.status === 'loading' && <ListStatus status="loading" label="recipes" />}
       {state.status === 'notFound' && (
-        <PickerListStatus
-          status="error"
-          label="recipes"
-          message="This collection no longer exists."
-        />
+        <ListStatus status="error" label="recipes" message="This collection no longer exists." />
       )}
       {state.status === 'error' && (
-        <PickerListStatus
+        <ListStatus
           status="error"
           label="recipes"
           message={state.message}
@@ -47,7 +43,7 @@ export function PickerCollectionRecipes({ id, onBack, onSelect }: PickerCollecti
           <PickerRecipeRow
             key={recipe.id}
             recipe={toPickedRecipe(recipe, recipe.imageUrl)}
-            onSelect={onSelect}
+            selection={selection}
           />
         ))}
     </>

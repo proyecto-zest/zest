@@ -6,6 +6,7 @@ import { SignupPage } from '../features/auth/SignupPage'
 import { CollectionsPage } from '../features/collections/CollectionsPage'
 import { CollectionDetailPage } from '../features/collections/CollectionDetailPage'
 import { FeedPage } from '../features/feed/FeedPage'
+import { MealPlannerPage } from '../features/planner/MealPlannerPage'
 import { RecipeCreatePage } from '../features/recipe-create/RecipeCreatePage'
 import { RecipeDetailPage } from '../features/recipe-detail/RecipeDetailPage'
 import { RecipeEditPage } from '../features/recipe-edit/RecipeEditPage'
@@ -64,6 +65,14 @@ export const routes: RouteObject[] = [
     element: (
       <ProtectedRoute>
         <CollectionDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/planner',
+    element: (
+      <ProtectedRoute>
+        <MealPlannerPage />
       </ProtectedRoute>
     ),
   },
