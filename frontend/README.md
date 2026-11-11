@@ -4,7 +4,7 @@ React + TypeScript + Vite + Tailwind CSS.
 
 ## Initial setup
 
-Requires Node 22 or newer.
+Requires Node 22 or newer (CI uses 22) and npm.
 
 ```bash
 git clone https://github.com/proyecto-zest/zest.git
@@ -13,80 +13,94 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` and set `VITE_API_URL` to the backend base URL
-(`http://localhost:3000` for a local backend).
+The clone checks out `main`, the production code. To work on the latest
+changes, run `git switch dev` before `npm install`.
 
-For the authenticated application, also fill `VITE_AUTH0_DOMAIN`,
-`VITE_AUTH0_CLIENT_ID` and `VITE_AUTH0_AUDIENCE` with the SPA/API configuration
-from Auth0. Set `VITE_AUTH0_DB_CONNECTION` to the Database connection name when
-testing password-reset emails. The app reports missing API or required Auth0
-configuration on startup; the empty example values must be filled locally.
+Then fill in `.env`. Every variable is described in
+[`docs/frontend-deployment.md`](../docs/frontend-deployment.md#environment-variables);
+ask a team member for the Auth0 values.
+
+| Variable                   | Local value                                                          |
+| -------------------------- | -------------------------------------------------------------------- |
+| `VITE_API_URL`             | `http://localhost:3000` (a local backend, see `backend/README.md`)   |
+| `VITE_AUTH0_DOMAIN`        | The team's Auth0 tenant domain                                       |
+| `VITE_AUTH0_CLIENT_ID`     | Client ID of the Auth0 SPA application                               |
+| `VITE_AUTH0_AUDIENCE`      | Identifier of the Auth0 API (same as the backend's `AUTH0_AUDIENCE`) |
+| `VITE_AUTH0_DB_CONNECTION` | Optional. Auth0 Database connection, only for password-reset emails  |
+
+The first four are required even to render the login screen. If one is empty,
+`npm run dev` starts fine but the page stays **blank** and the browser console
+shows `Missing VITE_API_URL…` or `Missing Auth0 env vars…`. Restart
+`npm run dev` after editing `.env`.
+
+Without Auth0 credentials you can still check the setup and work on the login
+and signup screens: put any non-empty placeholder in the three `VITE_AUTH0_*`
+required variables. Every other route requires a session, so it redirects to
+`/login`, and the login button will fail at Auth0.
+
+For login to work locally, `http://localhost:5173` must be in the Auth0
+application's allowed URLs and in the backend's `CORS_ORIGIN`; see
+[Configuration outside Vercel](../docs/frontend-deployment.md#configuration-outside-vercel).
 
 Never commit your `.env`. All `VITE_*` values are included in the browser build:
 they are public configuration, not a place for client secrets, database
 credentials or AWS access keys.
 
-## Production configuration (Vercel)
+## Deployment
 
-Configure the project under **Settings → Environment Variables**:
-
-- `VITE_API_URL`: the public HTTPS base URL of the Render backend, type **Config**,
-  scoped to **Production**. Do not use `localhost` or append `/health`.
-- Per ZEST-78, `VITE_AUTH0_*` remain empty during the initial provisioning. This
-  applies to the older `main` version without Auth0. Before deploying the
-  authenticated application from `dev`, configure its required Auth0 values;
-  empty values will prevent that version from starting.
-
-Redeploy after changing variables: Vite reads them during the build, so updating
-Vercel settings does not change an already published build. Keep actual
-environment-specific values in Vercel rather than this repository.
-
-To verify, open the production site and check in the browser Network panel that
-API requests target Render. A successful build does not establish that CORS or
-the backend endpoints work. Preview configuration and CORS are covered by
-ZEST-80.
+Vercel deploys `main` to production and every other branch or PR to a preview
+URL. Variables, Auth0 and CORS setup, and how to check a deployment:
+[`docs/frontend-deployment.md`](../docs/frontend-deployment.md).
 
 ## Daily use
 
-| Command             | What it does                           |
-| ------------------- | -------------------------------------- |
-| `npm run dev`       | Dev server at http://localhost:5173    |
-| `npm run build`     | Production build into `dist/`          |
-| `npm run preview`   | Serves the production build for review |
-| `npm run lint`      | ESLint                                 |
-| `npm run typecheck` | Type check without emitting            |
-| `npm run format`    | Formats with Prettier                  |
+| Command                | What it does                                              |
+| ---------------------- | --------------------------------------------------------- |
+| `npm run dev`          | Dev server at http://localhost:5173 (`PORT` overrides it) |
+| `npm run build`        | Type check and production build into `dist/`              |
+| `npm run preview`      | Serves the production build for review                    |
+| `npm run lint`         | ESLint                                                    |
+| `npm run typecheck`    | Type check without emitting                               |
+| `npm run format`       | Formats with Prettier                                     |
+| `npm run format:check` | Checks formatting without writing                         |
+
+Unit test (also run in CI):
+
+```bash
+node --experimental-strip-types --test test/search-normalization.test.ts
+```
 
 ## Structure
 
 ```
 src/
-  app/          App.tsx and route definitions
-  components/   shared components (AppShell, AppHeader, Card, Logo)
-  features/     code grouped by feature (health, ...)
+  app/          App.tsx, route definitions (routes.tsx)
+  auth/         Auth0 provider, protected routes, access-token bridge
+  components/   shared components; nav/ (site shell), ui/ (form controls,
+                buttons, modal, toast), alert/
+  features/     screens and their logic, grouped by feature (feed,
+                recipe-create, collections, profile, auth, ...)
   services/     HTTP clients, one per backend resource
-  hooks/        reusable hooks
-  styles/       Tailwind entry point
+  lib/          pure helpers (formatting, search normalization)
+  types/        shared TypeScript types
+  styles/       Tailwind entry point and design tokens
+  theme/        token mapping onto Tailwind
 ```
 
 ## Backend connection
 
 `services/httpClient.ts` centralizes HTTP calls: it uses `VITE_API_URL` as the
-base and throws `HttpError` on unsuccessful responses. Do not scatter bare
-`fetch` calls inside components.
-
-`features/health/useHealthCheck.ts` consumes `GET /health` and the home screen
-renders the result, so it is obvious at a glance whether frontend and backend
-are talking.
+base, attaches the Auth0 access token when there is a session, and throws
+`HttpError` on unsuccessful responses. Do not scatter bare `fetch` calls inside
+components.
 
 ## Layout
 
-`components/AppShell.tsx` follows the shell in the design reference
-(`support/design/uploads/zest-wireframe-design/components/site-shell.tsx`):
-a sticky header over a centered, capped content column, and no footer.
-
-Navigation, search and the profile menu are deliberately absent — their routes
-do not exist yet and each lands with its own ticket.
+`components/nav/SiteShell.tsx` wraps every route with the shell from the design
+reference (`support/design/uploads/zest-wireframe-design/components/site-shell.tsx`):
+a top navigation bar (a header and drawer on mobile) over a centered, capped
+content column, and no footer. `/login` and `/signup` render full-bleed,
+without the navigation.
 
 ## Alerts
 
@@ -144,5 +158,6 @@ Full reference: [`docs/design-system.md`](../docs/design-system.md).
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every PR and on push to `main`:
-`npm ci` → `lint` → `typecheck` → `build`.
+The `frontend` job in `.github/workflows/ci.yml` runs on every PR and on push
+to `main`: `npm ci` → `lint` → `typecheck` → search-normalization test →
+`build`. It does not check formatting; run `npm run format:check` yourself.
