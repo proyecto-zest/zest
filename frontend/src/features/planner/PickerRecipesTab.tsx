@@ -22,7 +22,6 @@ export function PickerRecipesTab({ search, onSearchChange, selection }: PickerRe
         field={search.field}
         query={search.query}
         difficulty={search.difficulty}
-        disabled={false}
         onFieldChange={(field) => change({ field })}
         onQueryChange={(query) => change({ query })}
         onDifficultyChange={(difficulty) => change({ difficulty })}
