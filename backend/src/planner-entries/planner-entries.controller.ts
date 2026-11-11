@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CurrentUserGuard } from '../auth/current-user.guard';
@@ -28,5 +40,14 @@ export class PlannerEntriesController {
     @Body() dto: CreatePlannerEntryDto,
   ): Promise<PlannerEntryResponseDto> {
     return this.plannerEntriesService.create(user.id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.plannerEntriesService.remove(user.id, id);
   }
 }
