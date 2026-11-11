@@ -1,0 +1,231 @@
+import {
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Prisma, RecipeTimeUnit } from '@prisma/client';
+
+import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
+import { PlannerEntriesService } from './planner-entries.service';
+
+describe('PlannerEntriesService', () => {
+  const recipe = {
+    id: '11111111-1111-4111-8111-111111111111',
+    title: 'Soup',
+    time: 20,
+    timeUnit: RecipeTimeUnit.MINUTOS,
+    images: [{ s3Key: 'recipes/soup.webp' }],
+  };
+  const dto = { recipeId: recipe.id, date: '2026-11-03', quantity: 1 };
+  const upsert = jest.fn();
+  const findEntry = jest.fn();
+  const deleteEntries = jest.fn();
+  const updateEntry = jest.fn();
+  const sign = jest.fn();
+  let service: PlannerEntriesService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    sign.mockResolvedValue('https://signed.test/soup');
+    findEntry.mockResolvedValue({ userId: 'user', recipe });
+    updateEntry.mockResolvedValue({
+      id: 'entry',
+      date: new Date('2026-11-03'),
+      recipeId: recipe.id,
+      quantity: 3,
+    });
+    upsert.mockResolvedValue({
+      id: 'entry',
+      recipeId: recipe.id,
+      date: new Date('2026-11-03'),
+      quantity: 1,
+    });
+    service = new PlannerEntriesService(
+      {
+        recipe: { findUnique: jest.fn().mockResolvedValue(recipe) },
+        plannerEntry: {
+          upsert,
+          findUnique: findEntry,
+          deleteMany: deleteEntries,
+          update: updateEntry,
+        },
+      } as unknown as PrismaService,
+      {
+        getSignedReadUrl: sign,
+      } as unknown as StorageService,
+    );
+  });
+
+  it('returns 404 if the entry disappears between the ownership check and deletion', async () => {
+    findEntry.mockResolvedValueOnce({ userId: 'user' });
+    deleteEntries.mockResolvedValueOnce({ count: 0 });
+
+    await expect(service.remove('user', 'entry')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(deleteEntries).toHaveBeenCalledWith({
+      where: { id: 'entry', userId: 'user' },
+    });
+  });
+
+  it('finishes signing before updating and scopes the write to the owner', async () => {
+    sign.mockImplementationOnce(() => {
+      expect(updateEntry).not.toHaveBeenCalled();
+      return Promise.resolve('https://signed.test/soup');
+    });
+    await service.update('user', 'entry', { quantity: 3 });
+    expect(updateEntry).toHaveBeenCalledWith({
+      where: { id: 'entry', userId: 'user' },
+      data: { quantity: 3 },
+      select: { id: true, date: true, quantity: true, recipeId: true },
+    });
+  });
+
+  it('does not update if image signing fails', async () => {
+    const error = new Error('Credentials unavailable');
+    sign.mockRejectedValueOnce(error);
+    await expect(service.update('user', 'entry', { quantity: 3 })).rejects.toBe(
+      error,
+    );
+    expect(updateEntry).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 if the entry is deleted between the ownership check and update', async () => {
+    updateEntry.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Record not found', {
+        code: 'P2025',
+        clientVersion: '6.19.3',
+      }),
+    );
+    await expect(
+      service.update('user', 'entry', { quantity: 3 }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('preserves unrelated update failures', async () => {
+    const error = new Error('Database unavailable');
+    updateEntry.mockRejectedValueOnce(error);
+    await expect(service.update('user', 'entry', { quantity: 3 })).rejects.toBe(
+      error,
+    );
+  });
+
+  it('finishes signing before writing', async () => {
+    sign.mockImplementationOnce(() => {
+      expect(upsert).not.toHaveBeenCalled();
+      return Promise.resolve('https://signed.test/soup');
+    });
+    await service.create('user', dto);
+    expect(upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not write if signing fails', async () => {
+    const error = new Error('Credentials unavailable');
+    sign.mockRejectedValueOnce(error);
+    await expect(service.create('user', dto)).rejects.toBe(error);
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it('maps only the quantity constraint to 400', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError(
+        'Check constraint planner_entries_quantity_check violated',
+        { code: 'P2004', clientVersion: '6.19.3' },
+      ),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('maps a recipe deleted before the upsert to 404', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Foreign key violated', {
+        code: 'P2003',
+        clientVersion: '6.19.3',
+        meta: { field_name: 'planner_entries_recipe_id_fkey (index)' },
+      }),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('maps the native upsert CHECK error to 400', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientUnknownRequestError(
+        '23514 violates check constraint planner_entries_quantity_check',
+        { clientVersion: '6.19.3' },
+      ),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('prefers the structured constraint metadata over the message', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Check constraint violated', {
+        code: 'P2004',
+        clientVersion: '6.19.3',
+        meta: { constraint: 'planner_entries_quantity_check' },
+      }),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it.each([
+    new Prisma.PrismaClientKnownRequestError('Foreign key violated', {
+      code: 'P2003',
+      clientVersion: '6.19.3',
+      meta: { constraint: 'planner_entries_user_id_fkey' },
+    }),
+    new Prisma.PrismaClientUnknownRequestError(
+      '23503 violates planner_entries_user_id_fkey',
+      { clientVersion: '6.19.3' },
+    ),
+  ])(
+    'returns 401 if the user was deleted before writing: %s',
+    async (error) => {
+      upsert.mockRejectedValueOnce(error);
+      await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+    },
+  );
+
+  it('maps a native recipe FK violation to 404', async () => {
+    upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientUnknownRequestError(
+        '23503 violates planner_entries_recipe_id_fkey',
+        { clientVersion: '6.19.3' },
+      ),
+    );
+    await expect(service.create('user', dto)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it.each([
+    new Error('Database unavailable'),
+    new Prisma.PrismaClientUnknownRequestError(
+      '23514 violates another constraint',
+      { clientVersion: '6.19.3' },
+    ),
+    new Prisma.PrismaClientKnownRequestError('Another constraint', {
+      code: 'P2004',
+      clientVersion: '6.19.3',
+    }),
+    new Prisma.PrismaClientKnownRequestError('Another FK', {
+      code: 'P2003',
+      clientVersion: '6.19.3',
+      meta: { field_name: 'another_table_user_id_fkey' },
+    }),
+  ])('preserves unrelated errors: %s', async (error) => {
+    upsert.mockRejectedValueOnce(error);
+    await expect(service.create('user', dto)).rejects.toBe(error);
+  });
+});

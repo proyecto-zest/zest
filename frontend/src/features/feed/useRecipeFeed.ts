@@ -6,20 +6,22 @@ import type { RecipeSearchFiltersValue } from '../../components/recipe-search-fi
 /** A multiple of 1, 2 and 3 — the grid's mobile/tablet/desktop column counts — so the last row of a page never falls short. */
 const PAGE_SIZE = 18
 
-/** Skeleton count when the incoming result's size can't be known yet (cold start, or a filter change). */
+/** Skeleton count on a cold start, when there is nothing to show yet and the result's size can't be known. */
 const UNKNOWN_SKELETON_COUNT = 6
 
 export type RecipeFeedState =
   | { status: 'loading'; skeletonCount: number }
   | { status: 'ok'; data: PaginatedRecipes }
   /**
-   * A new page/filters request is in flight. `data` is the result being left —
+   * A new page (same filters) is in flight. `data` is the result being left —
    * its `pagination` is still valid, so the header count and the page controls
    * stay put — while `skeletonCount` is how many cards the incoming result will
    * have, so the grid holds the right amount of space instead of showing the
    * previous cards and then collapsing to a shorter list.
    */
   | { status: 'switchingPage'; data: PaginatedRecipes; skeletonCount: number }
+  /** The filters changed and their results are in flight. `data` is the last good (non-empty) result, shown dimmed and inert so typing never empties the grid. */
+  | { status: 'searching'; data: PaginatedRecipes }
   /** `staleData`, when present, is a previous page's recipes shown (atenuated) behind the error banner instead of the grid vanishing. */
   | { status: 'error'; message: string; staleData?: PaginatedRecipes }
 
@@ -37,6 +39,19 @@ const sameFilters = (a: RecipeSearchFiltersValue, b: RecipeSearchFiltersValue) =
 /** How many recipes a given page holds, from the pagination metadata of any page of the same feed. */
 const countForPage = (pagination: RecipePagination, page: number) =>
   Math.max(0, Math.min(pagination.limit, pagination.total - (page - 1) * pagination.limit))
+
+const withoutRecipe = (data: PaginatedRecipes, id: string): PaginatedRecipes => {
+  const total = data.pagination.total - 1
+  return {
+    ...data,
+    recipes: data.recipes.filter((recipe) => recipe.id !== id),
+    pagination: {
+      ...data.pagination,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / data.pagination.limit)),
+    },
+  }
+}
 
 /**
  * Loads one page of GET /recipes for the given filters. `state` is derived
@@ -99,35 +114,28 @@ export function useRecipeFeed(page: number, filters: RecipeSearchFiltersValue) {
   } else if (lastGoodData) {
     // Only a page change within the same filters has a predictable size: the
     // pagination metadata already says how many recipes the target page holds.
-    // A filter change can return anything, so it falls back to a plain screenful.
+    // A filter change can return anything, so the previous results stay on
+    // screen (dimmed) until the new ones arrive, or skeletons if there were none.
     const onlyPageChanged = result !== null && sameFilters(result.filters, filters)
-    state = {
-      status: 'switchingPage',
-      data: lastGoodData,
-      skeletonCount: onlyPageChanged ? countForPage(lastGoodData.pagination, page) : UNKNOWN_SKELETON_COUNT,
-    }
+    state = onlyPageChanged
+      ? {
+          status: 'switchingPage',
+          data: lastGoodData,
+          skeletonCount: countForPage(lastGoodData.pagination, page),
+        }
+      : lastGoodData.recipes.length > 0
+        ? { status: 'searching', data: lastGoodData }
+        : { status: 'loading', skeletonCount: UNKNOWN_SKELETON_COUNT }
   } else {
     state = { status: 'loading', skeletonCount: UNKNOWN_SKELETON_COUNT }
   }
 
-  /** Drops a deleted recipe from the current page's in-memory data — no refetch needed. */
+  /** Drops a deleted recipe from the in-memory data — no refetch needed. `lastGoodData` too, so it never reappears while a search is in flight. */
   const removeRecipe = (id: string) => {
-    setResult((prev) => {
-      if (!prev || prev.status !== 'ok') return prev
-      const total = prev.data.pagination.total - 1
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          recipes: prev.data.recipes.filter((recipe) => recipe.id !== id),
-          pagination: {
-            ...prev.data.pagination,
-            total,
-            totalPages: Math.max(1, Math.ceil(total / prev.data.pagination.limit)),
-          },
-        },
-      }
-    })
+    setResult((prev) =>
+      prev?.status === 'ok' ? { ...prev, data: withoutRecipe(prev.data, id) } : prev,
+    )
+    setLastGoodData((prev) => prev && withoutRecipe(prev, id))
   }
 
   return { state, retry: () => setAttempt((n) => n + 1), removeRecipe }

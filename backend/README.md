@@ -13,16 +13,46 @@ API de Zest construida con NestJS, TypeScript, Prisma y PostgreSQL.
 ```bash
 git clone https://github.com/proyecto-zest/zest.git
 cd zest/backend
-npm install
+git switch dev
+npm ci
 cp .env.example .env
 docker compose up -d postgres
-npm run prisma:migrate:dev
+npm run prisma:generate
+npm run prisma:migrate:deploy
 npm run start:dev
 ```
 
-Antes de conectar servicios reales, reemplazá en `.env` los placeholders de
-Auth0 y AWS. `CORS_ORIGIN` debe apuntar al origen del frontend. Nunca subas el
-archivo `.env` al repositorio.
+Los valores de `.env.example` permiten arrancar y consultar `/health` con la
+base local. Para login y operaciones con imágenes, pedí al equipo los valores
+de Auth0 y AWS y reemplazá sus placeholders en `.env`. `CORS_ORIGIN` debe apuntar
+al origen del frontend. Nunca subas `.env` al repositorio.
+
+Si 5432 está ocupado, usá `POSTGRES_PORT=5433 docker compose up -d postgres`
+y cambiá el puerto a 5433 en **ambas** conexiones de `.env` (`DATABASE_URL` y
+`DIRECT_URL`). Si 3000 está ocupado, cambiá `PORT` y la URL de las requests.
+Para poblar o actualizar el catálogo local de ingredientes: `npx prisma db seed`.
+`prisma:migrate:deploy` aplica las migraciones existentes; `prisma:migrate:dev`
+se reserva para crear nuevas migraciones cuando se modifica el schema.
+
+`GET /recipes` compara título, nombre de ingrediente y autor sin distinguir
+mayúsculas ni tildes (también `ñ`/`n`), sin modificar los textos guardados.
+Los filtros se combinan con AND; `%`, `_` y `\` se buscan literalmente.
+`enable_unaccent_search` habilita `unaccent` e `index_accent_search` agrega
+`pg_trgm`, la función simple `search_unaccent` y los índices GIN de búsqueda.
+Aplicar las migraciones con `npm run prisma:migrate:deploy`; el rol de
+`DIRECT_URL` necesita permisos para instalar ambas extensiones.
+
+Los filtros estructurados comparten definición entre Prisma y SQL. Solo la
+búsqueda textual usa SQL parametrizado con `unaccent` y una transacción
+`RepeatableRead`; el feed sin texto usa Prisma sin transacción. El firmado de
+imágenes queda fuera de la transacción.
+Si cambia el diccionario de `unaccent`, reconstruir los índices
+`recipes_title_search_idx`, `ingredients_name_search_idx` y `users_name_search_idx`.
+Las búsquedas cortas o poco selectivas pueden requerir escaneos.
+
+El filtro local de ingredientes usa NFD. No replica las equivalencias de
+caracteres como `ß`, `æ`, `ø`, `ł` o fracciones de PostgreSQL. CI verifica la
+búsqueda sin tildes y mayúsculas sobre PostgreSQL 16.
 
 `DATABASE_URL` es la conexión que usa la app y `DIRECT_URL` la que usa
 `prisma migrate`. En local son iguales; en producción (Neon) `DATABASE_URL` es
@@ -72,6 +102,11 @@ docker compose up --build
 
 El servicio `migrate` espera a que PostgreSQL esté sano y aplica las migraciones
 pendientes. La API arranca cuando esa tarea termina correctamente.
+
+## Planificador y despliegue
+
+- [Contrato de POST, GET, PATCH y DELETE /planner](docs/planner.md).
+- [Despliegue en Render/Neon y variables de entorno](docs/deployment.md).
 
 ## Comandos útiles
 

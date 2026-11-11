@@ -5,7 +5,7 @@ import { toOptions } from '../../lib/enumLabels'
 import { IngredientFilterField } from './IngredientFilterField'
 import { RecipeSearchField, type SearchField } from './RecipeSearchField'
 import { SelectedIngredientChips } from './SelectedIngredientChips'
-import { SingleSelectDropdown } from './SingleSelectDropdown'
+import { SingleSelectDropdown } from '../ui/SingleSelectDropdown'
 import { emptyRecipeSearchFilters, hasActiveFilters, type RecipeSearchFiltersValue } from './types'
 
 interface VisibleFilters {
