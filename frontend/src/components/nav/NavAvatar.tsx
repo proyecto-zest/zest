@@ -80,6 +80,8 @@ export function NavAvatar({ placement = 'below', onNavigate }: NavAvatarProps) {
       {open && (
         <div
           role="menu"
+          // "above" is the mobile drawer, where the avatar sits at the left edge: anchored left,
+          // the menu opens rightward and stays inside the drawer instead of off-screen.
           className={`absolute z-dropdown w-48 overflow-hidden rounded-xl border border-border bg-card shadow-lg ${
             placement === 'above' ? 'bottom-full left-0 mb-2' : 'right-0 top-full mt-2'
           }`}
