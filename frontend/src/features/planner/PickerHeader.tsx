@@ -22,7 +22,8 @@ export function PickerHeader({ titleId, date, onClose }: PickerHeaderProps) {
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground"
+        // 36px circle per the design; the ::after (5px past the 1px border) makes a 44px target.
+        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground after:absolute after:-inset-[5px] after:content-['']"
       >
         <X aria-hidden="true" className="h-4 w-4" />
       </button>
