@@ -27,7 +27,7 @@ export function SingleSelectDropdown({
   ...triggerAttrs
 }: SingleSelectDropdownProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const d = useDropdown(containerRef, options, value, onChange)
+  const d = useDropdown(containerRef, options, value, onChange, triggerAttrs.disabled)
 
   return (
     <div ref={containerRef} onBlur={d.onBlur} className={`relative ${d.open ? 'z-dropdown' : ''}`}>

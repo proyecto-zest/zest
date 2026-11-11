@@ -9,11 +9,16 @@ export function useDropdown(
   options: { value: string; label: string }[],
   value: string,
   onChange: (v: string) => void,
+  disabled = false,
 ) {
   const [open, setOpen] = useState(false)
+  // Disabled or emptied while open (a catalog reloading): close rather than show a dead list.
+  if (open && (disabled || options.length === 0)) setOpen(false)
   const [openUp, setOpenUp] = useState(false)
   const [flash, setFlash] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [highlighted, setActiveIndex] = useState(0)
+  // Clamped so `aria-activedescendant` never points past a list that shrank while open.
+  const activeIndex = Math.max(0, Math.min(highlighted, options.length - 1))
   const listboxId = useId()
   const optionId = useCallback((index: number) => `${listboxId}-option-${index}`, [listboxId])
   const selected = options.find((option) => option.value === value)
@@ -22,8 +27,8 @@ export function useDropdown(
     options.findIndex((option) => option.value === value),
   )
   const close = useCallback(() => setOpen(false), [])
-
   const openMenu = () => {
+    if (disabled || options.length === 0) return
     setActiveIndex(selectedIndex)
     setOpenUp(shouldOpenUp(containerRef.current))
     setOpen(true)
@@ -34,16 +39,10 @@ export function useDropdown(
     setFlash(true)
   }
   useCloseOnOutsidePointer(open, containerRef, close)
+  const hasSelection = selected !== undefined
   const onKeyDown = useDropdownKeys({
-    open,
-    options,
-    activeIndex,
-    selectedIndex,
-    hasSelection: selected !== undefined,
-    setActiveIndex,
-    openMenu,
-    close,
-    select,
+    ...{ open, options, activeIndex, selectedIndex, hasSelection, setActiveIndex },
+    ...{ openMenu, close, select },
   })
   // Focus moving to another field (not just a pointer press) also dismisses the list.
   const onBlur = (e: FocusEvent) => {

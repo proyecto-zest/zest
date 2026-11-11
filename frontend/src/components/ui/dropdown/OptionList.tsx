@@ -23,7 +23,6 @@ export function OptionList({
   onSelect,
 }: OptionListProps) {
   const markHover = useScrollToActive(activeIndex, optionId)
-
   return (
     <ul
       id={id}
@@ -41,7 +40,9 @@ export function OptionList({
             tabIndex={-1}
             aria-selected={option.value === value}
             onMouseDown={(e) => e.preventDefault()}
-            onMouseEnter={() => {
+            // Not mouseenter: a list the keyboard scrolls under a resting pointer keeps its highlight.
+            onMouseMove={() => {
+              if (index === activeIndex) return
               markHover()
               onHover(index)
             }}
