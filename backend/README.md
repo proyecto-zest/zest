@@ -123,6 +123,11 @@ la entrada. El upsert utiliza `ON CONFLICT` para sumar atómicamente incluso con
 requests concurrentes; el `CHECK` de la base aplica el límite sin una transacción
 adicional. Si el usuario se elimina durante la request, responde 401.
 
+`PATCH /planner/:id` recibe `{ "quantity": 2 }` y reemplaza la cantidad (entero
+de 1 a 100), sin cambiar receta ni fecha. Devuelve 200 con `PlannerEntryResponseDto`;
+400 si el body/UUID es inválido, 401 sin sesión, 403 si la entrada es ajena y 404
+si no existe.
+
 ## Consultar el planificador
 
 `GET /planner?from=2026-11-03&to=2026-11-09` requiere autenticación y devuelve
@@ -136,6 +141,13 @@ Ambas fechas son obligatorias, sin hora ni zona horaria, con un máximo de 31 d�
 incluyendo los extremos. Fechas inválidas o un rango invertido/excesivo devuelven
 400; sin token, 401. Borrar una receta elimina sus entradas del planner de todos
 los usuarios por el `CASCADE` definido en ZEST-118.
+
+## Quitar una entrada del planificador
+
+`DELETE /planner/:id` requiere autenticación y permite borrar solo una entrada
+del usuario logueado. Devuelve 204 sin body, 404 si no existe y 403 si pertenece
+a otro usuario. Un ID que no es UUID devuelve 400; sin token, 401.
+Solo elimina la entrada: la receta, sus imágenes y las demás entradas se conservan.
 
 ## Comandos útiles
 

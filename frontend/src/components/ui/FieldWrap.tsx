@@ -8,19 +8,34 @@ interface FieldWrapProps {
   hint?: string
   errorId: string
   htmlFor?: string
+  /** Id for the label text, for controls that point at it with `aria-labelledby`. */
+  labelId?: string
   className?: string
   children: ReactNode
 }
 
-/** Shared label/required-mark/error/hint chrome for TextField, NumberField, SelectField and TextAreaField. */
-export function FieldWrap({ label, required, error, hint, errorId, htmlFor, className = '', children }: FieldWrapProps) {
+/**
+ * Shared label/required-mark/error/hint chrome for TextField, NumberField, SelectField and TextAreaField.
+ * Only the label text is a `<label>`: wrapping the control would forward clicks on a select's open list to its trigger.
+ */
+export function FieldWrap({
+  label,
+  required,
+  error,
+  hint,
+  errorId,
+  htmlFor,
+  labelId,
+  className = '',
+  children,
+}: FieldWrapProps) {
   return (
-    <label className={`flex flex-col gap-2 ${className}`} htmlFor={htmlFor}>
+    <div className={`flex flex-col gap-2 ${className}`}>
       {label && (
-        <span className="text-sm font-semibold">
+        <label id={labelId} htmlFor={htmlFor} className="text-sm font-semibold">
           {label}
           {required && <span className="text-error"> *</span>}
-        </span>
+        </label>
       )}
       {children}
       {(error || hint) && (
@@ -33,6 +48,6 @@ export function FieldWrap({ label, required, error, hint, errorId, htmlFor, clas
           {hint && <span className="ml-auto text-muted-foreground">{hint}</span>}
         </div>
       )}
-    </label>
+    </div>
   )
 }
