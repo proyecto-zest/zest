@@ -17,7 +17,7 @@ export interface QuantityActions {
  * Step ± one portion on a planned meal. The number changes on screen at once and
  * goes back, with an error toast, if PATCH /planner/:id fails. Stepping down from
  * 1 is not a quantity change: it hands over to `onRemove`, the existing remove flow.
- * A 404 means the meal was removed elsewhere, so the week reloads instead.
+ * A 404 means the meal was removed elsewhere, so the week reloads with no toast.
  */
 export function useMealQuantity(
   entry: PlannerEntry,
@@ -38,8 +38,11 @@ export function useMealQuantity(
     try {
       await updatePlannerEntry(entry.id, next)
     } catch (e) {
-      if (e instanceof HttpError && e.status === 404) refetch()
-      else setQuantity(entry.id, previous)
+      if (e instanceof HttpError && e.status === 404) {
+        refetch()
+        return
+      }
+      setQuantity(entry.id, previous)
       showToast(
         e instanceof Error ? e.message : 'Could not change the quantity. Please try again.',
         'error',

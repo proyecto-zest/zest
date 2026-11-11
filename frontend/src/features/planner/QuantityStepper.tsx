@@ -7,9 +7,9 @@ interface QuantityStepperProps {
   onRemove: () => void
 }
 
-// The circle stays 22px; the ::after extends the touch target to 44px.
+// The circle stays 22px; the ::after extends the touch target to 44px (−'s border takes 1px).
 const buttonClasses =
-  "relative flex h-[22px] w-[22px] items-center justify-center rounded-full text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 after:absolute after:-inset-[11px] after:content-['']"
+  "relative flex h-[22px] w-[22px] items-center justify-center rounded-full text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 after:absolute after:content-['']"
 
 /**
  * − / quantity / + on a planned meal, under its title: a day column is too narrow for it
@@ -26,10 +26,10 @@ export function QuantityStepper({ entry, quantityActions, onRemove }: QuantitySt
     <div className="mt-1 flex items-center gap-1.5">
       <button
         type="button"
-        aria-label="Remove one"
+        aria-label={`Remove one portion of ${entry.title}`}
         disabled={pending}
         onClick={decrease}
-        className={`${buttonClasses} border border-border bg-card`}
+        className={`${buttonClasses} border border-border bg-card after:-inset-[12px]`}
       >
         −
       </button>
@@ -39,10 +39,10 @@ export function QuantityStepper({ entry, quantityActions, onRemove }: QuantitySt
       </span>
       <button
         type="button"
-        aria-label="Add one"
+        aria-label={`Add one portion of ${entry.title}`}
         disabled={pending || !canIncrease}
         onClick={increase}
-        className={`${buttonClasses} bg-primary text-primary-foreground`}
+        className={`${buttonClasses} bg-primary text-primary-foreground after:-inset-[11px]`}
       >
         +
       </button>
