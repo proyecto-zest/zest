@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -18,6 +19,7 @@ import { UserResponseDto } from '../users/dto/user-response.dto';
 import { CreatePlannerEntryDto } from './dto/create-planner-entry.dto';
 import { ListPlannerEntriesQueryDto } from './dto/list-planner-entries-query.dto';
 import { PlannerEntryResponseDto } from './dto/planner-entry-response.dto';
+import { UpdatePlannerEntryDto } from './dto/update-planner-entry.dto';
 import { PlannerEntriesService } from './planner-entries.service';
 
 @Controller('planner')
@@ -49,5 +51,14 @@ export class PlannerEntriesController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     return this.plannerEntriesService.remove(user.id, id);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePlannerEntryDto,
+  ): Promise<PlannerEntryResponseDto> {
+    return this.plannerEntriesService.update(user.id, id, dto);
   }
 }

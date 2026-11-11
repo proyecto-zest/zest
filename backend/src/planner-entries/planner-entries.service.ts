@@ -13,6 +13,7 @@ import { StorageService } from '../storage/storage.service';
 import { CreatePlannerEntryDto } from './dto/create-planner-entry.dto';
 import { ListPlannerEntriesQueryDto } from './dto/list-planner-entries-query.dto';
 import { PlannerEntryResponseDto } from './dto/planner-entry-response.dto';
+import { UpdatePlannerEntryDto } from './dto/update-planner-entry.dto';
 import { MAX_PLANNER_QUANTITY } from './planner-entries.constants';
 
 const plannerRecipeSelect = {
@@ -156,6 +157,72 @@ export class PlannerEntriesService {
       imageUrl,
       time: recipe.time,
       timeUnit: recipe.timeUnit,
+    };
+  }
+
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdatePlannerEntryDto,
+  ): Promise<PlannerEntryResponseDto> {
+    const current = await this.prisma.plannerEntry.findUnique({
+      where: { id },
+      select: {
+        userId: true,
+        recipe: {
+          select: {
+            title: true,
+            time: true,
+            timeUnit: true,
+            images: {
+              select: { s3Key: true },
+              orderBy: RECIPE_IMAGE_ORDER,
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+    if (!current) {
+      throw new NotFoundException('Planner entry not found');
+    }
+    if (current.userId !== userId) {
+      throw new ForbiddenException(
+        'You can only edit your own planner entries',
+      );
+    }
+
+    // Sign before writing so a signing failure does not persist a change
+    // behind a failed response. The database write itself is atomic.
+    const imageKey = current.recipe.images[0]?.s3Key;
+    const imageUrl = imageKey
+      ? await this.storageService.getSignedReadUrl(imageKey)
+      : null;
+    const entry = await this.prisma.plannerEntry
+      .update({
+        where: { id, userId },
+        data: { quantity: dto.quantity },
+        select: { id: true, date: true, quantity: true, recipeId: true },
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2025'
+        ) {
+          throw new NotFoundException('Planner entry not found');
+        }
+        throw error;
+      });
+
+    return {
+      id: entry.id,
+      date: entry.date.toISOString().slice(0, 10),
+      quantity: entry.quantity,
+      recipeId: entry.recipeId,
+      title: current.recipe.title,
+      imageUrl,
+      time: current.recipe.time,
+      timeUnit: current.recipe.timeUnit,
     };
   }
 
